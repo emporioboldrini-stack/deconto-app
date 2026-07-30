@@ -10,8 +10,7 @@ export function renderAdminDashboard(activeTab) {
   const backups = db.getBackupLogs();
 
   const totalCreditsInField = boards.reduce((acc, b) => acc + b.remainingCredits, 0);
-  const totalRefillsCount = refills.length;
-  const totalCoffeesExtracted = coffees.length + 14820; // + Offset storico demo
+  const totalCoffeesExtracted = coffees.length + 14820;
   const lowStockCount = boards.filter(b => b.remainingCredits < b.lowStockThreshold && b.remainingCredits > 0).length;
   const lockedCount = boards.filter(b => b.remainingCredits <= 0).length;
 
@@ -31,8 +30,8 @@ export function renderAdminDashboard(activeTab) {
         <div class="card-grid" style="margin-bottom: 24px;">
           <div class="stat-card success">
             <div class="stat-label">Repository GitHub Target</div>
-            <div class="stat-value" style="font-size: 1.2rem; color: var(--accent-cyan);">deconto-org/deconto-db-backups</div>
-            <div class="stat-desc">Accesso crittografato SSH / SSH Key</div>
+            <div class="stat-value" style="font-size: 1.2rem; color: var(--accent-cyan);">emporioboldrini-stack/deconto-app</div>
+            <div class="stat-desc">Accesso crittografato PAT / SSH</div>
           </div>
           <div class="stat-card">
             <div class="stat-label">Frequenza Backup</div>
@@ -82,7 +81,6 @@ export function renderAdminDashboard(activeTab) {
   }
 
   if (activeTab === 'maintenance') {
-    // Macchine con durata erogazione anomala (> 30s) -> Calcare / Pompa usata
     const anomalousCoffees = coffees.filter(c => c.durationSeconds > 30);
 
     return `
@@ -145,9 +143,15 @@ export function renderAdminDashboard(activeTab) {
   // Vista Dashboard BI Standard
   return `
     <div>
-      <div style="margin-bottom: 24px;">
-        <h1 style="font-size: 1.8rem; font-weight: 800;">📊 Dashboard Esecutiva BI</h1>
-        <p style="color: var(--text-muted);">Panoramica in tempo reale del parco macchine e dei consumi erogati</p>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <div>
+          <h1 style="font-size: 1.8rem; font-weight: 800;">📊 Dashboard Esecutiva BI</h1>
+          <p style="color: var(--text-muted);">Panoramica in tempo reale del parco macchine e dei consumi erogati</p>
+        </div>
+
+        <button id="btn-export-csv" class="btn btn-secondary">
+          📥 Esporta Report Consumi CSV
+        </button>
       </div>
 
       <!-- Stat Cards -->
@@ -200,7 +204,7 @@ export function renderAdminDashboard(activeTab) {
 
               return `
                 <tr>
-                  <td><span class="badge badge-info">3467: ${b.shortCode}</span></td>
+                  <td><span class="badge badge-info">${b.shortCode}</span></td>
                   <td>
                     <strong>${details.client ? details.client.name : 'Non Assegnato'}</strong><br>
                     <small style="color: var(--text-muted);">${details.client ? details.client.address : ''}</small>

@@ -9,9 +9,8 @@ import { renderAdrPanel } from './components/AdrPanel.js';
 import { renderClientDiyPanel } from './components/ClientDiyPanel.js';
 import { renderHardwareSimulator } from './components/HardwareSimulator.js';
 
-// Stato globale dell'applicazione
 let state = {
-  currentRole: 'ADMIN', // ADMIN | UFFICIO | ADR | CLIENT_DIY
+  currentRole: 'ADMIN',
   activeTab: 'dashboard'
 };
 
@@ -74,6 +73,21 @@ function attachEventListeners() {
     });
   });
 
+  // Esporta Report Consumi CSV (Admin View)
+  const btnExportCsv = document.getElementById('btn-export-csv');
+  if (btnExportCsv) {
+    btnExportCsv.addEventListener('click', () => {
+      const csv = db.exportCoffeeLogsCSV();
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `DECONTO_Report_Consumi_${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      alert('📥 Report Consumi CSV Scaricato con successo!');
+    });
+  }
+
   // Trigger Backup GitHub (Admin View)
   const btnBackup = document.getElementById('btn-trigger-backup');
   if (btnBackup) {
@@ -81,12 +95,71 @@ function attachEventListeners() {
       btnBackup.disabled = true;
       btnBackup.innerText = '⏳ Backup in corso su GitHub...';
       const res = await githubBackupService.executeBackupNow();
-      alert(`✅ Backup GitHub Eseguito con Successo!\n\nRepository: ${res.backupRecord.repo}\nCommit Hash: ${res.backupRecord.commitHash}\nEntità salvate: ${res.backupRecord.recordCount}`);
+      alert(`✅ Backup GitHub Eseguito con Successo!\n\nRepository: https://github.com/emporioboldrini-stack/deconto-app.git\nCommit Hash: ${res.backupRecord.commitHash}\nEntità salvate: ${res.backupRecord.recordCount}`);
       renderApp();
     });
   }
 
-  // Generatore Ricariche OTP (Ufficio View)
+  // Toggle & Registrazione Nuovo Cliente (Office View)
+  const btnToggleAdd = document.getElementById('btn-toggle-add-client');
+  const addFormContainer = document.getElementById('add-client-form-container');
+  if (btnToggleAdd && addFormContainer) {
+    btnToggleAdd.addEventListener('click', () => {
+      addFormContainer.style.display = addFormContainer.style.display === 'none' ? 'block' : 'none';
+    });
+  }
+
+  const btnCancelAdd = document.getElementById('btn-cancel-add-client');
+  if (btnCancelAdd && addFormContainer) {
+    btnCancelAdd.addEventListener('click', () => {
+      addFormContainer.style.display = 'none';
+    });
+  }
+
+  const btnSaveNewClient = document.getElementById('btn-save-new-client');
+  if (btnSaveNewClient) {
+    btnSaveNewClient.addEventListener('click', () => {
+      const name = document.getElementById('new-cli-name').value.trim();
+      const refPerson = document.getElementById('new-cli-ref').value.trim();
+      const phone = document.getElementById('new-cli-phone').value.trim();
+      const city = document.getElementById('new-cli-city').value.trim();
+      const machineModel = document.getElementById('new-cli-mc-model').value.trim();
+      const shortCode = document.getElementById('new-cli-code').value.trim();
+      const initialCredits = document.getElementById('new-cli-credits').value;
+
+      if (!name || !refPerson || !phone) {
+        alert('Compila i campi obbligatori: Nome Cliente, Referente e Telefono!');
+        return;
+      }
+
+      db.addClient({
+        name,
+        refPerson,
+        phone,
+        city,
+        address: city,
+        machineModel: machineModel || 'Didiesse Frog Revolution',
+        shortCode: shortCode || `${Math.floor(1000 + Math.random() * 9000)}`,
+        initialCredits
+      });
+
+      alert(`✅ Cliente "${name}" registrato con successo ed associato alla scheda Deconto!`);
+      renderApp();
+    });
+  }
+
+  // Rimuovi Cliente (Office View)
+  document.querySelectorAll('.btn-del-client').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-id');
+      if (confirm('Sei sicuro di voler rimuovere questo cliente dal sistema?')) {
+        db.deleteClient(id);
+        renderApp();
+      }
+    });
+  });
+
+  // Generatore Ricariche OTP (Office View)
   const btnGenerateOtp = document.getElementById('btn-generate-otp');
   if (btnGenerateOtp) {
     btnGenerateOtp.addEventListener('click', () => {
@@ -94,7 +167,7 @@ function attachEventListeners() {
       const credits = parseInt(document.getElementById('otp-credits-select').value, 10);
 
       const otpCode = `OTP-${Math.floor(1000 + Math.random() * 9000)}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
-      const link = `https://deconto.it/ricarica?short=${boardShortCode}&otp=${otpCode}&c=${credits}`;
+      const link = `https://deconto-vending-app.web.app/?short=${boardShortCode}&otp=${otpCode}&c=${credits}`;
 
       document.getElementById('otp-code-val').innerText = otpCode;
       document.getElementById('otp-link-val').innerText = link;
@@ -112,11 +185,27 @@ function attachEventListeners() {
     });
   }
 
-  // Stampa Etichetta QR Code (Ufficio View)
+  const btnCopyOtpLink = document.getElementById('btn-copy-otp-link');
+  if (btnCopyOtpLink) {
+    btnCopyOtpLink.addEventListener('click', () => {
+      const link = document.getElementById('otp-link-val').innerText;
+      navigator.clipboard.writeText(link);
+      alert('📋 Link Ricarica Copiato negli appunti!');
+    });
+  }
+
+  // Stampa Etichetta QR Code (Office View)
   const btnPrintQr = document.getElementById('btn-print-qr');
   if (btnPrintQr) {
     btnPrintQr.addEventListener('click', () => {
       window.print();
+    });
+  }
+
+  const qrHeaderInput = document.getElementById('qr-header-input');
+  if (qrHeaderInput) {
+    qrHeaderInput.addEventListener('input', (e) => {
+      document.getElementById('lbl-header-title').innerText = `☕ ${e.target.value.toUpperCase()} ☕`;
     });
   }
 
@@ -125,7 +214,7 @@ function attachEventListeners() {
     qrBoardSelect.addEventListener('change', (e) => {
       const details = db.getBoardFullDetails(e.target.value);
       if (details) {
-        document.querySelector('#qr-sticker-preview div[style*="font-size: 3rem"]').innerText = details.board.shortCode;
+        document.getElementById('lbl-short-code-display').innerText = details.board.shortCode;
         document.getElementById('lbl-mc-sn').innerText = details.machine ? details.machine.serialNumber : 'N/D';
         document.getElementById('lbl-hw-sn').innerText = details.board.hwSerial;
       }
@@ -160,7 +249,6 @@ function attachEventListeners() {
     });
   }
 
-  // ADR Tasto Rapido Ricarica
   document.querySelectorAll('.btn-adr-quick-fill').forEach(btn => {
     btn.addEventListener('click', async () => {
       const code = btn.getAttribute('data-code');
@@ -212,7 +300,6 @@ function attachEventListeners() {
       const select = document.getElementById('sim-board-select');
       const shortCode = select ? select.value : '3467';
 
-      // Impulso visivo sui fili
       document.getElementById('signal-sense-volts').innerText = '230V AC (Impulso)';
       document.getElementById('signal-sense-badge').className = 'badge badge-warning';
       document.getElementById('signal-sense-badge').innerText = 'EROGAZIONE IN CORSO';
@@ -254,5 +341,4 @@ function attachEventListeners() {
   }
 }
 
-// Inizializzazione App al caricamento DOM
 document.addEventListener('DOMContentLoaded', renderApp);

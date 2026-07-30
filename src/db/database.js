@@ -1,12 +1,11 @@
 /**
- * DECONTO IoT System - Core Database & Data Storage Engine
+ * DECONTO IoT System - Core Database & Data Storage Engine (v2 - FASE 2)
  * Gestisce l'anagrafica clienti, parco macchine, dispositivi hardware Deconto,
- * log delle erogazioni, token OTP di ricarica e storico backup GitHub.
+ * log delle erogazioni, token OTP di ricarica, esportazione CSV e storico backup GitHub.
  */
 
 const STORAGE_KEY = 'DECONTO_DB_V1';
 
-// Dati iniziali di seed per la demo
 const initialData = {
   users: [
     { id: 'usr_admin', name: 'Marco Rossi (Admin)', email: 'admin@deconto.it', role: 'ADMIN', avatar: '👨‍💼' },
@@ -62,7 +61,7 @@ const initialData = {
       macAddress: 'C6:3F:8A:33:55:10',
       machineId: 'mc_3',
       version: 'BASIC',
-      remainingCredits: 12, // In sottoscorta (< 20)
+      remainingCredits: 12,
       lowStockThreshold: 20,
       relayStatus: 'CLOSED_OK',
       firmwareVersion: 'v2.1.0-ESP32-C6',
@@ -76,7 +75,7 @@ const initialData = {
       macAddress: 'C6:3F:8A:44:99:01',
       machineId: 'mc_4',
       version: 'BASIC',
-      remainingCredits: 0, // Credito Esaurito! Relè Aperto
+      remainingCredits: 0,
       lowStockThreshold: 20,
       relayStatus: 'OPEN_LOCKED',
       firmwareVersion: 'v2.1.0-ESP32-C6',
@@ -111,7 +110,7 @@ const initialData = {
   coffeeLogs: [
     { id: 'log_1', boardId: 'board_3467', timestamp: new Date(Date.now() - 3600000 * 2).toISOString(), durationSeconds: 22, groupId: 1 },
     { id: 'log_2', boardId: 'board_3467', timestamp: new Date(Date.now() - 3600000 * 4).toISOString(), durationSeconds: 21, groupId: 1 },
-    { id: 'log_3', boardId: 'board_5510', timestamp: new Date(Date.now() - 3600000 * 6).toISOString(), durationSeconds: 38, groupId: 1 }, // Durata anomala (calcare)
+    { id: 'log_3', boardId: 'board_5510', timestamp: new Date(Date.now() - 3600000 * 6).toISOString(), durationSeconds: 38, groupId: 1 },
     { id: 'log_4', boardId: 'board_1289', timestamp: new Date(Date.now() - 3600000 * 10).toISOString(), durationSeconds: 20, groupId: 1 },
     { id: 'log_5', boardId: 'board_1289', timestamp: new Date(Date.now() - 3600000 * 11).toISOString(), durationSeconds: 23, groupId: 2 }
   ],
@@ -135,11 +134,9 @@ class DecontoDatabase {
   loadData() {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        return JSON.parse(stored);
-      }
+      if (stored) return JSON.parse(stored);
     } catch (e) {
-      console.warn('Impossibile caricare da localStorage, uso dati di default:', e);
+      console.warn('Impossibile caricare da localStorage:', e);
     }
     this.saveData(initialData);
     return initialData;
@@ -150,11 +147,9 @@ class DecontoDatabase {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
     } catch (e) {
-      console.error('Errore nel salvataggio localStorage:', e);
+      console.error('Errore salvataggio localStorage:', e);
     }
   }
-
-  // --- QUERY E METODI ---
 
   getUsers() { return this.data.users; }
   getClients() { return this.data.clients; }
@@ -164,7 +159,6 @@ class DecontoDatabase {
   getCoffeeLogs() { return this.data.coffeeLogs; }
   getBackupLogs() { return this.data.backupLogs; }
 
-  // Ottiene tutte le informazioni associate ad una scheda Deconto
   getBoardFullDetails(shortCodeOrId) {
     const board = this.data.decontoBoards.find(b => b.shortCode === shortCodeOrId || b.id === shortCodeOrId);
     if (!board) return null;
@@ -174,40 +168,68 @@ class DecontoDatabase {
     const refills = this.data.refillLogs.filter(r => r.boardId === board.id);
     const coffees = this.data.coffeeLogs.filter(c => c.boardId === board.id);
 
-    return {
-      board,
-      machine,
-      client,
-      refills,
-      coffees
-    };
+    return { board, machine, client, refills, coffees };
   }
 
-  // Aggiunge o aggiorna un cliente
-  saveClient(client) {
-    const existingIndex = this.data.clients.findIndex(c => c.id === client.id);
-    if (existingIndex >= 0) {
-      this.data.clients[existingIndex] = { ...this.data.clients[existingIndex], ...client };
-    } else {
-      const newClient = { ...client, id: 'cli_' + Date.now() };
-      this.data.clients.push(newClient);
+  addClient(newClientData) {
+    const newClient = {
+      id: 'cli_' + Date.now(),
+      name: newClientData.name,
+      refPerson: newClientData.refPerson || 'Referente',
+      phone: newClientData.phone || '+39 ',
+      address: newClientData.address || '',
+      city: newClientData.city || '',
+      status: 'ACTIVE'
+    };
+    this.data.clients.unshift(newClient);
+
+    // Se fornita una macchina, creiamola ed associamola
+    if (newClientData.machineModel) {
+      const newMachine = {
+        id: 'mc_' + Date.now(),
+        serialNumber: newClientData.machineSerial || `SN-MC-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+        model: newClientData.machineModel,
+        clientId: newClient.id,
+        installDate: new Date().toISOString().split('T')[0]
+      };
+      this.data.machines.unshift(newMachine);
+
+      // Crea anche la scheda Deconto
+      const shortCode = newClientData.shortCode || `${Math.floor(1000 + Math.random() * 9000)}`;
+      const newBoard = {
+        id: 'board_' + shortCode,
+        shortCode: shortCode,
+        hwSerial: `DC-HW-${Math.floor(1000 + Math.random() * 9000)}`,
+        macAddress: `C6:3F:8A:${Math.floor(10 + Math.random() * 89)}:${shortCode.substring(0,2)}:${shortCode.substring(2,4)}`,
+        machineId: newMachine.id,
+        version: newClientData.boardVersion || 'BASIC',
+        remainingCredits: parseInt(newClientData.initialCredits || 200, 10),
+        lowStockThreshold: 20,
+        relayStatus: 'CLOSED_OK',
+        firmwareVersion: 'v2.1.0-ESP32-C6',
+        isOnlineWifi: false,
+        lastSyncDate: new Date().toISOString()
+      };
+      this.data.decontoBoards.unshift(newBoard);
     }
+
+    this.saveData();
+    return newClient;
+  }
+
+  deleteClient(clientId) {
+    this.data.clients = this.data.clients.filter(c => c.id !== clientId);
     this.saveData();
   }
 
-  // Esegue una ricarica crediti (ADR, Fai-da-te OTP o Cloud Ufficio)
   performRefill({ boardShortCode, credits, method, operatorId, tokenOtp }) {
     const board = this.data.decontoBoards.find(b => b.shortCode === boardShortCode);
-    if (!board) {
-      throw new Error(`Scheda Deconto con codice ${boardShortCode} non trovata.`);
-    }
+    if (!board) throw new Error(`Scheda Deconto #${boardShortCode} non trovata.`);
 
-    // Incrementa crediti e riabilita il relè se era in blocco
     board.remainingCredits += credits;
     board.relayStatus = 'CLOSED_OK';
     board.lastSyncDate = new Date().toISOString();
 
-    // Registra log di ricarica
     const newRefillLog = {
       id: 'ref_' + Date.now(),
       boardId: board.id,
@@ -225,7 +247,6 @@ class DecontoDatabase {
     return { board, newRefillLog };
   }
 
-  // Simulazione di erogazione di un caffè da parte dell'hardware
   registerCoffeeExtraction(boardShortCode, durationSeconds = 22, groupId = 1) {
     const board = this.data.decontoBoards.find(b => b.shortCode === boardShortCode);
     if (!board) return null;
@@ -261,13 +282,25 @@ class DecontoDatabase {
     };
   }
 
-  // Backup Automatico su GitHub (Simulazione Cron Pipeline)
+  // Esportazione Report CSV dei Log Erogazione & Consumi
+  exportCoffeeLogsCSV() {
+    let csv = 'ID_Log,Codice_Deconto,Cliente,Seriale_Macchina,Data_Ora,Durata_Secondi,Gruppo_Braccio\n';
+    this.data.coffeeLogs.forEach(log => {
+      const details = this.getBoardFullDetails(log.boardId);
+      const clientName = details && details.client ? details.client.name.replace(/,/g, ' ') : 'N/D';
+      const mcSerial = details && details.machine ? details.machine.serialNumber : 'N/D';
+      const code = details && details.board ? details.board.shortCode : 'N/D';
+      csv += `${log.id},${code},"${clientName}",${mcSerial},${log.timestamp},${log.durationSeconds},${log.groupId}\n`;
+    });
+    return csv;
+  }
+
   triggerGitHubBackup() {
     const newBackup = {
       id: 'bak_' + Date.now(),
       timestamp: new Date().toISOString(),
       repo: 'deconto-org/deconto-db-backups',
-      commitHash: Math.random().toString(36).substring(2, 10),
+      commitHash: 'git-' + Math.random().toString(36).substring(2, 10),
       status: 'SUCCESS',
       recordCount: this.data.clients.length + this.data.machines.length + this.data.decontoBoards.length + this.data.refillLogs.length
     };

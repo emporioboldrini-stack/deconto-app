@@ -3,6 +3,7 @@ import { db } from '../db/database.js';
 export function renderOfficePanel(activeTab) {
   const clients = db.getClients();
   const boards = db.getBoards();
+  const refills = db.getRefillLogs();
 
   if (activeTab === 'qr_generator') {
     return `
@@ -15,10 +16,10 @@ export function renderOfficePanel(activeTab) {
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px;">
           <!-- Modulo di Configurazione -->
           <div class="stat-card" style="padding: 24px;">
-            <h3 style="margin-top: 0; color: var(--accent-cyan);">Seleziona Macchina / Deconto:</h3>
+            <h3 style="margin-top: 0; color: var(--accent-cyan);">1. Configura Etichetta:</h3>
             
             <div style="margin-bottom: 16px;">
-              <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 6px;">Seleziona Scheda Deconto:</label>
+              <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 6px;">Seleziona Scheda Deconto / Cliente:</label>
               <select id="qr-board-select" style="width: 100%; padding: 10px; background: var(--bg-primary); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px;">
                 ${boards.map(b => {
                   const details = db.getBoardFullDetails(b.id);
@@ -28,12 +29,20 @@ export function renderOfficePanel(activeTab) {
             </div>
 
             <div style="margin-bottom: 16px;">
-              <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 6px;">Intestazione Aziendale:</label>
-              <input type="text" value="DECONTO IoT System - Comodato Gratuito" style="width: 100%; padding: 10px; background: var(--bg-primary); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px;">
+              <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 6px;">Formato di Stampa:</label>
+              <select id="qr-format-select" style="width: 100%; padding: 10px; background: var(--bg-primary); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px;">
+                <option value="THERMAL_50x30">Etichetta Termica Adesiva 50x30mm (Singola)</option>
+                <option value="A4_SHEET">Foglio A4 Etichette Multi-Adesive (12 per foglio)</option>
+              </select>
             </div>
 
-            <button id="btn-print-qr" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
-              🖨️ Stampa Etichetta Termica Adesiva
+            <div style="margin-bottom: 16px;">
+              <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 6px;">Intestazione Personalizzata:</label>
+              <input type="text" id="qr-header-input" value="DECONTO IoT System - Comodato Gratuito" style="width: 100%; padding: 10px; background: var(--bg-primary); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px;">
+            </div>
+
+            <button id="btn-print-qr" class="btn btn-primary" style="width: 100%; margin-top: 10px; padding: 14px; font-size: 1rem;">
+              🖨️ Stampa Etichetta Termica Ora
             </button>
           </div>
 
@@ -42,11 +51,11 @@ export function renderOfficePanel(activeTab) {
             <h3 style="margin-top: 0; color: var(--text-muted);">Anteprima Stampa Etichetta:</h3>
             
             <div id="qr-sticker-preview" style="background: #ffffff; color: #000000; padding: 24px; border-radius: 12px; font-family: monospace; border: 3px dashed #000; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-              <div style="font-size: 0.8rem; font-weight: 800; text-transform: uppercase; border-bottom: 2px solid #000; padding-bottom: 6px; margin-bottom: 12px;">
+              <div id="lbl-header-title" style="font-size: 0.8rem; font-weight: 800; text-transform: uppercase; border-bottom: 2px solid #000; padding-bottom: 6px; margin-bottom: 12px;">
                 ☕ DECONTO COFFEE CONTROL ☕
               </div>
               
-              <div style="font-size: 3rem; font-weight: 900; letter-spacing: 4px; margin: 8px 0; color: #000;">
+              <div id="lbl-short-code-display" style="font-size: 3.2rem; font-weight: 900; letter-spacing: 4px; margin: 6px 0; color: #000;">
                 3467
               </div>
               
@@ -134,21 +143,66 @@ export function renderOfficePanel(activeTab) {
                 
                 <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 12px;">Link WhatsApp Cliente:</div>
                 <div id="otp-link-val" style="font-size: 0.85rem; color: var(--accent-cyan); word-break: break-all; margin-top: 4px;">
-                  https://deconto.it/ricarica?short=3467&otp=OTP-9981-X79K2&c=200
+                  https://deconto-vending-app.web.app/?short=3467&otp=OTP-9981-X79K2&c=200
                 </div>
               </div>
             </div>
 
-            <button id="btn-send-whatsapp" class="btn btn-success" style="width: 100%;">
-              💬 Invia Link via WhatsApp al Cliente
-            </button>
+            <div style="display: flex; gap: 12px;">
+              <button id="btn-send-whatsapp" class="btn btn-success" style="flex: 1;">
+                💬 Invia via WhatsApp
+              </button>
+              <button id="btn-copy-otp-link" class="btn btn-secondary" style="flex: 1;">
+                📋 Copia Link
+              </button>
+            </div>
           </div>
         </div>
       </div>
     `;
   }
 
-  // Vista Gestione Clienti Standard
+  if (activeTab === 'refills_history') {
+    return `
+      <div>
+        <div style="margin-bottom: 24px;">
+          <h1 style="font-size: 1.8rem; font-weight: 800;">📋 Storico Ricariche Accreditate</h1>
+          <p style="color: var(--text-muted);">Registro di tutte le ricariche effettuate da ADR, Clienti Fai-da-Te e da Ufficio</p>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>ID Ricarica</th>
+                <th>Data & Ora</th>
+                <th>Deconto ID</th>
+                <th>Caffè Accreditati</th>
+                <th>Modalità / Operatore</th>
+                <th>Token OTP Monouso</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${refills.map(r => `
+                <tr>
+                  <td><code>${r.id}</code></td>
+                  <td>${new Date(r.timestamp).toLocaleString('it-IT')}</td>
+                  <td><span class="badge badge-info">${r.shortCode}</span></td>
+                  <td><strong style="color: var(--accent-green); font-size: 1.1rem;">+${r.creditsAdded} caffè</strong></td>
+                  <td>
+                    ${r.operatorType === 'ADR' ? '<span class="badge badge-warning">🚚 ADR (BLE sul Posto)</span>' : (r.operatorType === 'CLIENT_DIY' ? '<span class="badge badge-success">📱 Cliente Fai-da-Te (OTP)</span>' : '<span class="badge badge-info">👩‍💻 Ufficio Cloud</span>')}
+                  </td>
+                  <td><code>${r.tokenOtp}</code></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  // Vista Gestione Clienti Standard (con Form di Creazione Nuovo Cliente)
   return `
     <div>
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
@@ -156,11 +210,56 @@ export function renderOfficePanel(activeTab) {
           <h1 style="font-size: 1.8rem; font-weight: 800;">🏢 Anagrafica Clienti & Parco Macchine</h1>
           <p style="color: var(--text-muted);">Gestione contratti in comodato d'uso e associazione dispositivi Deconto</p>
         </div>
-        <button id="btn-new-client" class="btn btn-primary">
-          ➕ Nuovo Cliente
+        <button id="btn-toggle-add-client" class="btn btn-primary">
+          ➕ Nuovo Cliente & Macchina
         </button>
       </div>
 
+      <!-- Form Nuovo Cliente (Nascosto di Default) -->
+      <div id="add-client-form-container" class="stat-card" style="display: none; margin-bottom: 32px; padding: 24px; border: 2px solid var(--accent-cyan);">
+        <h3 style="margin-top: 0; color: var(--accent-cyan); margin-bottom: 16px;">➕ Registrazione Nuovo Cliente & Scheda Deconto:</h3>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Ragione Sociale / Cliente:*</label>
+            <input type="text" id="new-cli-name" placeholder="Es. Bar Splendid" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+          </div>
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Persona di Riferimento:*</label>
+            <input type="text" id="new-cli-ref" placeholder="Es. Marco Rossi" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+          </div>
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Telefono / WhatsApp:*</label>
+            <input type="text" id="new-cli-phone" placeholder="Es. +39 333 1234567" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Città & Indirizzo:</label>
+            <input type="text" id="new-cli-city" placeholder="Es. Milano, Via Torino 5" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+          </div>
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Modello Macchina:</label>
+            <input type="text" id="new-cli-mc-model" placeholder="Es. Faber Slot Plast 1G" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+          </div>
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Codice Deconto (4 cifre):</label>
+            <input type="text" id="new-cli-code" placeholder="Es. 8812" maxlength="4" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 800; font-family: monospace;">
+          </div>
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Credito Iniziale:</label>
+            <input type="number" id="new-cli-credits" value="200" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 800;">
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+          <button id="btn-cancel-add-client" class="btn btn-secondary">Annulla</button>
+          <button id="btn-save-new-client" class="btn btn-primary">💾 Salva Cliente & Assegna Deconto</button>
+        </div>
+      </div>
+
+      <!-- Tabella Clienti -->
       <div class="table-container">
         <table>
           <thead>
@@ -190,7 +289,7 @@ export function renderOfficePanel(activeTab) {
                     ${board ? `<strong style="color: ${board.remainingCredits > 20 ? 'var(--accent-green)' : 'var(--accent-rose)'}">${board.remainingCredits} caffè</strong>` : 'N/D'}
                   </td>
                   <td>
-                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;">Dettagli</button>
+                    <button class="btn btn-secondary btn-del-client" data-id="${c.id}" style="padding: 6px 12px; font-size: 0.8rem; color: var(--accent-rose);">🗑️ Rimuovi</button>
                   </td>
                 </tr>
               `;

@@ -1,4 +1,5 @@
-(function(){let e=document.createElement(`link`).relList;if(e&&e.supports&&e.supports(`modulepreload`))return;for(let e of document.querySelectorAll(`link[rel="modulepreload"]`))n(e);new MutationObserver(e=>{for(let t of e)if(t.type===`childList`)for(let e of t.addedNodes)e.tagName===`LINK`&&e.rel===`modulepreload`&&n(e)}).observe(document,{childList:!0,subtree:!0});function t(e){let t={};return e.integrity&&(t.integrity=e.integrity),e.referrerPolicy&&(t.referrerPolicy=e.referrerPolicy),t.credentials=e.crossOrigin===`use-credentials`?`include`:e.crossOrigin===`anonymous`?`omit`:`same-origin`,t}function n(e){if(e.ep)return;e.ep=!0;let n=t(e);fetch(e.href,n)}})();var e=`DECONTO_DB_V1`,t={users:[{id:`usr_admin`,name:`Marco Rossi (Admin)`,email:`admin@deconto.it`,role:`ADMIN`,avatar:`👨‍💼`},{id:`usr_ufficio`,name:`Laura Bianchi (Ufficio)`,email:`ufficio@deconto.it`,role:`UFFICIO`,avatar:`👩‍💻`},{id:`usr_adr_1`,name:`Giuseppe Verdi (ADR Zona Nord)`,email:`adr.nord@deconto.it`,role:`ADR`,avatar:`🚚`},{id:`usr_adr_2`,name:`Antonio Neri (ADR Zona Sud)`,email:`adr.sud@deconto.it`,role:`ADR`,avatar:`🚚`}],clients:[{id:`cli_1`,name:`Bar Milano Central`,refPerson:`Mario Rossi`,phone:`+39 02 5551234`,address:`Via Roma 12, Milano`,city:`Milano`,status:`ACTIVE`},{id:`cli_2`,name:`Ristorante La Perla`,refPerson:`Elena Neri`,phone:`+39 06 7778899`,address:`Corso Italia 45, Roma`,city:`Roma`,status:`ACTIVE`},{id:`cli_3`,name:`Studio Legale Brambilla`,refPerson:`Avv. Brambilla`,phone:`+39 02 4443322`,address:`Via Montenapoleone 8, Milano`,city:`Milano`,status:`WARNING`},{id:`cli_4`,name:`Officina Meccanica Conti`,refPerson:`Luigi Conti`,phone:`+39 011 998877`,address:`Via Garibaldi 102, Torino`,city:`Torino`,status:`ACTIVE`}],machines:[{id:`mc_1`,serialNumber:`SN-MC-2026-9912`,model:`DeLonghi Pod Professional 1G`,clientId:`cli_1`,installDate:`2025-11-10`},{id:`mc_2`,serialNumber:`SN-MC-2026-8843`,model:`Faber Slot Plast Single`,clientId:`cli_2`,installDate:`2026-01-15`},{id:`mc_3`,serialNumber:`SN-MC-2026-7711`,model:`Didiesse Frog Revolution`,clientId:`cli_3`,installDate:`2026-02-20`},{id:`mc_4`,serialNumber:`SN-MC-2026-4409`,model:`Spinel Pinocchio Professional`,clientId:`cli_4`,installDate:`2026-03-05`}],decontoBoards:[{id:`board_3467`,shortCode:`3467`,hwSerial:`DC-HW-8841`,macAddress:`C6:3F:8A:11:34:67`,machineId:`mc_1`,version:`BASIC`,remainingCredits:145,lowStockThreshold:20,relayStatus:`CLOSED_OK`,firmwareVersion:`v2.1.0-ESP32-C6`,isOnlineWifi:!0,lastSyncDate:new Date().toISOString()},{id:`board_1289`,shortCode:`1289`,hwSerial:`DC-HW-7732`,macAddress:`C6:3F:8A:22:12:89`,machineId:`mc_2`,version:`PRO`,remainingCredits:320,lowStockThreshold:20,relayStatus:`CLOSED_OK`,firmwareVersion:`v2.1.0-ESP32-C6`,isOnlineWifi:!1,lastSyncDate:new Date(Date.now()-2592e5).toISOString()},{id:`board_5510`,shortCode:`5510`,hwSerial:`DC-HW-9910`,macAddress:`C6:3F:8A:33:55:10`,machineId:`mc_3`,version:`BASIC`,remainingCredits:12,lowStockThreshold:20,relayStatus:`CLOSED_OK`,firmwareVersion:`v2.1.0-ESP32-C6`,isOnlineWifi:!1,lastSyncDate:new Date(Date.now()-10368e5).toISOString()},{id:`board_9901`,shortCode:`9901`,hwSerial:`DC-HW-4401`,macAddress:`C6:3F:8A:44:99:01`,machineId:`mc_4`,version:`BASIC`,remainingCredits:0,lowStockThreshold:20,relayStatus:`OPEN_LOCKED`,firmwareVersion:`v2.1.0-ESP32-C6`,isOnlineWifi:!0,lastSyncDate:new Date().toISOString()}],refillLogs:[{id:`ref_101`,boardId:`board_3467`,shortCode:`3467`,creditsAdded:200,tokenOtp:`OTP-9981-X79K2`,operatorType:`ADR`,operatorId:`usr_adr_1`,timestamp:new Date(Date.now()-1296e6).toISOString(),method:`BLE_PWA`},{id:`ref_102`,boardId:`board_5510`,shortCode:`5510`,creditsAdded:150,tokenOtp:`OTP-4412-M28P0`,operatorType:`CLIENT_DIY`,operatorId:`cli_3`,timestamp:new Date(Date.now()-216e7).toISOString(),method:`WHATSAPP_OTP_BLE`}],coffeeLogs:[{id:`log_1`,boardId:`board_3467`,timestamp:new Date(Date.now()-72e5).toISOString(),durationSeconds:22,groupId:1},{id:`log_2`,boardId:`board_3467`,timestamp:new Date(Date.now()-144e5).toISOString(),durationSeconds:21,groupId:1},{id:`log_3`,boardId:`board_5510`,timestamp:new Date(Date.now()-216e5).toISOString(),durationSeconds:38,groupId:1},{id:`log_4`,boardId:`board_1289`,timestamp:new Date(Date.now()-36e6).toISOString(),durationSeconds:20,groupId:1},{id:`log_5`,boardId:`board_1289`,timestamp:new Date(Date.now()-396e5).toISOString(),durationSeconds:23,groupId:2}],backupLogs:[{id:`bak_001`,timestamp:new Date(Date.now()-864e5).toISOString(),repo:`deconto-org/deconto-db-backups`,commitHash:`a1b2c3d4e5`,status:`SUCCESS`,recordCount:28}]},n=new class{constructor(){this.data=this.loadData()}loadData(){try{let t=localStorage.getItem(e);if(t)return JSON.parse(t)}catch(e){console.warn(`Impossibile caricare da localStorage, uso dati di default:`,e)}return this.saveData(t),t}saveData(t){this.data=t||this.data;try{localStorage.setItem(e,JSON.stringify(this.data))}catch(e){console.error(`Errore nel salvataggio localStorage:`,e)}}getUsers(){return this.data.users}getClients(){return this.data.clients}getMachines(){return this.data.machines}getBoards(){return this.data.decontoBoards}getRefillLogs(){return this.data.refillLogs}getCoffeeLogs(){return this.data.coffeeLogs}getBackupLogs(){return this.data.backupLogs}getBoardFullDetails(e){let t=this.data.decontoBoards.find(t=>t.shortCode===e||t.id===e);if(!t)return null;let n=this.data.machines.find(e=>e.id===t.machineId);return{board:t,machine:n,client:n?this.data.clients.find(e=>e.id===n.clientId):null,refills:this.data.refillLogs.filter(e=>e.boardId===t.id),coffees:this.data.coffeeLogs.filter(e=>e.boardId===t.id)}}saveClient(e){let t=this.data.clients.findIndex(t=>t.id===e.id);if(t>=0)this.data.clients[t]={...this.data.clients[t],...e};else{let t={...e,id:`cli_`+Date.now()};this.data.clients.push(t)}this.saveData()}performRefill({boardShortCode:e,credits:t,method:n,operatorId:r,tokenOtp:i}){let a=this.data.decontoBoards.find(t=>t.shortCode===e);if(!a)throw Error(`Scheda Deconto con codice ${e} non trovata.`);a.remainingCredits+=t,a.relayStatus=`CLOSED_OK`,a.lastSyncDate=new Date().toISOString();let o={id:`ref_`+Date.now(),boardId:a.id,shortCode:a.shortCode,creditsAdded:t,tokenOtp:i||`OTP-${Math.floor(1e3+Math.random()*9e3)}-${Math.random().toString(36).substring(2,7).toUpperCase()}`,operatorType:n===`WHATSAPP_OTP_BLE`?`CLIENT_DIY`:n===`CLOUD_DIRECT`?`OFFICE`:`ADR`,operatorId:r||`usr_ufficio`,timestamp:new Date().toISOString(),method:n};return this.data.refillLogs.unshift(o),this.saveData(),{board:a,newRefillLog:o}}registerCoffeeExtraction(e,t=22,n=1){let r=this.data.decontoBoards.find(t=>t.shortCode===e);if(!r)return null;if(r.remainingCredits<=0)return r.relayStatus=`OPEN_LOCKED`,this.saveData(),{success:!1,reason:`CREDITS_EXHAUSTED`,relayStatus:`OPEN_LOCKED`};--r.remainingCredits,r.remainingCredits<=0&&(r.remainingCredits=0,r.relayStatus=`OPEN_LOCKED`);let i={id:`log_`+Date.now(),boardId:r.id,timestamp:new Date().toISOString(),durationSeconds:t,groupId:n};return this.data.coffeeLogs.unshift(i),this.saveData(),{success:!0,remainingCredits:r.remainingCredits,isLowStock:r.remainingCredits<r.lowStockThreshold,relayStatus:r.relayStatus}}triggerGitHubBackup(){let e={id:`bak_`+Date.now(),timestamp:new Date().toISOString(),repo:`deconto-org/deconto-db-backups`,commitHash:Math.random().toString(36).substring(2,10),status:`SUCCESS`,recordCount:this.data.clients.length+this.data.machines.length+this.data.decontoBoards.length+this.data.refillLogs.length};return this.data.backupLogs.unshift(e),this.saveData(),e}},r=new class{constructor(){this.isSupported=typeof navigator<`u`&&`bluetooth`in navigator,this.connectedDevice=null}checkSupport(){return this.isSupported}async connectToBoardByShortCode(e){if(console.log(`📡 Ricerca dispositivo Deconto con codice breve [${e}]...`),this.isSupported&&navigator.bluetooth)try{let t=await navigator.bluetooth.requestDevice({filters:[{namePrefix:`DECONTO_${e}`}],optionalServices:[`0000ffe0-0000-1000-8000-00805f9b34fb`]});return this.connectedDevice=t,{success:!0,deviceName:t.name,isRealHardware:!0}}catch(e){console.warn(`Fallback a simulazione BLE locale:`,e.message)}return await new Promise(e=>setTimeout(e,1500)),{success:!0,deviceName:`DECONTO_${e}`,shortCode:e,isRealHardware:!1,connectedAt:new Date().toISOString()}}async sendRefillOtpToken(e,t,n){if(!(await this.connectToBoardByShortCode(e)).success)throw Error(`Impossibile connettersi al dispositivo DECONTO_${e}`);return await new Promise(e=>setTimeout(e,1e3)),{success:!0,shortCode:e,creditsAccredited:t,tokenApplied:n,relayStatus:`CLOSED_OK`,timestamp:new Date().toISOString()}}},i=new class{constructor(){this.repoUrl=`https://github.com/deconto-org/deconto-db-backups`}generateDatabaseSnapshot(){return{version:`1.0.0`,timestamp:new Date().toISOString(),data:n.data}}async executeBackupNow(){let e=this.generateDatabaseSnapshot(),t=JSON.stringify(e,null,2);return await new Promise(e=>setTimeout(e,1200)),{success:!0,backupRecord:n.triggerGitHubBackup(),sizeBytes:new Blob([t]).size,snapshotTimestamp:e.timestamp}}};function a(e,t,n,r){let i=[{id:`ADMIN`,label:`👨‍💼 Admin`,desc:`BI, Report & Manutenzione`},{id:`UFFICIO`,label:`👩‍💻 Ufficio`,desc:`Anagrafiche, Etichette QR, OTP`},{id:`ADR`,label:`🚚 ADR (Agente)`,desc:`Giro Consegne & Sync BLE`},{id:`CLIENT_DIY`,label:`📱 Cliente Fai-da-Te`,desc:`Ricarica da Link WhatsApp`}],a=[];return e===`ADMIN`?a=[{id:`dashboard`,label:`📊 Dashboard BI`,icon:`📈`},{id:`clients`,label:`🏢 Clienti & Parco`,icon:`🏢`},{id:`maintenance`,label:`🛠️ Manutenzione Predittiva`,icon:`⚠️`},{id:`backups`,label:`💾 Backup GitHub`,icon:`🐙`},{id:`simulator`,label:`☕ Simulatore Macchina HW`,icon:`⚡`}]:e===`UFFICIO`?a=[{id:`clients`,label:`🏢 Gestione Clienti`,icon:`🏢`},{id:`qr_generator`,label:`🏷️ Generatore Etichette QR`,icon:`🖨️`},{id:`otp_generator`,label:`🔑 Genera Ricariche OTP`,icon:`💬`},{id:`refills_history`,label:`📋 Storico Ricariche`,icon:`🧾`},{id:`simulator`,label:`☕ Simulatore Macchina HW`,icon:`⚡`}]:e===`ADR`?a=[{id:`adr_visits`,label:`🗺️ Giro Consegne Oggi`,icon:`🚚`},{id:`adr_scan`,label:`📡 Ricarica BLE (Codice/QR)`,icon:`📶`},{id:`simulator`,label:`☕ Simulatore Macchina HW`,icon:`⚡`}]:e===`CLIENT_DIY`&&(a=[{id:`client_refill`,label:`📱 Ricarica 1-Click WhatsApp`,icon:`✨`},{id:`simulator`,label:`☕ Simulatore Macchina HW`,icon:`⚡`}]),`
+(function(){let e=document.createElement(`link`).relList;if(e&&e.supports&&e.supports(`modulepreload`))return;for(let e of document.querySelectorAll(`link[rel="modulepreload"]`))n(e);new MutationObserver(e=>{for(let t of e)if(t.type===`childList`)for(let e of t.addedNodes)e.tagName===`LINK`&&e.rel===`modulepreload`&&n(e)}).observe(document,{childList:!0,subtree:!0});function t(e){let t={};return e.integrity&&(t.integrity=e.integrity),e.referrerPolicy&&(t.referrerPolicy=e.referrerPolicy),t.credentials=e.crossOrigin===`use-credentials`?`include`:e.crossOrigin===`anonymous`?`omit`:`same-origin`,t}function n(e){if(e.ep)return;e.ep=!0;let n=t(e);fetch(e.href,n)}})();var e=`DECONTO_DB_V1`,t={users:[{id:`usr_admin`,name:`Marco Rossi (Admin)`,email:`admin@deconto.it`,role:`ADMIN`,avatar:`👨‍💼`},{id:`usr_ufficio`,name:`Laura Bianchi (Ufficio)`,email:`ufficio@deconto.it`,role:`UFFICIO`,avatar:`👩‍💻`},{id:`usr_adr_1`,name:`Giuseppe Verdi (ADR Zona Nord)`,email:`adr.nord@deconto.it`,role:`ADR`,avatar:`🚚`},{id:`usr_adr_2`,name:`Antonio Neri (ADR Zona Sud)`,email:`adr.sud@deconto.it`,role:`ADR`,avatar:`🚚`}],clients:[{id:`cli_1`,name:`Bar Milano Central`,refPerson:`Mario Rossi`,phone:`+39 02 5551234`,address:`Via Roma 12, Milano`,city:`Milano`,status:`ACTIVE`},{id:`cli_2`,name:`Ristorante La Perla`,refPerson:`Elena Neri`,phone:`+39 06 7778899`,address:`Corso Italia 45, Roma`,city:`Roma`,status:`ACTIVE`},{id:`cli_3`,name:`Studio Legale Brambilla`,refPerson:`Avv. Brambilla`,phone:`+39 02 4443322`,address:`Via Montenapoleone 8, Milano`,city:`Milano`,status:`WARNING`},{id:`cli_4`,name:`Officina Meccanica Conti`,refPerson:`Luigi Conti`,phone:`+39 011 998877`,address:`Via Garibaldi 102, Torino`,city:`Torino`,status:`ACTIVE`}],machines:[{id:`mc_1`,serialNumber:`SN-MC-2026-9912`,model:`DeLonghi Pod Professional 1G`,clientId:`cli_1`,installDate:`2025-11-10`},{id:`mc_2`,serialNumber:`SN-MC-2026-8843`,model:`Faber Slot Plast Single`,clientId:`cli_2`,installDate:`2026-01-15`},{id:`mc_3`,serialNumber:`SN-MC-2026-7711`,model:`Didiesse Frog Revolution`,clientId:`cli_3`,installDate:`2026-02-20`},{id:`mc_4`,serialNumber:`SN-MC-2026-4409`,model:`Spinel Pinocchio Professional`,clientId:`cli_4`,installDate:`2026-03-05`}],decontoBoards:[{id:`board_3467`,shortCode:`3467`,hwSerial:`DC-HW-8841`,macAddress:`C6:3F:8A:11:34:67`,machineId:`mc_1`,version:`BASIC`,remainingCredits:145,lowStockThreshold:20,relayStatus:`CLOSED_OK`,firmwareVersion:`v2.1.0-ESP32-C6`,isOnlineWifi:!0,lastSyncDate:new Date().toISOString()},{id:`board_1289`,shortCode:`1289`,hwSerial:`DC-HW-7732`,macAddress:`C6:3F:8A:22:12:89`,machineId:`mc_2`,version:`PRO`,remainingCredits:320,lowStockThreshold:20,relayStatus:`CLOSED_OK`,firmwareVersion:`v2.1.0-ESP32-C6`,isOnlineWifi:!1,lastSyncDate:new Date(Date.now()-2592e5).toISOString()},{id:`board_5510`,shortCode:`5510`,hwSerial:`DC-HW-9910`,macAddress:`C6:3F:8A:33:55:10`,machineId:`mc_3`,version:`BASIC`,remainingCredits:12,lowStockThreshold:20,relayStatus:`CLOSED_OK`,firmwareVersion:`v2.1.0-ESP32-C6`,isOnlineWifi:!1,lastSyncDate:new Date(Date.now()-10368e5).toISOString()},{id:`board_9901`,shortCode:`9901`,hwSerial:`DC-HW-4401`,macAddress:`C6:3F:8A:44:99:01`,machineId:`mc_4`,version:`BASIC`,remainingCredits:0,lowStockThreshold:20,relayStatus:`OPEN_LOCKED`,firmwareVersion:`v2.1.0-ESP32-C6`,isOnlineWifi:!0,lastSyncDate:new Date().toISOString()}],refillLogs:[{id:`ref_101`,boardId:`board_3467`,shortCode:`3467`,creditsAdded:200,tokenOtp:`OTP-9981-X79K2`,operatorType:`ADR`,operatorId:`usr_adr_1`,timestamp:new Date(Date.now()-1296e6).toISOString(),method:`BLE_PWA`},{id:`ref_102`,boardId:`board_5510`,shortCode:`5510`,creditsAdded:150,tokenOtp:`OTP-4412-M28P0`,operatorType:`CLIENT_DIY`,operatorId:`cli_3`,timestamp:new Date(Date.now()-216e7).toISOString(),method:`WHATSAPP_OTP_BLE`}],coffeeLogs:[{id:`log_1`,boardId:`board_3467`,timestamp:new Date(Date.now()-72e5).toISOString(),durationSeconds:22,groupId:1},{id:`log_2`,boardId:`board_3467`,timestamp:new Date(Date.now()-144e5).toISOString(),durationSeconds:21,groupId:1},{id:`log_3`,boardId:`board_5510`,timestamp:new Date(Date.now()-216e5).toISOString(),durationSeconds:38,groupId:1},{id:`log_4`,boardId:`board_1289`,timestamp:new Date(Date.now()-36e6).toISOString(),durationSeconds:20,groupId:1},{id:`log_5`,boardId:`board_1289`,timestamp:new Date(Date.now()-396e5).toISOString(),durationSeconds:23,groupId:2}],backupLogs:[{id:`bak_001`,timestamp:new Date(Date.now()-864e5).toISOString(),repo:`deconto-org/deconto-db-backups`,commitHash:`a1b2c3d4e5`,status:`SUCCESS`,recordCount:28}]},n=new class{constructor(){this.data=this.loadData()}loadData(){try{let t=localStorage.getItem(e);if(t)return JSON.parse(t)}catch(e){console.warn(`Impossibile caricare da localStorage:`,e)}return this.saveData(t),t}saveData(t){this.data=t||this.data;try{localStorage.setItem(e,JSON.stringify(this.data))}catch(e){console.error(`Errore salvataggio localStorage:`,e)}}getUsers(){return this.data.users}getClients(){return this.data.clients}getMachines(){return this.data.machines}getBoards(){return this.data.decontoBoards}getRefillLogs(){return this.data.refillLogs}getCoffeeLogs(){return this.data.coffeeLogs}getBackupLogs(){return this.data.backupLogs}getBoardFullDetails(e){let t=this.data.decontoBoards.find(t=>t.shortCode===e||t.id===e);if(!t)return null;let n=this.data.machines.find(e=>e.id===t.machineId);return{board:t,machine:n,client:n?this.data.clients.find(e=>e.id===n.clientId):null,refills:this.data.refillLogs.filter(e=>e.boardId===t.id),coffees:this.data.coffeeLogs.filter(e=>e.boardId===t.id)}}addClient(e){let t={id:`cli_`+Date.now(),name:e.name,refPerson:e.refPerson||`Referente`,phone:e.phone||`+39 `,address:e.address||``,city:e.city||``,status:`ACTIVE`};if(this.data.clients.unshift(t),e.machineModel){let n={id:`mc_`+Date.now(),serialNumber:e.machineSerial||`SN-MC-2026-${Math.floor(1e3+Math.random()*9e3)}`,model:e.machineModel,clientId:t.id,installDate:new Date().toISOString().split(`T`)[0]};this.data.machines.unshift(n);let r=e.shortCode||`${Math.floor(1e3+Math.random()*9e3)}`,i={id:`board_`+r,shortCode:r,hwSerial:`DC-HW-${Math.floor(1e3+Math.random()*9e3)}`,macAddress:`C6:3F:8A:${Math.floor(10+Math.random()*89)}:${r.substring(0,2)}:${r.substring(2,4)}`,machineId:n.id,version:e.boardVersion||`BASIC`,remainingCredits:parseInt(e.initialCredits||200,10),lowStockThreshold:20,relayStatus:`CLOSED_OK`,firmwareVersion:`v2.1.0-ESP32-C6`,isOnlineWifi:!1,lastSyncDate:new Date().toISOString()};this.data.decontoBoards.unshift(i)}return this.saveData(),t}deleteClient(e){this.data.clients=this.data.clients.filter(t=>t.id!==e),this.saveData()}performRefill({boardShortCode:e,credits:t,method:n,operatorId:r,tokenOtp:i}){let a=this.data.decontoBoards.find(t=>t.shortCode===e);if(!a)throw Error(`Scheda Deconto #${e} non trovata.`);a.remainingCredits+=t,a.relayStatus=`CLOSED_OK`,a.lastSyncDate=new Date().toISOString();let o={id:`ref_`+Date.now(),boardId:a.id,shortCode:a.shortCode,creditsAdded:t,tokenOtp:i||`OTP-${Math.floor(1e3+Math.random()*9e3)}-${Math.random().toString(36).substring(2,7).toUpperCase()}`,operatorType:n===`WHATSAPP_OTP_BLE`?`CLIENT_DIY`:n===`CLOUD_DIRECT`?`OFFICE`:`ADR`,operatorId:r||`usr_ufficio`,timestamp:new Date().toISOString(),method:n};return this.data.refillLogs.unshift(o),this.saveData(),{board:a,newRefillLog:o}}registerCoffeeExtraction(e,t=22,n=1){let r=this.data.decontoBoards.find(t=>t.shortCode===e);if(!r)return null;if(r.remainingCredits<=0)return r.relayStatus=`OPEN_LOCKED`,this.saveData(),{success:!1,reason:`CREDITS_EXHAUSTED`,relayStatus:`OPEN_LOCKED`};--r.remainingCredits,r.remainingCredits<=0&&(r.remainingCredits=0,r.relayStatus=`OPEN_LOCKED`);let i={id:`log_`+Date.now(),boardId:r.id,timestamp:new Date().toISOString(),durationSeconds:t,groupId:n};return this.data.coffeeLogs.unshift(i),this.saveData(),{success:!0,remainingCredits:r.remainingCredits,isLowStock:r.remainingCredits<r.lowStockThreshold,relayStatus:r.relayStatus}}exportCoffeeLogsCSV(){let e=`ID_Log,Codice_Deconto,Cliente,Seriale_Macchina,Data_Ora,Durata_Secondi,Gruppo_Braccio
+`;return this.data.coffeeLogs.forEach(t=>{let n=this.getBoardFullDetails(t.boardId),r=n&&n.client?n.client.name.replace(/,/g,` `):`N/D`,i=n&&n.machine?n.machine.serialNumber:`N/D`,a=n&&n.board?n.board.shortCode:`N/D`;e+=`${t.id},${a},"${r}",${i},${t.timestamp},${t.durationSeconds},${t.groupId}\n`}),e}triggerGitHubBackup(){let e={id:`bak_`+Date.now(),timestamp:new Date().toISOString(),repo:`deconto-org/deconto-db-backups`,commitHash:`git-`+Math.random().toString(36).substring(2,10),status:`SUCCESS`,recordCount:this.data.clients.length+this.data.machines.length+this.data.decontoBoards.length+this.data.refillLogs.length};return this.data.backupLogs.unshift(e),this.saveData(),e}},r=new class{constructor(){this.isSupported=typeof navigator<`u`&&`bluetooth`in navigator,this.connectedDevice=null}checkSupport(){return this.isSupported}async connectToBoardByShortCode(e){if(console.log(`📡 Ricerca dispositivo Deconto con codice breve [${e}]...`),this.isSupported&&navigator.bluetooth)try{let t=await navigator.bluetooth.requestDevice({filters:[{namePrefix:`DECONTO_${e}`}],optionalServices:[`0000ffe0-0000-1000-8000-00805f9b34fb`]});return this.connectedDevice=t,{success:!0,deviceName:t.name,isRealHardware:!0}}catch(e){console.warn(`Fallback a simulazione BLE locale:`,e.message)}return await new Promise(e=>setTimeout(e,1500)),{success:!0,deviceName:`DECONTO_${e}`,shortCode:e,isRealHardware:!1,connectedAt:new Date().toISOString()}}async sendRefillOtpToken(e,t,n){if(!(await this.connectToBoardByShortCode(e)).success)throw Error(`Impossibile connettersi al dispositivo DECONTO_${e}`);return await new Promise(e=>setTimeout(e,1e3)),{success:!0,shortCode:e,creditsAccredited:t,tokenApplied:n,relayStatus:`CLOSED_OK`,timestamp:new Date().toISOString()}}},i=new class{constructor(){this.repoUrl=`https://github.com/deconto-org/deconto-db-backups`}generateDatabaseSnapshot(){return{version:`1.0.0`,timestamp:new Date().toISOString(),data:n.data}}async executeBackupNow(){let e=this.generateDatabaseSnapshot(),t=JSON.stringify(e,null,2);return await new Promise(e=>setTimeout(e,1200)),{success:!0,backupRecord:n.triggerGitHubBackup(),sizeBytes:new Blob([t]).size,snapshotTimestamp:e.timestamp}}};function a(e,t,n,r){let i=[{id:`ADMIN`,label:`👨‍💼 Admin`,desc:`BI, Report & Manutenzione`},{id:`UFFICIO`,label:`👩‍💻 Ufficio`,desc:`Anagrafiche, Etichette QR, OTP`},{id:`ADR`,label:`🚚 ADR (Agente)`,desc:`Giro Consegne & Sync BLE`},{id:`CLIENT_DIY`,label:`📱 Cliente Fai-da-Te`,desc:`Ricarica da Link WhatsApp`}],a=[];return e===`ADMIN`?a=[{id:`dashboard`,label:`📊 Dashboard BI`,icon:`📈`},{id:`clients`,label:`🏢 Clienti & Parco`,icon:`🏢`},{id:`maintenance`,label:`🛠️ Manutenzione Predittiva`,icon:`⚠️`},{id:`backups`,label:`💾 Backup GitHub`,icon:`🐙`},{id:`simulator`,label:`☕ Simulatore Macchina HW`,icon:`⚡`}]:e===`UFFICIO`?a=[{id:`clients`,label:`🏢 Gestione Clienti`,icon:`🏢`},{id:`qr_generator`,label:`🏷️ Generatore Etichette QR`,icon:`🖨️`},{id:`otp_generator`,label:`🔑 Genera Ricariche OTP`,icon:`💬`},{id:`refills_history`,label:`📋 Storico Ricariche`,icon:`🧾`},{id:`simulator`,label:`☕ Simulatore Macchina HW`,icon:`⚡`}]:e===`ADR`?a=[{id:`adr_visits`,label:`🗺️ Giro Consegne Oggi`,icon:`🚚`},{id:`adr_scan`,label:`📡 Ricarica BLE (Codice/QR)`,icon:`📶`},{id:`simulator`,label:`☕ Simulatore Macchina HW`,icon:`⚡`}]:e===`CLIENT_DIY`&&(a=[{id:`client_refill`,label:`📱 Ricarica 1-Click WhatsApp`,icon:`✨`},{id:`simulator`,label:`☕ Simulatore Macchina HW`,icon:`⚡`}]),`
     <aside class="sidebar">
       <div class="brand-logo">
         <div class="brand-icon">☕</div>
@@ -33,7 +34,7 @@
         Dispositivo target: <strong>ESP32-C6</strong><br>Firmware v2.1.0 (Wi-Fi 6 + BLE)
       </div>
     </aside>
-  `}function o(e){let t=n.getClients();n.getMachines();let r=n.getBoards(),i=n.getRefillLogs(),a=n.getCoffeeLogs(),o=n.getBackupLogs();r.reduce((e,t)=>e+t.remainingCredits,0),i.length;let s=a.length+14820,c=r.filter(e=>e.remainingCredits<e.lowStockThreshold&&e.remainingCredits>0).length,l=r.filter(e=>e.remainingCredits<=0).length;if(e===`backups`)return`
+  `}function o(e){let t=n.getClients();n.getMachines();let r=n.getBoards();n.getRefillLogs();let i=n.getCoffeeLogs(),a=n.getBackupLogs();r.reduce((e,t)=>e+t.remainingCredits,0);let o=i.length+14820,s=r.filter(e=>e.remainingCredits<e.lowStockThreshold&&e.remainingCredits>0).length,c=r.filter(e=>e.remainingCredits<=0).length;if(e===`backups`)return`
       <div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
           <div>
@@ -48,8 +49,8 @@
         <div class="card-grid" style="margin-bottom: 24px;">
           <div class="stat-card success">
             <div class="stat-label">Repository GitHub Target</div>
-            <div class="stat-value" style="font-size: 1.2rem; color: var(--accent-cyan);">deconto-org/deconto-db-backups</div>
-            <div class="stat-desc">Accesso crittografato SSH / SSH Key</div>
+            <div class="stat-value" style="font-size: 1.2rem; color: var(--accent-cyan);">emporioboldrini-stack/deconto-app</div>
+            <div class="stat-desc">Accesso crittografato PAT / SSH</div>
           </div>
           <div class="stat-card">
             <div class="stat-label">Frequenza Backup</div>
@@ -59,9 +60,9 @@
           <div class="stat-card success">
             <div class="stat-label">Ultimo Backup</div>
             <div class="stat-value" style="font-size: 1.1rem; color: var(--accent-green);">
-              ${o.length>0?new Date(o[0].timestamp).toLocaleString(`it-IT`):`N/D`}
+              ${a.length>0?new Date(a[0].timestamp).toLocaleString(`it-IT`):`N/D`}
             </div>
-            <div class="stat-desc">Commit: <code>${o.length>0?o[0].commitHash:`N/D`}</code></div>
+            <div class="stat-desc">Commit: <code>${a.length>0?a[0].commitHash:`N/D`}</code></div>
           </div>
         </div>
 
@@ -81,7 +82,7 @@
               </tr>
             </thead>
             <tbody>
-              ${o.map(e=>`
+              ${a.map(e=>`
                 <tr>
                   <td><code>${e.id}</code></td>
                   <td>${new Date(e.timestamp).toLocaleString(`it-IT`)}</td>
@@ -95,7 +96,7 @@
           </table>
         </div>
       </div>
-    `;if(e===`maintenance`){let e=a.filter(e=>e.durationSeconds>30);return`
+    `;if(e===`maintenance`){let e=i.filter(e=>e.durationSeconds>30);return`
       <div>
         <div style="margin-bottom: 24px;">
           <h1 style="font-size: 1.8rem; font-weight: 800;">🛠️ Telemetria & Manutenzione Predittiva</h1>
@@ -148,9 +149,15 @@
       </div>
     `}return`
     <div>
-      <div style="margin-bottom: 24px;">
-        <h1 style="font-size: 1.8rem; font-weight: 800;">📊 Dashboard Esecutiva BI</h1>
-        <p style="color: var(--text-muted);">Panoramica in tempo reale del parco macchine e dei consumi erogati</p>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <div>
+          <h1 style="font-size: 1.8rem; font-weight: 800;">📊 Dashboard Esecutiva BI</h1>
+          <p style="color: var(--text-muted);">Panoramica in tempo reale del parco macchine e dei consumi erogati</p>
+        </div>
+
+        <button id="btn-export-csv" class="btn btn-secondary">
+          📥 Esporta Report Consumi CSV
+        </button>
       </div>
 
       <!-- Stat Cards -->
@@ -162,17 +169,17 @@
         </div>
         <div class="stat-card success">
           <div class="stat-label">Caffè Erogati Totali</div>
-          <div class="stat-value" style="color: var(--accent-green);">${s.toLocaleString()}</div>
+          <div class="stat-value" style="color: var(--accent-green);">${o.toLocaleString()}</div>
           <div class="stat-desc">Conteggiati da schede Deconto</div>
         </div>
         <div class="stat-card warning">
           <div class="stat-label">Macchine Sottoscorta (&lt;20)</div>
-          <div class="stat-value" style="color: var(--accent-amber);">${c}</div>
+          <div class="stat-value" style="color: var(--accent-amber);">${s}</div>
           <div class="stat-desc">Avviso acustico 60s attivo</div>
         </div>
         <div class="stat-card danger">
           <div class="stat-label">Macchine in Blocco (0)</div>
-          <div class="stat-value" style="color: var(--accent-rose);">${l}</div>
+          <div class="stat-value" style="color: var(--accent-rose);">${c}</div>
           <div class="stat-desc">Relè aperto - Erogazione disattivata</div>
         </div>
       </div>
@@ -198,7 +205,7 @@
           <tbody>
             ${r.map(e=>{let t=n.getBoardFullDetails(e.id),r=e.remainingCredits<=0,i=e.remainingCredits<e.lowStockThreshold&&!r;return`
                 <tr>
-                  <td><span class="badge badge-info">3467: ${e.shortCode}</span></td>
+                  <td><span class="badge badge-info">${e.shortCode}</span></td>
                   <td>
                     <strong>${t.client?t.client.name:`Non Assegnato`}</strong><br>
                     <small style="color: var(--text-muted);">${t.client?t.client.address:``}</small>
@@ -222,7 +229,7 @@
         </table>
       </div>
     </div>
-  `}function s(e){let t=n.getClients(),r=n.getBoards();return e===`qr_generator`?`
+  `}function s(e){let t=n.getClients(),r=n.getBoards(),i=n.getRefillLogs();return e===`qr_generator`?`
       <div>
         <div style="margin-bottom: 24px;">
           <h1 style="font-size: 1.8rem; font-weight: 800;">🖨️ Generatore Etichette Adesive QR Code</h1>
@@ -232,22 +239,30 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px;">
           <!-- Modulo di Configurazione -->
           <div class="stat-card" style="padding: 24px;">
-            <h3 style="margin-top: 0; color: var(--accent-cyan);">Seleziona Macchina / Deconto:</h3>
+            <h3 style="margin-top: 0; color: var(--accent-cyan);">1. Configura Etichetta:</h3>
             
             <div style="margin-bottom: 16px;">
-              <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 6px;">Seleziona Scheda Deconto:</label>
+              <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 6px;">Seleziona Scheda Deconto / Cliente:</label>
               <select id="qr-board-select" style="width: 100%; padding: 10px; background: var(--bg-primary); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px;">
                 ${r.map(e=>{let t=n.getBoardFullDetails(e.id);return`<option value="${e.shortCode}">${e.shortCode} - ${t.client?t.client.name:`N/D`} (${t.machine?t.machine.serialNumber:``})</option>`}).join(``)}
               </select>
             </div>
 
             <div style="margin-bottom: 16px;">
-              <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 6px;">Intestazione Aziendale:</label>
-              <input type="text" value="DECONTO IoT System - Comodato Gratuito" style="width: 100%; padding: 10px; background: var(--bg-primary); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px;">
+              <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 6px;">Formato di Stampa:</label>
+              <select id="qr-format-select" style="width: 100%; padding: 10px; background: var(--bg-primary); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px;">
+                <option value="THERMAL_50x30">Etichetta Termica Adesiva 50x30mm (Singola)</option>
+                <option value="A4_SHEET">Foglio A4 Etichette Multi-Adesive (12 per foglio)</option>
+              </select>
             </div>
 
-            <button id="btn-print-qr" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
-              🖨️ Stampa Etichetta Termica Adesiva
+            <div style="margin-bottom: 16px;">
+              <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 6px;">Intestazione Personalizzata:</label>
+              <input type="text" id="qr-header-input" value="DECONTO IoT System - Comodato Gratuito" style="width: 100%; padding: 10px; background: var(--bg-primary); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px;">
+            </div>
+
+            <button id="btn-print-qr" class="btn btn-primary" style="width: 100%; margin-top: 10px; padding: 14px; font-size: 1rem;">
+              🖨️ Stampa Etichetta Termica Ora
             </button>
           </div>
 
@@ -256,11 +271,11 @@
             <h3 style="margin-top: 0; color: var(--text-muted);">Anteprima Stampa Etichetta:</h3>
             
             <div id="qr-sticker-preview" style="background: #ffffff; color: #000000; padding: 24px; border-radius: 12px; font-family: monospace; border: 3px dashed #000; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-              <div style="font-size: 0.8rem; font-weight: 800; text-transform: uppercase; border-bottom: 2px solid #000; padding-bottom: 6px; margin-bottom: 12px;">
+              <div id="lbl-header-title" style="font-size: 0.8rem; font-weight: 800; text-transform: uppercase; border-bottom: 2px solid #000; padding-bottom: 6px; margin-bottom: 12px;">
                 ☕ DECONTO COFFEE CONTROL ☕
               </div>
               
-              <div style="font-size: 3rem; font-weight: 900; letter-spacing: 4px; margin: 8px 0; color: #000;">
+              <div id="lbl-short-code-display" style="font-size: 3.2rem; font-weight: 900; letter-spacing: 4px; margin: 6px 0; color: #000;">
                 3467
               </div>
               
@@ -341,15 +356,56 @@
                 
                 <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 12px;">Link WhatsApp Cliente:</div>
                 <div id="otp-link-val" style="font-size: 0.85rem; color: var(--accent-cyan); word-break: break-all; margin-top: 4px;">
-                  https://deconto.it/ricarica?short=3467&otp=OTP-9981-X79K2&c=200
+                  https://deconto-vending-app.web.app/?short=3467&otp=OTP-9981-X79K2&c=200
                 </div>
               </div>
             </div>
 
-            <button id="btn-send-whatsapp" class="btn btn-success" style="width: 100%;">
-              💬 Invia Link via WhatsApp al Cliente
-            </button>
+            <div style="display: flex; gap: 12px;">
+              <button id="btn-send-whatsapp" class="btn btn-success" style="flex: 1;">
+                💬 Invia via WhatsApp
+              </button>
+              <button id="btn-copy-otp-link" class="btn btn-secondary" style="flex: 1;">
+                📋 Copia Link
+              </button>
+            </div>
           </div>
+        </div>
+      </div>
+    `:e===`refills_history`?`
+      <div>
+        <div style="margin-bottom: 24px;">
+          <h1 style="font-size: 1.8rem; font-weight: 800;">📋 Storico Ricariche Accreditate</h1>
+          <p style="color: var(--text-muted);">Registro di tutte le ricariche effettuate da ADR, Clienti Fai-da-Te e da Ufficio</p>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>ID Ricarica</th>
+                <th>Data & Ora</th>
+                <th>Deconto ID</th>
+                <th>Caffè Accreditati</th>
+                <th>Modalità / Operatore</th>
+                <th>Token OTP Monouso</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${i.map(e=>`
+                <tr>
+                  <td><code>${e.id}</code></td>
+                  <td>${new Date(e.timestamp).toLocaleString(`it-IT`)}</td>
+                  <td><span class="badge badge-info">${e.shortCode}</span></td>
+                  <td><strong style="color: var(--accent-green); font-size: 1.1rem;">+${e.creditsAdded} caffè</strong></td>
+                  <td>
+                    ${e.operatorType===`ADR`?`<span class="badge badge-warning">🚚 ADR (BLE sul Posto)</span>`:e.operatorType===`CLIENT_DIY`?`<span class="badge badge-success">📱 Cliente Fai-da-Te (OTP)</span>`:`<span class="badge badge-info">👩‍💻 Ufficio Cloud</span>`}
+                  </td>
+                  <td><code>${e.tokenOtp}</code></td>
+                </tr>
+              `).join(``)}
+            </tbody>
+          </table>
         </div>
       </div>
     `:`
@@ -359,11 +415,56 @@
           <h1 style="font-size: 1.8rem; font-weight: 800;">🏢 Anagrafica Clienti & Parco Macchine</h1>
           <p style="color: var(--text-muted);">Gestione contratti in comodato d'uso e associazione dispositivi Deconto</p>
         </div>
-        <button id="btn-new-client" class="btn btn-primary">
-          ➕ Nuovo Cliente
+        <button id="btn-toggle-add-client" class="btn btn-primary">
+          ➕ Nuovo Cliente & Macchina
         </button>
       </div>
 
+      <!-- Form Nuovo Cliente (Nascosto di Default) -->
+      <div id="add-client-form-container" class="stat-card" style="display: none; margin-bottom: 32px; padding: 24px; border: 2px solid var(--accent-cyan);">
+        <h3 style="margin-top: 0; color: var(--accent-cyan); margin-bottom: 16px;">➕ Registrazione Nuovo Cliente & Scheda Deconto:</h3>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Ragione Sociale / Cliente:*</label>
+            <input type="text" id="new-cli-name" placeholder="Es. Bar Splendid" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+          </div>
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Persona di Riferimento:*</label>
+            <input type="text" id="new-cli-ref" placeholder="Es. Marco Rossi" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+          </div>
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Telefono / WhatsApp:*</label>
+            <input type="text" id="new-cli-phone" placeholder="Es. +39 333 1234567" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Città & Indirizzo:</label>
+            <input type="text" id="new-cli-city" placeholder="Es. Milano, Via Torino 5" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+          </div>
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Modello Macchina:</label>
+            <input type="text" id="new-cli-mc-model" placeholder="Es. Faber Slot Plast 1G" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+          </div>
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Codice Deconto (4 cifre):</label>
+            <input type="text" id="new-cli-code" placeholder="Es. 8812" maxlength="4" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 800; font-family: monospace;">
+          </div>
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Credito Iniziale:</label>
+            <input type="number" id="new-cli-credits" value="200" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 800;">
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+          <button id="btn-cancel-add-client" class="btn btn-secondary">Annulla</button>
+          <button id="btn-save-new-client" class="btn btn-primary">💾 Salva Cliente & Assegna Deconto</button>
+        </div>
+      </div>
+
+      <!-- Tabella Clienti -->
       <div class="table-container">
         <table>
           <thead>
@@ -389,7 +490,7 @@
                     ${r?`<strong style="color: ${r.remainingCredits>20?`var(--accent-green)`:`var(--accent-rose)`}">${r.remainingCredits} caffè</strong>`:`N/D`}
                   </td>
                   <td>
-                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;">Dettagli</button>
+                    <button class="btn btn-secondary btn-del-client" data-id="${e.id}" style="padding: 6px 12px; font-size: 0.8rem; color: var(--accent-rose);">🗑️ Rimuovi</button>
                   </td>
                 </tr>
               `}).join(``)}
@@ -654,4 +755,4 @@
         ${t}
       </main>
     </div>
-  `,h()}function p(e){d.activeTab=e,f()}function m(e){d.currentRole=e,e===`ADMIN`?d.activeTab=`dashboard`:e===`UFFICIO`?d.activeTab=`clients`:e===`ADR`?d.activeTab=`adr_visits`:e===`CLIENT_DIY`&&(d.activeTab=`client_refill`),f()}function h(){let e=document.getElementById(`role-selector`);e&&e.addEventListener(`change`,e=>{m(e.target.value)}),document.querySelectorAll(`.nav-item`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-tab`);t&&p(t)})});let t=document.getElementById(`btn-trigger-backup`);t&&t.addEventListener(`click`,async()=>{t.disabled=!0,t.innerText=`⏳ Backup in corso su GitHub...`;let e=await i.executeBackupNow();alert(`✅ Backup GitHub Eseguito con Successo!\n\nRepository: ${e.backupRecord.repo}\nCommit Hash: ${e.backupRecord.commitHash}\nEntità salvate: ${e.backupRecord.recordCount}`),f()});let a=document.getElementById(`btn-generate-otp`);a&&a.addEventListener(`click`,()=>{let e=document.getElementById(`otp-board-select`).value,t=parseInt(document.getElementById(`otp-credits-select`).value,10),n=`OTP-${Math.floor(1e3+Math.random()*9e3)}-${Math.random().toString(36).substring(2,7).toUpperCase()}`,r=`https://deconto.it/ricarica?short=${e}&otp=${n}&c=${t}`;document.getElementById(`otp-code-val`).innerText=n,document.getElementById(`otp-link-val`).innerText=r,alert(`✅ Token OTP Generato per Deconto #${e} (+${t} Caffè)!`)});let o=document.getElementById(`btn-send-whatsapp`);o&&o.addEventListener(`click`,()=>{let e=`Gentile cliente, ecco il link per ricaricare la tua macchina da caffè Deconto: ${document.getElementById(`otp-link-val`).innerText}`;window.open(`https://wa.me/?text=${encodeURIComponent(e)}`,`_blank`)});let s=document.getElementById(`btn-print-qr`);s&&s.addEventListener(`click`,()=>{window.print()});let c=document.getElementById(`qr-board-select`);c&&c.addEventListener(`change`,e=>{let t=n.getBoardFullDetails(e.target.value);t&&(document.querySelector(`#qr-sticker-preview div[style*="font-size: 3rem"]`).innerText=t.board.shortCode,document.getElementById(`lbl-mc-sn`).innerText=t.machine?t.machine.serialNumber:`N/D`,document.getElementById(`lbl-hw-sn`).innerText=t.board.hwSerial)});let l=document.getElementById(`btn-adr-ble-connect`);l&&l.addEventListener(`click`,async()=>{let e=document.getElementById(`adr-code-input`).value.trim(),t=parseInt(document.getElementById(`adr-credits-select`).value,10),i=document.getElementById(`adr-status-box`);if(!e){alert(`Inserisci il codice a 4 cifre!`);return}i.style.display=`block`,i.innerHTML=`📡 Scansione Bluetooth BLE per <strong>DECONTO_${e}</strong> in corso...`;try{await r.sendRefillOtpToken(e,t,`ADR_BLE_MANUAL`),n.performRefill({boardShortCode:e,credits:t,method:`BLE_PWA`,operatorId:`usr_adr_1`}),i.innerHTML=`<span style="color: var(--accent-green);">✅ Ricarica Completata! Accreditate <strong>+${t} cialde</strong> sulla macchina #${e}. Relè Ripristinato.</span>`,setTimeout(()=>f(),2e3)}catch(e){i.innerHTML=`<span style="color: var(--accent-rose);">❌ Errore connessione: ${e.message}</span>`}}),document.querySelectorAll(`.btn-adr-quick-fill`).forEach(e=>{e.addEventListener(`click`,async()=>{let t=e.getAttribute(`data-code`);await r.sendRefillOtpToken(t,200,`ADR_QUICK_BLE`),n.performRefill({boardShortCode:t,credits:200,method:`BLE_PWA`,operatorId:`usr_adr_1`}),alert(`✅ Ricaricate +200 cialde via Bluetooth sulla macchina #${t}!`),f()})});let u=document.getElementById(`btn-client-diy-refill`);u&&u.addEventListener(`click`,async()=>{u.disabled=!0,u.innerText=`📡 Connessione Bluetooth alla Macchina #3467...`;let e=document.getElementById(`diy-status-msg`);try{await r.sendRefillOtpToken(`3467`,200,`OTP-9981-X79K2`),n.performRefill({boardShortCode:`3467`,credits:200,method:`WHATSAPP_OTP_BLE`,operatorId:`cli_3`,tokenOtp:`OTP-9981-X79K2`}),e.innerHTML=`<span style="color: var(--accent-green); font-weight: 800; font-size: 1.1rem;">🎉 RICARICA COMPLETATA! +200 CAFFÈ ACCREDITATI SULLA TUA MACCHINA.</span>`,u.innerText=`✓ RICARICATO CON SUCCESSO`,u.style.background=`var(--accent-green)`}catch(t){e.innerHTML=`<span style="color: var(--accent-rose);">Errore: ${t.message}</span>`,u.disabled=!1}});let d=document.getElementById(`sim-board-select`);d&&d.addEventListener(`change`,e=>{let t=e.target.value,r=n.getBoardFullDetails(t);r&&(document.getElementById(`sim-badge-code`).innerText=`DECONTO ${t}`,document.getElementById(`sim-credits-display`).innerText=r.board.remainingCredits)});let h=document.getElementById(`btn-sim-brew`);h&&h.addEventListener(`click`,()=>{let e=document.getElementById(`sim-board-select`),t=e?e.value:`3467`;document.getElementById(`signal-sense-volts`).innerText=`230V AC (Impulso)`,document.getElementById(`signal-sense-badge`).className=`badge badge-warning`,document.getElementById(`signal-sense-badge`).innerText=`EROGAZIONE IN CORSO`;let r=n.registerCoffeeExtraction(t,22,1);setTimeout(()=>{if(document.getElementById(`signal-sense-volts`).innerText=`0V AC`,document.getElementById(`signal-sense-badge`).className=`badge badge-info`,document.getElementById(`signal-sense-badge`).innerText=`INATTIVO`,r&&r.success){let e=document.getElementById(`sim-console-log`);e.innerHTML+=`[EXTRACTION]: Caffè erogato! Credito rimanente: ${r.remainingCredits}.<br>`,e.scrollTop=e.scrollHeight,r.isLowStock&&(e.innerHTML+=`<span style="color: var(--accent-amber);">[BUZZER 60s]: CREDITO &lt; 20! SEGNALE ACUSTICO ATTIVATO (BIP... BIP...).</span><br>`)}else if(r&&!r.success){let e=document.getElementById(`sim-console-log`);e.innerHTML+=`<span style="color: var(--accent-rose);">[HARDWARE LOCK]: CREDITO 0! RELÈ APERTO. POMPA DISATTIVATA.</span><br>`}f()},800)});let g=document.getElementById(`btn-sim-reset`);g&&g.addEventListener(`click`,()=>{let e=document.getElementById(`sim-board-select`),t=e?e.value:`3467`;n.performRefill({boardShortCode:t,credits:200,method:`TEST_BENCH`,operatorId:`usr_admin`}),alert(`✅ Ricaricate +200 cialde di prova sulla macchina #${t}!`),f()})}document.addEventListener(`DOMContentLoaded`,f);
+  `,h()}function p(e){d.activeTab=e,f()}function m(e){d.currentRole=e,e===`ADMIN`?d.activeTab=`dashboard`:e===`UFFICIO`?d.activeTab=`clients`:e===`ADR`?d.activeTab=`adr_visits`:e===`CLIENT_DIY`&&(d.activeTab=`client_refill`),f()}function h(){let e=document.getElementById(`role-selector`);e&&e.addEventListener(`change`,e=>{m(e.target.value)}),document.querySelectorAll(`.nav-item`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-tab`);t&&p(t)})});let t=document.getElementById(`btn-export-csv`);t&&t.addEventListener(`click`,()=>{let e=n.exportCoffeeLogsCSV(),t=new Blob([e],{type:`text/csv;charset=utf-8;`}),r=URL.createObjectURL(t),i=document.createElement(`a`);i.href=r,i.download=`DECONTO_Report_Consumi_${new Date().toISOString().split(`T`)[0]}.csv`,i.click(),alert(`📥 Report Consumi CSV Scaricato con successo!`)});let a=document.getElementById(`btn-trigger-backup`);a&&a.addEventListener(`click`,async()=>{a.disabled=!0,a.innerText=`⏳ Backup in corso su GitHub...`;let e=await i.executeBackupNow();alert(`✅ Backup GitHub Eseguito con Successo!\n\nRepository: https://github.com/emporioboldrini-stack/deconto-app.git\nCommit Hash: ${e.backupRecord.commitHash}\nEntità salvate: ${e.backupRecord.recordCount}`),f()});let o=document.getElementById(`btn-toggle-add-client`),s=document.getElementById(`add-client-form-container`);o&&s&&o.addEventListener(`click`,()=>{s.style.display=s.style.display===`none`?`block`:`none`});let c=document.getElementById(`btn-cancel-add-client`);c&&s&&c.addEventListener(`click`,()=>{s.style.display=`none`});let l=document.getElementById(`btn-save-new-client`);l&&l.addEventListener(`click`,()=>{let e=document.getElementById(`new-cli-name`).value.trim(),t=document.getElementById(`new-cli-ref`).value.trim(),r=document.getElementById(`new-cli-phone`).value.trim(),i=document.getElementById(`new-cli-city`).value.trim(),a=document.getElementById(`new-cli-mc-model`).value.trim(),o=document.getElementById(`new-cli-code`).value.trim(),s=document.getElementById(`new-cli-credits`).value;if(!e||!t||!r){alert(`Compila i campi obbligatori: Nome Cliente, Referente e Telefono!`);return}n.addClient({name:e,refPerson:t,phone:r,city:i,address:i,machineModel:a||`Didiesse Frog Revolution`,shortCode:o||`${Math.floor(1e3+Math.random()*9e3)}`,initialCredits:s}),alert(`✅ Cliente "${e}" registrato con successo ed associato alla scheda Deconto!`),f()}),document.querySelectorAll(`.btn-del-client`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-id`);confirm(`Sei sicuro di voler rimuovere questo cliente dal sistema?`)&&(n.deleteClient(t),f())})});let u=document.getElementById(`btn-generate-otp`);u&&u.addEventListener(`click`,()=>{let e=document.getElementById(`otp-board-select`).value,t=parseInt(document.getElementById(`otp-credits-select`).value,10),n=`OTP-${Math.floor(1e3+Math.random()*9e3)}-${Math.random().toString(36).substring(2,7).toUpperCase()}`,r=`https://deconto-vending-app.web.app/?short=${e}&otp=${n}&c=${t}`;document.getElementById(`otp-code-val`).innerText=n,document.getElementById(`otp-link-val`).innerText=r,alert(`✅ Token OTP Generato per Deconto #${e} (+${t} Caffè)!`)});let d=document.getElementById(`btn-send-whatsapp`);d&&d.addEventListener(`click`,()=>{let e=`Gentile cliente, ecco il link per ricaricare la tua macchina da caffè Deconto: ${document.getElementById(`otp-link-val`).innerText}`;window.open(`https://wa.me/?text=${encodeURIComponent(e)}`,`_blank`)});let h=document.getElementById(`btn-copy-otp-link`);h&&h.addEventListener(`click`,()=>{let e=document.getElementById(`otp-link-val`).innerText;navigator.clipboard.writeText(e),alert(`📋 Link Ricarica Copiato negli appunti!`)});let g=document.getElementById(`btn-print-qr`);g&&g.addEventListener(`click`,()=>{window.print()});let _=document.getElementById(`qr-header-input`);_&&_.addEventListener(`input`,e=>{document.getElementById(`lbl-header-title`).innerText=`☕ ${e.target.value.toUpperCase()} ☕`});let v=document.getElementById(`qr-board-select`);v&&v.addEventListener(`change`,e=>{let t=n.getBoardFullDetails(e.target.value);t&&(document.getElementById(`lbl-short-code-display`).innerText=t.board.shortCode,document.getElementById(`lbl-mc-sn`).innerText=t.machine?t.machine.serialNumber:`N/D`,document.getElementById(`lbl-hw-sn`).innerText=t.board.hwSerial)});let y=document.getElementById(`btn-adr-ble-connect`);y&&y.addEventListener(`click`,async()=>{let e=document.getElementById(`adr-code-input`).value.trim(),t=parseInt(document.getElementById(`adr-credits-select`).value,10),i=document.getElementById(`adr-status-box`);if(!e){alert(`Inserisci il codice a 4 cifre!`);return}i.style.display=`block`,i.innerHTML=`📡 Scansione Bluetooth BLE per <strong>DECONTO_${e}</strong> in corso...`;try{await r.sendRefillOtpToken(e,t,`ADR_BLE_MANUAL`),n.performRefill({boardShortCode:e,credits:t,method:`BLE_PWA`,operatorId:`usr_adr_1`}),i.innerHTML=`<span style="color: var(--accent-green);">✅ Ricarica Completata! Accreditate <strong>+${t} cialde</strong> sulla macchina #${e}. Relè Ripristinato.</span>`,setTimeout(()=>f(),2e3)}catch(e){i.innerHTML=`<span style="color: var(--accent-rose);">❌ Errore connessione: ${e.message}</span>`}}),document.querySelectorAll(`.btn-adr-quick-fill`).forEach(e=>{e.addEventListener(`click`,async()=>{let t=e.getAttribute(`data-code`);await r.sendRefillOtpToken(t,200,`ADR_QUICK_BLE`),n.performRefill({boardShortCode:t,credits:200,method:`BLE_PWA`,operatorId:`usr_adr_1`}),alert(`✅ Ricaricate +200 cialde via Bluetooth sulla macchina #${t}!`),f()})});let b=document.getElementById(`btn-client-diy-refill`);b&&b.addEventListener(`click`,async()=>{b.disabled=!0,b.innerText=`📡 Connessione Bluetooth alla Macchina #3467...`;let e=document.getElementById(`diy-status-msg`);try{await r.sendRefillOtpToken(`3467`,200,`OTP-9981-X79K2`),n.performRefill({boardShortCode:`3467`,credits:200,method:`WHATSAPP_OTP_BLE`,operatorId:`cli_3`,tokenOtp:`OTP-9981-X79K2`}),e.innerHTML=`<span style="color: var(--accent-green); font-weight: 800; font-size: 1.1rem;">🎉 RICARICA COMPLETATA! +200 CAFFÈ ACCREDITATI SULLA TUA MACCHINA.</span>`,b.innerText=`✓ RICARICATO CON SUCCESSO`,b.style.background=`var(--accent-green)`}catch(t){e.innerHTML=`<span style="color: var(--accent-rose);">Errore: ${t.message}</span>`,b.disabled=!1}});let x=document.getElementById(`sim-board-select`);x&&x.addEventListener(`change`,e=>{let t=e.target.value,r=n.getBoardFullDetails(t);r&&(document.getElementById(`sim-badge-code`).innerText=`DECONTO ${t}`,document.getElementById(`sim-credits-display`).innerText=r.board.remainingCredits)});let S=document.getElementById(`btn-sim-brew`);S&&S.addEventListener(`click`,()=>{let e=document.getElementById(`sim-board-select`),t=e?e.value:`3467`;document.getElementById(`signal-sense-volts`).innerText=`230V AC (Impulso)`,document.getElementById(`signal-sense-badge`).className=`badge badge-warning`,document.getElementById(`signal-sense-badge`).innerText=`EROGAZIONE IN CORSO`;let r=n.registerCoffeeExtraction(t,22,1);setTimeout(()=>{if(document.getElementById(`signal-sense-volts`).innerText=`0V AC`,document.getElementById(`signal-sense-badge`).className=`badge badge-info`,document.getElementById(`signal-sense-badge`).innerText=`INATTIVO`,r&&r.success){let e=document.getElementById(`sim-console-log`);e.innerHTML+=`[EXTRACTION]: Caffè erogato! Credito rimanente: ${r.remainingCredits}.<br>`,e.scrollTop=e.scrollHeight,r.isLowStock&&(e.innerHTML+=`<span style="color: var(--accent-amber);">[BUZZER 60s]: CREDITO &lt; 20! SEGNALE ACUSTICO ATTIVATO (BIP... BIP...).</span><br>`)}else if(r&&!r.success){let e=document.getElementById(`sim-console-log`);e.innerHTML+=`<span style="color: var(--accent-rose);">[HARDWARE LOCK]: CREDITO 0! RELÈ APERTO. POMPA DISATTIVATA.</span><br>`}f()},800)});let C=document.getElementById(`btn-sim-reset`);C&&C.addEventListener(`click`,()=>{let e=document.getElementById(`sim-board-select`),t=e?e.value:`3467`;n.performRefill({boardShortCode:t,credits:200,method:`TEST_BENCH`,operatorId:`usr_admin`}),alert(`✅ Ricaricate +200 cialde di prova sulla macchina #${t}!`),f()})}document.addEventListener(`DOMContentLoaded`,f);
