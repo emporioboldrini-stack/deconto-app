@@ -1,16 +1,10 @@
-/**
- * Navigation & Role Selector Component
- */
-export function renderSidebar(currentRole, activeTab, onTabSelect, onRoleSelect) {
-  const roles = [
-    { id: 'ADMIN', label: '👨‍💼 Admin', desc: 'BI, Report & Manutenzione' },
-    { id: 'UFFICIO', label: '👩‍💻 Ufficio', desc: 'Anagrafiche, Etichette QR, OTP' },
-    { id: 'ADR', label: '🚚 ADR (Agente)', desc: 'Giro Consegne & Sync BLE' },
-    { id: 'CLIENT_DIY', label: '📱 Cliente Fai-da-Te', desc: 'Ricarica da Link WhatsApp' }
-  ];
+import { db } from '../db/database.js';
+
+export function renderSidebar(currentUser, activeTab) {
+  const user = currentUser || { name: 'Utente Opite', role: 'ADMIN', username: '001', avatar: '👨‍💼' };
 
   let navItems = [];
-  if (currentRole === 'ADMIN') {
+  if (user.role === 'ADMIN') {
     navItems = [
       { id: 'dashboard', label: '📊 Dashboard BI', icon: '📈' },
       { id: 'clients', label: '🏢 Clienti & Parco', icon: '🏢' },
@@ -18,7 +12,7 @@ export function renderSidebar(currentRole, activeTab, onTabSelect, onRoleSelect)
       { id: 'backups', label: '💾 Backup GitHub', icon: '🐙' },
       { id: 'simulator', label: '☕ Simulatore Macchina HW', icon: '⚡' }
     ];
-  } else if (currentRole === 'UFFICIO') {
+  } else if (user.role === 'UFFICIO') {
     navItems = [
       { id: 'clients', label: '🏢 Gestione Clienti', icon: '🏢' },
       { id: 'qr_generator', label: '🏷️ Generatore Etichette QR', icon: '🖨️' },
@@ -26,15 +20,10 @@ export function renderSidebar(currentRole, activeTab, onTabSelect, onRoleSelect)
       { id: 'refills_history', label: '📋 Storico Ricariche', icon: '🧾' },
       { id: 'simulator', label: '☕ Simulatore Macchina HW', icon: '⚡' }
     ];
-  } else if (currentRole === 'ADR') {
+  } else if (user.role === 'ADR') {
     navItems = [
       { id: 'adr_visits', label: '🗺️ Giro Consegne Oggi', icon: '🚚' },
       { id: 'adr_scan', label: '📡 Ricarica BLE (Codice/QR)', icon: '📶' },
-      { id: 'simulator', label: '☕ Simulatore Macchina HW', icon: '⚡' }
-    ];
-  } else if (currentRole === 'CLIENT_DIY') {
-    navItems = [
-      { id: 'client_refill', label: '📱 Ricarica 1-Click WhatsApp', icon: '✨' },
       { id: 'simulator', label: '☕ Simulatore Macchina HW', icon: '⚡' }
     ];
   }
@@ -49,13 +38,28 @@ export function renderSidebar(currentRole, activeTab, onTabSelect, onRoleSelect)
         </div>
       </div>
 
-      <div style="margin-bottom: 24px; padding: 12px; background: rgba(255,255,255,0.03); border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
-        <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 6px; text-transform: uppercase;">
-          Seleziona Ruolo Utente:
-        </label>
-        <select id="role-selector" style="width: 100%; padding: 8px; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px; font-weight: 600;">
-          ${roles.map(r => `<option value="${r.id}" ${r.id === currentRole ? 'selected' : ''}>${r.label}</option>`).join('')}
-        </select>
+      <!-- Card Utente Connesso -->
+      <div style="margin-bottom: 24px; padding: 14px; background: rgba(255,255,255,0.03); border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+          <div style="font-size: 1.4rem;">${user.avatar || '👤'}</div>
+          <div style="overflow: hidden;">
+            <div style="font-size: 0.85rem; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              ${user.name}
+            </div>
+            <div style="font-size: 0.75rem; color: var(--accent-cyan); font-weight: 600;">
+              @${user.username} (${user.role})
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 6px; margin-top: 10px;">
+          <button id="btn-open-profile-modal" class="btn btn-secondary" style="flex: 1; padding: 6px 8px; font-size: 0.75rem;">
+            ✏️ Credenziali
+          </button>
+          <button id="btn-logout" class="btn btn-secondary" style="padding: 6px 10px; font-size: 0.75rem; color: var(--accent-rose);">
+            🚪 Esci
+          </button>
+        </div>
       </div>
 
       <div class="nav-group">
@@ -71,7 +75,7 @@ export function renderSidebar(currentRole, activeTab, onTabSelect, onRoleSelect)
       </div>
 
       <div style="margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border-subtle); font-size: 0.75rem; color: var(--text-dim); text-align: center;">
-        Dispositivo target: <strong>ESP32-C6</strong><br>Firmware v2.1.0 (Wi-Fi 6 + BLE)
+        Chip HW: <strong>ESP32-C6</strong><br>Firmware v2.1.0 (Wi-Fi 6 + BLE)
       </div>
     </aside>
   `;

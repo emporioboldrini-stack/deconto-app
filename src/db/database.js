@@ -1,17 +1,17 @@
 /**
- * DECONTO IoT System - Core Database & Data Storage Engine (v2 - FASE 2)
- * Gestisce l'anagrafica clienti, parco macchine, dispositivi hardware Deconto,
- * log delle erogazioni, token OTP di ricarica, esportazione CSV e storico backup GitHub.
+ * DECONTO IoT System - Core Database & Authentication Engine
+ * Gestisce autenticazione con Username/Password, ruoli utente (ADMIN, UFFICIO, ADR),
+ * anagrafiche, parco macchine, schede Deconto, log erogazioni e ricariche.
  */
 
 const STORAGE_KEY = 'DECONTO_DB_V1';
+const SESSION_KEY = 'DECONTO_AUTH_SESSION_V1';
 
 const initialData = {
   users: [
-    { id: 'usr_admin', name: 'Marco Rossi (Admin)', email: 'admin@deconto.it', role: 'ADMIN', avatar: '👨‍💼' },
-    { id: 'usr_ufficio', name: 'Laura Bianchi (Ufficio)', email: 'ufficio@deconto.it', role: 'UFFICIO', avatar: '👩‍💻' },
-    { id: 'usr_adr_1', name: 'Giuseppe Verdi (ADR Zona Nord)', email: 'adr.nord@deconto.it', role: 'ADR', avatar: '🚚' },
-    { id: 'usr_adr_2', name: 'Antonio Neri (ADR Zona Sud)', email: 'adr.sud@deconto.it', role: 'ADR', avatar: '🚚' }
+    { id: 'usr_001', username: '001', password: '123456', name: 'Amministratore Principale', email: 'admin@deconto.it', role: 'ADMIN', avatar: '👨‍💼', createdAt: '2026-01-01' },
+    { id: 'usr_002', username: '002', password: '123456', name: 'Laura Bianchi', email: 'ufficio@deconto.it', role: 'UFFICIO', avatar: '👩‍💻', createdAt: '2026-01-05' },
+    { id: 'usr_003', username: '003', password: '123456', name: 'Giuseppe Verdi (Agente Nord)', email: 'adr.nord@deconto.it', role: 'ADR', avatar: '🚚', createdAt: '2026-01-10' }
   ],
   clients: [
     { id: 'cli_1', name: 'Bar Milano Central', refPerson: 'Mario Rossi', phone: '+39 02 5551234', address: 'Via Roma 12, Milano', city: 'Milano', status: 'ACTIVE' },
@@ -91,7 +91,7 @@ const initialData = {
       creditsAdded: 200,
       tokenOtp: 'OTP-9981-X79K2',
       operatorType: 'ADR',
-      operatorId: 'usr_adr_1',
+      operatorId: 'usr_003',
       timestamp: new Date(Date.now() - 86400000 * 15).toISOString(),
       method: 'BLE_PWA'
     },
@@ -118,8 +118,8 @@ const initialData = {
     {
       id: 'bak_001',
       timestamp: new Date(Date.now() - 86400000).toISOString(),
-      repo: 'deconto-org/deconto-db-backups',
-      commitHash: 'a1b2c3d4e5',
+      repo: 'emporioboldrini-stack/deconto-app',
+      commitHash: 'd2e5285',
       status: 'SUCCESS',
       recordCount: 28
     }
@@ -129,6 +129,7 @@ const initialData = {
 class DecontoDatabase {
   constructor() {
     this.data = this.loadData();
+    this.currentUser = this.loadSession();
   }
 
   loadData() {
@@ -150,6 +151,71 @@ class DecontoDatabase {
       console.error('Errore salvataggio localStorage:', e);
     }
   }
+
+  // --- AUTENTICAZIONE E SESSIONE ---
+
+  loadSession() {
+    try {
+      const stored = localStorage.getItem(SESSION_KEY);
+      if (stored) return JSON.parse(stored);
+    } catch (e) {}
+    return null;
+  }
+
+  saveSession(user) {
+    this.currentUser = user;
+    try {
+      if (user) {
+        localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+      } else {
+        localStorage.removeItem(SESSION_KEY);
+      }
+    } catch (e) {}
+  }
+
+  authenticate(username, password) {
+    const user = this.data.users.find(u => u.username === username.trim() && u.password === password.trim());
+    if (!user) {
+      throw new Error('Credenziali non valide. Verifica Nome Utente e Password.');
+    }
+    const sessionUser = { id: user.id, username: user.username, name: user.name, role: user.role, email: user.email, avatar: user.avatar };
+    this.saveSession(sessionUser);
+    return sessionUser;
+  }
+
+  logout() {
+    this.saveSession(null);
+  }
+
+  getCurrentUser() {
+    return this.currentUser;
+  }
+
+  updateUserProfile(userId, newDetails) {
+    const user = this.data.users.find(u => u.id === userId);
+    if (!user) throw new Error('Utente non trovato.');
+
+    if (newDetails.name) user.name = newDetails.name;
+    if (newDetails.username) user.username = newDetails.username;
+    if (newDetails.email) user.email = newDetails.email;
+    if (newDetails.newPassword) user.password = newDetails.newPassword;
+
+    this.saveData();
+
+    // Aggiorna la sessione attiva
+    if (this.currentUser && this.currentUser.id === userId) {
+      this.saveSession({
+        ...this.currentUser,
+        name: user.name,
+        username: user.username,
+        email: user.email
+      });
+    }
+
+    return user;
+  }
+
+  // --- METODI ANAGRAFICA ---
 
   getUsers() { return this.data.users; }
   getClients() { return this.data.clients; }
@@ -183,7 +249,6 @@ class DecontoDatabase {
     };
     this.data.clients.unshift(newClient);
 
-    // Se fornita una macchina, creiamola ed associamola
     if (newClientData.machineModel) {
       const newMachine = {
         id: 'mc_' + Date.now(),
@@ -194,7 +259,6 @@ class DecontoDatabase {
       };
       this.data.machines.unshift(newMachine);
 
-      // Crea anche la scheda Deconto
       const shortCode = newClientData.shortCode || `${Math.floor(1000 + Math.random() * 9000)}`;
       const newBoard = {
         id: 'board_' + shortCode,
@@ -237,7 +301,7 @@ class DecontoDatabase {
       creditsAdded: credits,
       tokenOtp: tokenOtp || `OTP-${Math.floor(1000 + Math.random() * 9000)}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`,
       operatorType: method === 'WHATSAPP_OTP_BLE' ? 'CLIENT_DIY' : (method === 'CLOUD_DIRECT' ? 'OFFICE' : 'ADR'),
-      operatorId: operatorId || 'usr_ufficio',
+      operatorId: operatorId || (this.currentUser ? this.currentUser.id : 'usr_002'),
       timestamp: new Date().toISOString(),
       method
     };
@@ -282,7 +346,6 @@ class DecontoDatabase {
     };
   }
 
-  // Esportazione Report CSV dei Log Erogazione & Consumi
   exportCoffeeLogsCSV() {
     let csv = 'ID_Log,Codice_Deconto,Cliente,Seriale_Macchina,Data_Ora,Durata_Secondi,Gruppo_Braccio\n';
     this.data.coffeeLogs.forEach(log => {
@@ -299,7 +362,7 @@ class DecontoDatabase {
     const newBackup = {
       id: 'bak_' + Date.now(),
       timestamp: new Date().toISOString(),
-      repo: 'deconto-org/deconto-db-backups',
+      repo: 'emporioboldrini-stack/deconto-app',
       commitHash: 'git-' + Math.random().toString(36).substring(2, 10),
       status: 'SUCCESS',
       recordCount: this.data.clients.length + this.data.machines.length + this.data.decontoBoards.length + this.data.refillLogs.length

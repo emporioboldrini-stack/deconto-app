@@ -3,6 +3,8 @@ import { db } from './db/database.js';
 import { bleService } from './services/bluetooth.js';
 import { githubBackupService } from './services/githubBackup.js';
 import { renderSidebar } from './components/Navigation.js';
+import { renderLoginScreen } from './components/LoginScreen.js';
+import { renderUserProfileModal } from './components/UserProfileModal.js';
 import { renderAdminDashboard } from './components/AdminDashboard.js';
 import { renderOfficePanel } from './components/OfficePanel.js';
 import { renderAdrPanel } from './components/AdrPanel.js';
@@ -10,58 +12,140 @@ import { renderClientDiyPanel } from './components/ClientDiyPanel.js';
 import { renderHardwareSimulator } from './components/HardwareSimulator.js';
 
 let state = {
-  currentRole: 'ADMIN',
-  activeTab: 'dashboard'
+  currentUser: db.getCurrentUser(), // Null se disconnesso
+  activeTab: 'dashboard',
+  showProfileModal: false
 };
 
 function renderApp() {
   const appEl = document.getElementById('app');
 
+  // Se l'utente non è autenticato, mostra la Schermata di Login obbligatoria
+  if (!state.currentUser) {
+    appEl.innerHTML = renderLoginScreen();
+    attachLoginEventListeners();
+    return;
+  }
+
+  // Se l'utente è autenticato, renderizza la Piattaforma in base al suo Ruolo
+  const user = state.currentUser;
   let mainContentHtml = '';
+
   if (state.activeTab === 'simulator') {
     mainContentHtml = renderHardwareSimulator();
-  } else if (state.currentRole === 'ADMIN') {
+  } else if (user.role === 'ADMIN') {
     mainContentHtml = renderAdminDashboard(state.activeTab);
-  } else if (state.currentRole === 'UFFICIO') {
+  } else if (user.role === 'UFFICIO') {
     mainContentHtml = renderOfficePanel(state.activeTab);
-  } else if (state.currentRole === 'ADR') {
+  } else if (user.role === 'ADR') {
     mainContentHtml = renderAdrPanel(state.activeTab);
-  } else if (state.currentRole === 'CLIENT_DIY') {
-    mainContentHtml = renderClientDiyPanel();
+  }
+
+  let modalHtml = '';
+  if (state.showProfileModal) {
+    modalHtml = renderUserProfileModal(user);
   }
 
   appEl.innerHTML = `
     <div class="app-container">
-      ${renderSidebar(state.currentRole, state.activeTab, onTabChange, onRoleChange)}
+      ${renderSidebar(user, state.activeTab)}
       <main class="main-content">
         ${mainContentHtml}
       </main>
     </div>
+    ${modalHtml}
   `;
 
-  attachEventListeners();
+  attachMainEventListeners();
 }
 
-function onTabChange(newTab) {
-  state.activeTab = newTab;
-  renderApp();
+function attachLoginEventListeners() {
+  const loginForm = document.getElementById('login-form');
+  const errorMsg = document.getElementById('login-error-msg');
+
+  if (loginForm) {
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = document.getElementById('login-username').value;
+      const password = document.getElementById('login-password').value;
+
+      try {
+        const user = db.authenticate(username, password);
+        state.currentUser = user;
+        state.activeTab = (user.role === 'ADMIN') ? 'dashboard' : ((user.role === 'UFFICIO') ? 'clients' : 'adr_visits');
+        renderApp();
+      } catch (err) {
+        errorMsg.innerText = err.message;
+        errorMsg.style.display = 'block';
+      }
+    });
+  }
+
+  // Tasti scorciatoia per demo
+  document.querySelectorAll('.btn-demo-auth').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const u = btn.getAttribute('data-user');
+      const p = btn.getAttribute('data-pass');
+      document.getElementById('login-username').value = u;
+      document.getElementById('login-password').value = p;
+      const user = db.authenticate(u, p);
+      state.currentUser = user;
+      state.activeTab = (user.role === 'ADMIN') ? 'dashboard' : ((user.role === 'UFFICIO') ? 'clients' : 'adr_visits');
+      renderApp();
+    });
+  });
 }
 
-function onRoleChange(newRole) {
-  state.currentRole = newRole;
-  if (newRole === 'ADMIN') state.activeTab = 'dashboard';
-  else if (newRole === 'UFFICIO') state.activeTab = 'clients';
-  else if (newRole === 'ADR') state.activeTab = 'adr_visits';
-  else if (newRole === 'CLIENT_DIY') state.activeTab = 'client_refill';
-  renderApp();
-}
+function attachMainEventListeners() {
+  // Logout Tasto
+  const btnLogout = document.getElementById('btn-logout');
+  if (btnLogout) {
+    btnLogout.addEventListener('click', () => {
+      db.logout();
+      state.currentUser = null;
+      renderApp();
+    });
+  }
 
-function attachEventListeners() {
-  // Cambio Ruolo Utente
-  const roleSelect = document.getElementById('role-selector');
-  if (roleSelect) {
-    roleSelect.addEventListener('change', (e) => {
-      onRoleChange(e.target.value);
+  // Modifica Profilo Tasto
+  const btnProfile = document.getElementById('btn-open-profile-modal');
+  if (btnProfile) {
+    btnProfile.addEventListener('click', () => {
+      state.showProfileModal = true;
+      renderApp();
+    });
+  }
+
+  // Chiusura Modal Profilo
+  const btnCloseModal = document.getElementById('btn-close-profile-modal');
+  const btnCancelProfile = document.getElementById('btn-cancel-profile');
+  if (btnCloseModal) btnCloseModal.addEventListener('click', () => { state.showProfileModal = false; renderApp(); });
+  if (btnCancelProfile) btnCancelProfile.addEventListener('click', () => { state.showProfileModal = false; renderApp(); });
+
+  // Salva Modifiche Profilo
+  const profileForm = document.getElementById('profile-edit-form');
+  if (profileForm) {
+    profileForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('edit-user-name').value.trim();
+      const username = document.getElementById('edit-user-username').value.trim();
+      const email = document.getElementById('edit-user-email').value.trim();
+      const newPassword = document.getElementById('edit-user-password').value.trim();
+
+      try {
+        const updatedUser = db.updateUserProfile(state.currentUser.id, {
+          name,
+          username,
+          email,
+          newPassword: newPassword || undefined
+        });
+        state.currentUser = updatedUser;
+        state.showProfileModal = false;
+        alert('✅ Credenziali e Profilo aggiornati con successo!');
+        renderApp();
+      } catch (err) {
+        alert(`Errore: ${err.message}`);
+      }
     });
   }
 
@@ -69,7 +153,10 @@ function attachEventListeners() {
   document.querySelectorAll('.nav-item').forEach(el => {
     el.addEventListener('click', () => {
       const tab = el.getAttribute('data-tab');
-      if (tab) onTabChange(tab);
+      if (tab) {
+        state.activeTab = tab;
+        renderApp();
+      }
     });
   });
 
@@ -239,7 +326,7 @@ function attachEventListeners() {
 
       try {
         const res = await bleService.sendRefillOtpToken(code, credits, 'ADR_BLE_MANUAL');
-        db.performRefill({ boardShortCode: code, credits, method: 'BLE_PWA', operatorId: 'usr_adr_1' });
+        db.performRefill({ boardShortCode: code, credits, method: 'BLE_PWA', operatorId: state.currentUser ? state.currentUser.id : 'usr_003' });
 
         statusBox.innerHTML = `<span style="color: var(--accent-green);">✅ Ricarica Completata! Accreditate <strong>+${credits} cialde</strong> sulla macchina #${code}. Relè Ripristinato.</span>`;
         setTimeout(() => renderApp(), 2000);
@@ -253,33 +340,11 @@ function attachEventListeners() {
     btn.addEventListener('click', async () => {
       const code = btn.getAttribute('data-code');
       const res = await bleService.sendRefillOtpToken(code, 200, 'ADR_QUICK_BLE');
-      db.performRefill({ boardShortCode: code, credits: 200, method: 'BLE_PWA', operatorId: 'usr_adr_1' });
+      db.performRefill({ boardShortCode: code, credits: 200, method: 'BLE_PWA', operatorId: state.currentUser ? state.currentUser.id : 'usr_003' });
       alert(`✅ Ricaricate +200 cialde via Bluetooth sulla macchina #${code}!`);
       renderApp();
     });
   });
-
-  // Ricarica Fai-da-Te Cliente (Client View)
-  const btnClientDiyRefill = document.getElementById('btn-client-diy-refill');
-  if (btnClientDiyRefill) {
-    btnClientDiyRefill.addEventListener('click', async () => {
-      btnClientDiyRefill.disabled = true;
-      btnClientDiyRefill.innerText = '📡 Connessione Bluetooth alla Macchina #3467...';
-      const msg = document.getElementById('diy-status-msg');
-
-      try {
-        await bleService.sendRefillOtpToken('3467', 200, 'OTP-9981-X79K2');
-        db.performRefill({ boardShortCode: '3467', credits: 200, method: 'WHATSAPP_OTP_BLE', operatorId: 'cli_3', tokenOtp: 'OTP-9981-X79K2' });
-
-        msg.innerHTML = `<span style="color: var(--accent-green); font-weight: 800; font-size: 1.1rem;">🎉 RICARICA COMPLETATA! +200 CAFFÈ ACCREDITATI SULLA TUA MACCHINA.</span>`;
-        btnClientDiyRefill.innerText = '✓ RICARICATO CON SUCCESSO';
-        btnClientDiyRefill.style.background = 'var(--accent-green)';
-      } catch (e) {
-        msg.innerHTML = `<span style="color: var(--accent-rose);">Errore: ${e.message}</span>`;
-        btnClientDiyRefill.disabled = false;
-      }
-    });
-  }
 
   // Simulatore Hardware Interattivo
   const simBoardSelect = document.getElementById('sim-board-select');
@@ -334,7 +399,7 @@ function attachEventListeners() {
     btnSimReset.addEventListener('click', () => {
       const select = document.getElementById('sim-board-select');
       const shortCode = select ? select.value : '3467';
-      db.performRefill({ boardShortCode: shortCode, credits: 200, method: 'TEST_BENCH', operatorId: 'usr_admin' });
+      db.performRefill({ boardShortCode: shortCode, credits: 200, method: 'TEST_BENCH', operatorId: state.currentUser ? state.currentUser.id : 'usr_001' });
       alert(`✅ Ricaricate +200 cialde di prova sulla macchina #${shortCode}!`);
       renderApp();
     });
