@@ -5,6 +5,10 @@ export function renderOfficePanel(activeTab) {
   const boards = db.getBoards();
   const refills = db.getRefillLogs();
 
+  const canCreate = db.hasPermission('canCreateClients');
+  const canEdit = db.hasPermission('canEditClients');
+  const canDelete = db.hasPermission('canDeleteClients');
+
   if (activeTab === 'qr_generator') {
     return `
       <div>
@@ -14,7 +18,6 @@ export function renderOfficePanel(activeTab) {
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px;">
-          <!-- Modulo di Configurazione -->
           <div class="stat-card" style="padding: 24px;">
             <h3 style="margin-top: 0; color: var(--accent-cyan);">1. Configura Etichetta:</h3>
             
@@ -46,7 +49,6 @@ export function renderOfficePanel(activeTab) {
             </button>
           </div>
 
-          <!-- Anteprima Etichetta Adesiva (Preview) -->
           <div>
             <h3 style="margin-top: 0; color: var(--text-muted);">Anteprima Stampa Etichetta:</h3>
             
@@ -60,7 +62,6 @@ export function renderOfficePanel(activeTab) {
               </div>
               
               <div style="display: flex; justify-content: center; margin: 12px 0;">
-                <!-- QR Code SVG Simulato -->
                 <svg width="120" height="120" viewBox="0 0 100 100" style="border: 2px solid #000; padding: 4px; background: #fff;">
                   <rect width="100" height="100" fill="#fff" />
                   <rect x="10" y="10" width="30" height="30" fill="#000"/>
@@ -131,7 +132,6 @@ export function renderOfficePanel(activeTab) {
             </button>
           </div>
 
-          <!-- Risultato Token Generato -->
           <div id="otp-result-card" class="stat-card success" style="padding: 24px; display: flex; flex-direction: column; justify-content: space-between;">
             <div>
               <h3 style="margin-top: 0; color: var(--accent-green);">Link Ricarica WhatsApp Pronto!</h3>
@@ -202,62 +202,73 @@ export function renderOfficePanel(activeTab) {
     `;
   }
 
-  // Vista Gestione Clienti Standard (con Form di Creazione Nuovo Cliente)
+  // Vista Gestione Anagrafica Clienti
   return `
     <div>
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
         <div>
           <h1 style="font-size: 1.8rem; font-weight: 800;">🏢 Anagrafica Clienti & Parco Macchine</h1>
-          <p style="color: var(--text-muted);">Gestione contratti in comodato d'uso e associazione dispositivi Deconto</p>
+          <p style="color: var(--text-muted);">
+            ${canCreate 
+              ? 'Gestione contratti in comodato d\'uso e associazione dispositivi Deconto' 
+              : 'Consultazione parco macchine ed anagrafica clienti (Modalità Lettura)'}
+          </p>
         </div>
-        <button id="btn-toggle-add-client" class="btn btn-primary">
-          ➕ Nuovo Cliente & Macchina
-        </button>
-      </div>
-
-      <!-- Form Nuovo Cliente (Nascosto di Default) -->
-      <div id="add-client-form-container" class="stat-card" style="display: none; margin-bottom: 32px; padding: 24px; border: 2px solid var(--accent-cyan);">
-        <h3 style="margin-top: 0; color: var(--accent-cyan); margin-bottom: 16px;">➕ Registrazione Nuovo Cliente & Scheda Deconto:</h3>
         
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px;">
-          <div>
-            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Ragione Sociale / Cliente:*</label>
-            <input type="text" id="new-cli-name" placeholder="Es. Bar Splendid" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
-          </div>
-          <div>
-            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Persona di Riferimento:*</label>
-            <input type="text" id="new-cli-ref" placeholder="Es. Marco Rossi" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
-          </div>
-          <div>
-            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Telefono / WhatsApp:*</label>
-            <input type="text" id="new-cli-phone" placeholder="Es. +39 333 1234567" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
-          </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px;">
-          <div>
-            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Città & Indirizzo:</label>
-            <input type="text" id="new-cli-city" placeholder="Es. Milano, Via Torino 5" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
-          </div>
-          <div>
-            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Modello Macchina:</label>
-            <input type="text" id="new-cli-mc-model" placeholder="Es. Faber Slot Plast 1G" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
-          </div>
-          <div>
-            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Codice Deconto (4 cifre):</label>
-            <input type="text" id="new-cli-code" placeholder="Es. 8812" maxlength="4" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 800; font-family: monospace;">
-          </div>
-          <div>
-            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Credito Iniziale:</label>
-            <input type="number" id="new-cli-credits" value="200" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 800;">
-          </div>
-        </div>
-
-        <div style="display: flex; gap: 12px; justify-content: flex-end;">
-          <button id="btn-cancel-add-client" class="btn btn-secondary">Annulla</button>
-          <button id="btn-save-new-client" class="btn btn-primary">💾 Salva Cliente & Assegna Deconto</button>
-        </div>
+        ${canCreate ? `
+          <button id="btn-toggle-add-client" class="btn btn-primary">
+            ➕ Nuovo Cliente & Macchina
+          </button>
+        ` : `
+          <span class="badge badge-info">👁️ Modalità Solo Lettura</span>
+        `}
       </div>
+
+      <!-- Form Nuovo Cliente (Solo se abilitato dall'Admin) -->
+      ${canCreate ? `
+        <div id="add-client-form-container" class="stat-card" style="display: none; margin-bottom: 32px; padding: 24px; border: 2px solid var(--accent-cyan);">
+          <h3 style="margin-top: 0; color: var(--accent-cyan); margin-bottom: 16px;">➕ Registrazione Nuovo Cliente & Scheda Deconto:</h3>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+            <div>
+              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Ragione Sociale / Cliente:*</label>
+              <input type="text" id="new-cli-name" placeholder="Es. Bar Splendid" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+            </div>
+            <div>
+              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Persona di Riferimento:*</label>
+              <input type="text" id="new-cli-ref" placeholder="Es. Marco Rossi" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+            </div>
+            <div>
+              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Telefono / WhatsApp:*</label>
+              <input type="text" id="new-cli-phone" placeholder="Es. +39 333 1234567" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+            <div>
+              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Città & Indirizzo:</label>
+              <input type="text" id="new-cli-city" placeholder="Es. Milano, Via Torino 5" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+            </div>
+            <div>
+              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Modello Macchina:</label>
+              <input type="text" id="new-cli-mc-model" placeholder="Es. Faber Slot Plast 1G" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+            </div>
+            <div>
+              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Codice Deconto (4 cifre):</label>
+              <input type="text" id="new-cli-code" placeholder="Es. 8812" maxlength="4" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 800; font-family: monospace;">
+            </div>
+            <div>
+              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Credito Iniziale:</label>
+              <input type="number" id="new-cli-credits" value="200" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 800;">
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 12px; justify-content: flex-end;">
+            <button id="btn-cancel-add-client" class="btn btn-secondary">Annulla</button>
+            <button id="btn-save-new-client" class="btn btn-primary">💾 Salva Cliente & Assegna Deconto</button>
+          </div>
+        </div>
+      ` : ''}
 
       <!-- Tabella Clienti -->
       <div class="table-container">
@@ -289,7 +300,11 @@ export function renderOfficePanel(activeTab) {
                     ${board ? `<strong style="color: ${board.remainingCredits > 20 ? 'var(--accent-green)' : 'var(--accent-rose)'}">${board.remainingCredits} caffè</strong>` : 'N/D'}
                   </td>
                   <td>
-                    <button class="btn btn-secondary btn-del-client" data-id="${c.id}" style="padding: 6px 12px; font-size: 0.8rem; color: var(--accent-rose);">🗑️ Rimuovi</button>
+                    ${canDelete ? `
+                      <button class="btn btn-secondary btn-del-client" data-id="${c.id}" style="padding: 6px 12px; font-size: 0.8rem; color: var(--accent-rose);">🗑️ Rimuovi</button>
+                    ` : `
+                      <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" disabled>👁️ Dettagli</button>
+                    `}
                   </td>
                 </tr>
               `;

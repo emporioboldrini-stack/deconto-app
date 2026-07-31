@@ -1,31 +1,48 @@
 import { db } from '../db/database.js';
 
 export function renderSidebar(currentUser, activeTab) {
-  const user = currentUser || { name: 'Utente Opite', role: 'ADMIN', username: '001', avatar: '👨‍💼' };
+  const user = currentUser || { name: 'Utente Ospite', role: 'ADMIN', username: '001', avatar: '👨‍💼' };
+  const permissions = db.getPermissions();
 
   let navItems = [];
+
   if (user.role === 'ADMIN') {
+    // ADMIN vede TUTTO ed ha controllo completo
     navItems = [
       { id: 'dashboard', label: '📊 Dashboard BI', icon: '📈' },
+      { id: 'user_management', label: '👥 Gestione Personale', icon: '👤' },
+      { id: 'permissions_matrix', label: '⚙️ Matrice Permessi', icon: '🔐' },
       { id: 'clients', label: '🏢 Clienti & Parco', icon: '🏢' },
+      { id: 'qr_generator', label: '🏷️ Generatore Etichette QR', icon: '🖨️' },
+      { id: 'otp_generator', label: '🔑 Genera Ricariche OTP', icon: '💬' },
+      { id: 'refills_history', label: '📋 Storico Ricariche', icon: '🧾' },
+      { id: 'adr_visits', label: '🗺️ Giro Consegne ADR', icon: '🚚' },
       { id: 'maintenance', label: '🛠️ Manutenzione Predittiva', icon: '⚠️' },
       { id: 'backups', label: '💾 Backup GitHub', icon: '🐙' },
       { id: 'simulator', label: '☕ Simulatore Macchina HW', icon: '⚡' }
     ];
-  } else if (user.role === 'UFFICIO') {
-    navItems = [
-      { id: 'clients', label: '🏢 Gestione Clienti', icon: '🏢' },
-      { id: 'qr_generator', label: '🏷️ Generatore Etichette QR', icon: '🖨️' },
-      { id: 'otp_generator', label: '🔑 Genera Ricariche OTP', icon: '💬' },
-      { id: 'refills_history', label: '📋 Storico Ricariche', icon: '🧾' },
-      { id: 'simulator', label: '☕ Simulatore Macchina HW', icon: '⚡' }
-    ];
-  } else if (user.role === 'ADR') {
-    navItems = [
-      { id: 'adr_visits', label: '🗺️ Giro Consegne Oggi', icon: '🚚' },
-      { id: 'adr_scan', label: '📡 Ricarica BLE (Codice/QR)', icon: '📶' },
-      { id: 'simulator', label: '☕ Simulatore Macchina HW', icon: '⚡' }
-    ];
+  } else {
+    // Ruoli UFFICIO e ADR: Voci filtrate in base alla Matrice dei Permessi impostata dall'Admin
+    const rolePerms = permissions[user.role] || {};
+
+    if (rolePerms.canViewClients) {
+      navItems.push({ id: 'clients', label: '🏢 Anagrafica Clienti', icon: '🏢' });
+    }
+    if (rolePerms.canGenerateQr) {
+      navItems.push({ id: 'qr_generator', label: '🏷️ Generatore Etichette QR', icon: '🖨️' });
+    }
+    if (rolePerms.canGenerateOtp) {
+      navItems.push({ id: 'otp_generator', label: '🔑 Genera Ricarica OTP', icon: '💬' });
+    }
+    if (rolePerms.canBleRefill || user.role === 'ADR') {
+      navItems.push({ id: 'adr_visits', label: '🗺️ Giro Consegne & BLE', icon: '🚚' });
+    }
+    if (rolePerms.canViewRefillHistory) {
+      navItems.push({ id: 'refills_history', label: '📋 Storico Ricariche', icon: '🧾' });
+    }
+    if (rolePerms.canUseSimulator) {
+      navItems.push({ id: 'simulator', label: '☕ Simulatore Macchina HW', icon: '⚡' });
+    }
   }
 
   return `
@@ -47,7 +64,7 @@ export function renderSidebar(currentUser, activeTab) {
               ${user.name}
             </div>
             <div style="font-size: 0.75rem; color: var(--accent-cyan); font-weight: 600;">
-              @${user.username} (${user.role})
+              Codice: ${user.username} (${user.role})
             </div>
           </div>
         </div>
@@ -64,7 +81,7 @@ export function renderSidebar(currentUser, activeTab) {
 
       <div class="nav-group">
         <div style="font-size: 0.75rem; color: var(--text-dim); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; padding-left: 8px;">
-          Menu Principale
+          Menu Abilitato
         </div>
         ${navItems.map(item => `
           <div class="nav-item ${item.id === activeTab ? 'active' : ''}" data-tab="${item.id}">

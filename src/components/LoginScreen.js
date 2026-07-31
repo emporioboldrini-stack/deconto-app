@@ -1,6 +1,4 @@
-import { db } from '../db/database.js';
-
-export function renderLoginScreen(onLoginSuccess) {
+export function renderLoginScreen() {
   return `
     <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at top right, #1f2937, #090d16); padding: 20px;">
       
@@ -22,44 +20,29 @@ export function renderLoginScreen(onLoginSuccess) {
         <form id="login-form">
           <div style="margin-bottom: 20px;">
             <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 6px; text-transform: uppercase;">
-              Nome Utente (Username):
+              Codice Accesso / Nome Utente:
             </label>
-            <input type="text" id="login-username" placeholder="Es. 001" value="001" required style="width: 100%; padding: 12px 16px; font-size: 1.1rem; font-weight: 700; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 10px;">
+            <input type="text" id="login-username" placeholder="Inserisci il tuo codice..." value="001" autocomplete="username" required style="width: 100%; padding: 12px 16px; font-size: 1.1rem; font-weight: 700; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 10px;">
           </div>
 
           <div style="margin-bottom: 24px;">
             <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 6px; text-transform: uppercase;">
               Password:
             </label>
-            <input type="password" id="login-password" placeholder="••••••" value="123456" required style="width: 100%; padding: 12px 16px; font-size: 1.1rem; font-weight: 700; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 10px;">
+            <input type="password" id="login-password" placeholder="••••••" value="123456" autocomplete="current-password" required style="width: 100%; padding: 12px 16px; font-size: 1.1rem; font-weight: 700; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 10px;">
           </div>
 
           <div id="login-error-msg" style="color: var(--accent-rose); font-size: 0.85rem; margin-bottom: 16px; display: none; text-align: center; font-weight: 600;">
             <!-- Messaggio Errore -->
           </div>
 
-          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px; font-size: 1.1rem; font-weight: 800; border-radius: 10px; margin-bottom: 24px;">
+          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px; font-size: 1.1rem; font-weight: 800; border-radius: 10px;">
             🔐 ACCEDI ALLA PIATTAFORMA
           </button>
         </form>
 
-        <!-- Scorciatoie Demo Rapide -->
-        <div style="border-top: 1px solid var(--border-subtle); padding-top: 20px;">
-          <div style="font-size: 0.75rem; color: var(--text-dim); text-align: center; text-transform: uppercase; font-weight: 700; margin-bottom: 12px;">
-            Credenziali Predefinite di Prova:
-          </div>
-          
-          <div style="display: flex; gap: 8px; justify-content: center;">
-            <button class="btn btn-secondary btn-demo-auth" data-user="001" data-pass="123456" style="padding: 6px 10px; font-size: 0.75rem;">
-              👨‍💼 Admin (001)
-            </button>
-            <button class="btn btn-secondary btn-demo-auth" data-user="002" data-pass="123456" style="padding: 6px 10px; font-size: 0.75rem;">
-              👩‍💻 Ufficio (002)
-            </button>
-            <button class="btn btn-secondary btn-demo-auth" data-user="003" data-pass="123456" style="padding: 6px 10px; font-size: 0.75rem;">
-              🚚 ADR (003)
-            </button>
-          </div>
+        <div style="margin-top: 24px; text-align: center; font-size: 0.75rem; color: var(--text-dim); border-top: 1px solid var(--border-subtle); padding-top: 16px;">
+          Amministratore predefinito: Codice <strong>001</strong> | Password <strong>123456</strong>
         </div>
 
       </div>

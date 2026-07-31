@@ -1,0 +1,256 @@
+import { db } from '../db/database.js';
+
+export function renderUserManagementPanel(activeTab) {
+  const users = db.getUsers();
+  const permissions = db.getPermissions();
+
+  if (activeTab === 'permissions_matrix') {
+    return `
+      <div>
+        <div style="margin-bottom: 24px;">
+          <h1 style="font-size: 1.8rem; font-weight: 800;">⚙️ Matrice Permessi & Abilitazioni Dinamiche</h1>
+          <p style="color: var(--text-muted);">Configura in modo granulare i permessi di visualizzazione, modifica e gestione per le varie tipologie di utenza</p>
+        </div>
+
+        <div style="margin-bottom: 24px; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px; padding: 16px; color: var(--accent-cyan);">
+          💡 <strong>Nota Amministratore</strong>: L'utente <strong>ADMIN (001)</strong> possiede sempre l'accesso completo a tutte le funzioni. Qui puoi attivare o disattivare i permessi per i ruoli <strong>UFFICIO</strong> e <strong>ADR</strong>.
+        </div>
+
+        <form id="permissions-matrix-form">
+          <div class="table-container" style="margin-bottom: 24px;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Funzionalità / Permesso Piattaforma</th>
+                  <th style="text-align: center; width: 180px;">👩‍💻 Categoria UFFICIO</th>
+                  <th style="text-align: center; width: 180px;">🚚 Categoria ADR</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <strong>Visualizzazione Anagrafica Clienti & Macchine</strong><br>
+                    <small style="color: var(--text-muted);">Permette di consultare la lista dei clienti e delle macchine da caffè</small>
+                  </td>
+                  <td style="text-align: center;">
+                    <input type="checkbox" id="perm_UFFICIO_canViewClients" ${permissions.UFFICIO.canViewClients ? 'checked' : ''} style="width: 20px; height: 20px;">
+                  </td>
+                  <td style="text-align: center;">
+                    <input type="checkbox" id="perm_ADR_canViewClients" ${permissions.ADR.canViewClients ? 'checked' : ''} style="width: 20px; height: 20px;">
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>
+                    <strong>Creazione Nuovi Clienti & Assegnazione Schede</strong><br>
+                    <small style="color: var(--text-muted);">Permette di aggiungere nuovi clienti e associare schede Deconto</small>
+                  </td>
+                  <td style="text-align: center;">
+                    <input type="checkbox" id="perm_UFFICIO_canCreateClients" ${permissions.UFFICIO.canCreateClients ? 'checked' : ''} style="width: 20px; height: 20px;">
+                  </td>
+                  <td style="text-align: center;">
+                    <input type="checkbox" id="perm_ADR_canCreateClients" ${permissions.ADR.canCreateClients ? 'checked' : ''} style="width: 20px; height: 20px;">
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>
+                    <strong>Modifica Schede Clienti & Macchine</strong><br>
+                    <small style="color: var(--text-muted);">Permette di modificare i dati anagrafici e la configurazione delle macchine</small>
+                  </td>
+                  <td style="text-align: center;">
+                    <input type="checkbox" id="perm_UFFICIO_canEditClients" ${permissions.UFFICIO.canEditClients ? 'checked' : ''} style="width: 20px; height: 20px;">
+                  </td>
+                  <td style="text-align: center;">
+                    <input type="checkbox" id="perm_ADR_canEditClients" ${permissions.ADR.canEditClients ? 'checked' : ''} style="width: 20px; height: 20px;">
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>
+                    <strong>Cancellazione Clienti dall'Anagrafica</strong><br>
+                    <small style="color: var(--text-muted);">Permette di rimuovere definitivamente i clienti dal sistema</small>
+                  </td>
+                  <td style="text-align: center;">
+                    <input type="checkbox" id="perm_UFFICIO_canDeleteClients" ${permissions.UFFICIO.canDeleteClients ? 'checked' : ''} style="width: 20px; height: 20px;">
+                  </td>
+                  <td style="text-align: center;">
+                    <input type="checkbox" id="perm_ADR_canDeleteClients" ${permissions.ADR.canDeleteClients ? 'checked' : ''} style="width: 20px; height: 20px;">
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>
+                    <strong>Generatore Etichette Termiche QR Code</strong><br>
+                    <small style="color: var(--text-muted);">Permette di configurare e stampare le etichette fisiche adesive</small>
+                  </td>
+                  <td style="text-align: center;">
+                    <input type="checkbox" id="perm_UFFICIO_canGenerateQr" ${permissions.UFFICIO.canGenerateQr ? 'checked' : ''} style="width: 20px; height: 20px;">
+                  </td>
+                  <td style="text-align: center;">
+                    <input type="checkbox" id="perm_ADR_canGenerateQr" ${permissions.ADR.canGenerateQr ? 'checked' : ''} style="width: 20px; height: 20px;">
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>
+                    <strong>Emissione Token OTP Ricariche Fai-da-Te (WhatsApp)</strong><br>
+                    <small style="color: var(--text-muted);">Permette di generare ed inviare link di ricarica WhatsApp ai clienti</small>
+                  </td>
+                  <td style="text-align: center;">
+                    <input type="checkbox" id="perm_UFFICIO_canGenerateOtp" ${permissions.UFFICIO.canGenerateOtp ? 'checked' : ''} style="width: 20px; height: 20px;">
+                  </td>
+                  <td style="text-align: center;">
+                    <input type="checkbox" id="perm_ADR_canGenerateOtp" ${permissions.ADR.canGenerateOtp ? 'checked' : ''} style="width: 20px; height: 20px;">
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>
+                    <strong>Ricariche Bluetooth BLE sul Posto (Giro Consegne)</strong><br>
+                    <small style="color: var(--text-muted);">Permette di ricaricare le macchine via Bluetooth avvicinandosi allo smartphone</small>
+                  </td>
+                  <td style="text-align: center;">
+                    <input type="checkbox" id="perm_UFFICIO_canBleRefill" ${permissions.UFFICIO.canBleRefill ? 'checked' : ''} style="width: 20px; height: 20px;">
+                  </td>
+                  <td style="text-align: center;">
+                    <input type="checkbox" id="perm_ADR_canBleRefill" ${permissions.ADR.canBleRefill ? 'checked' : ''} style="width: 20px; height: 20px;">
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>
+                    <strong>Accesso al Banco Prova Simulatore Hardware</strong><br>
+                    <small style="color: var(--text-muted);">Permette di accedere al simulatore di test delle macchine da caffè</small>
+                  </td>
+                  <td style="text-align: center;">
+                    <input type="checkbox" id="perm_UFFICIO_canUseSimulator" ${permissions.UFFICIO.canUseSimulator ? 'checked' : ''} style="width: 20px; height: 20px;">
+                  </td>
+                  <td style="text-align: center;">
+                    <input type="checkbox" id="perm_ADR_canUseSimulator" ${permissions.ADR.canUseSimulator ? 'checked' : ''} style="width: 20px; height: 20px;">
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end;">
+            <button type="submit" class="btn btn-primary" style="padding: 12px 24px; font-size: 1rem;">
+              💾 Salva Configurazione Permessi
+            </button>
+          </div>
+        </form>
+      </div>
+    `;
+  }
+
+  // Vista Default: Gestione Personale & Utenti
+  return `
+    <div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <div>
+          <h1 style="font-size: 1.8rem; font-weight: 800;">👥 Gestione Personale & Account Utenti</h1>
+          <p style="color: var(--text-muted);">Registrazione del personale dipendente, assegnazione ruoli e modifica credenziali</p>
+        </div>
+        <button id="btn-toggle-add-user" class="btn btn-primary">
+          ➕ Nuovo Utente Personale
+        </button>
+      </div>
+
+      <!-- Form Nuovo Utente (Nascosto di Default) -->
+      <div id="add-user-form-container" class="stat-card" style="display: none; margin-bottom: 32px; padding: 24px; border: 2px solid var(--accent-cyan);">
+        <h3 style="margin-top: 0; color: var(--accent-cyan); margin-bottom: 16px;">➕ Registrazione Nuovo Account Dipendente:</h3>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Codice Utente (Username):*</label>
+            <input type="text" id="new-user-username" placeholder="Es. 004" required style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700;">
+          </div>
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Password di Accesso:*</label>
+            <input type="password" id="new-user-password" placeholder="Password..." required style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+          </div>
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Nome & Cognome:*</label>
+            <input type="text" id="new-user-name" placeholder="Es. Mario Rossi" required style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Ruolo Assegnato:*</label>
+            <select id="new-user-role" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700;">
+              <option value="UFFICIO">👩‍💻 UFFICIO (Gestione Anagrafiche & OTP)</option>
+              <option value="ADR">🚚 ADR (Agente Consegne & Bluetooth)</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Email:</label>
+            <input type="email" id="new-user-email" placeholder="email@deconto.it" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+          </div>
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Telefono Mobile:</label>
+            <input type="text" id="new-user-phone" placeholder="+39 333 ..." style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+          <button id="btn-cancel-add-user" class="btn btn-secondary">Annulla</button>
+          <button id="btn-save-new-user" class="btn btn-primary">💾 Salva Account Dipendente</button>
+        </div>
+      </div>
+
+      <!-- Tabella Utenti -->
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Utente / Operatore</th>
+              <th>Codice Accesso</th>
+              <th>Ruolo</th>
+              <th>Contatti</th>
+              <th>Stato Account</th>
+              <th>Azioni Admin</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${users.map(u => `
+              <tr>
+                <td>
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.4rem;">${u.avatar || '👤'}</span>
+                    <div>
+                      <strong>${u.name}</strong><br>
+                      <small style="color: var(--text-muted);">Creato il ${u.createdAt || 'N/D'}</small>
+                    </div>
+                  </div>
+                </td>
+                <td><strong style="color: var(--accent-cyan); font-family: monospace; font-size: 1.1rem;">${u.username}</strong></td>
+                <td>
+                  ${u.role === 'ADMIN' ? '<span class="badge badge-danger">👨‍💼 ADMIN</span>' : (u.role === 'UFFICIO' ? '<span class="badge badge-info">👩‍💻 UFFICIO</span>' : '<span class="badge badge-warning">🚚 ADR</span>')}
+                </td>
+                <td>
+                  ${u.email ? `<small>${u.email}</small><br>` : ''}
+                  <small style="color: var(--text-muted);">${u.phone || ''}</small>
+                </td>
+                <td>
+                  ${u.status === 'ACTIVE' ? '<span class="badge badge-success">Attivo</span>' : '<span class="badge badge-danger">Disattivato</span>'}
+                </td>
+                <td>
+                  ${u.username !== '001' ? `
+                    <button class="btn btn-secondary btn-toggle-user-status" data-id="${u.id}" data-status="${u.status}" style="padding: 4px 8px; font-size: 0.75rem;">
+                      ${u.status === 'ACTIVE' ? '⏸️ Disattiva' : '▶️ Attiva'}
+                    </button>
+                    <button class="btn btn-secondary btn-delete-user" data-id="${u.id}" style="padding: 4px 8px; font-size: 0.75rem; color: var(--accent-rose);">
+                      🗑️ Elimina
+                    </button>
+                  ` : '<small style="color: var(--text-muted);">Account Principale (Protetto)</small>'}
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}

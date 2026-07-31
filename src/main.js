@@ -6,6 +6,7 @@ import { renderSidebar } from './components/Navigation.js';
 import { renderLoginScreen } from './components/LoginScreen.js';
 import { renderUserProfileModal } from './components/UserProfileModal.js';
 import { renderAdminDashboard } from './components/AdminDashboard.js';
+import { renderUserManagementPanel } from './components/UserManagementPanel.js';
 import { renderOfficePanel } from './components/OfficePanel.js';
 import { renderAdrPanel } from './components/AdrPanel.js';
 import { renderClientDiyPanel } from './components/ClientDiyPanel.js';
@@ -27,18 +28,27 @@ function renderApp() {
     return;
   }
 
-  // Se l'utente è autenticato, renderizza la Piattaforma in base al suo Ruolo
   const user = state.currentUser;
   let mainContentHtml = '';
 
   if (state.activeTab === 'simulator') {
     mainContentHtml = renderHardwareSimulator();
+  } else if (state.activeTab === 'user_management' || state.activeTab === 'permissions_matrix') {
+    mainContentHtml = renderUserManagementPanel(state.activeTab);
   } else if (user.role === 'ADMIN') {
-    mainContentHtml = renderAdminDashboard(state.activeTab);
-  } else if (user.role === 'UFFICIO') {
-    mainContentHtml = renderOfficePanel(state.activeTab);
-  } else if (user.role === 'ADR') {
-    mainContentHtml = renderAdrPanel(state.activeTab);
+    if (state.activeTab === 'clients' || state.activeTab === 'qr_generator' || state.activeTab === 'otp_generator' || state.activeTab === 'refills_history') {
+      mainContentHtml = renderOfficePanel(state.activeTab);
+    } else if (state.activeTab === 'adr_visits') {
+      mainContentHtml = renderAdrPanel(state.activeTab);
+    } else {
+      mainContentHtml = renderAdminDashboard(state.activeTab);
+    }
+  } else if (user.role === 'UFFICIO' || user.role === 'ADR') {
+    if (state.activeTab === 'adr_visits') {
+      mainContentHtml = renderAdrPanel(state.activeTab);
+    } else {
+      mainContentHtml = renderOfficePanel(state.activeTab);
+    }
   }
 
   let modalHtml = '';
@@ -72,7 +82,7 @@ function attachLoginEventListeners() {
       try {
         const user = db.authenticate(username, password);
         state.currentUser = user;
-        state.activeTab = (user.role === 'ADMIN') ? 'dashboard' : ((user.role === 'UFFICIO') ? 'clients' : 'adr_visits');
+        state.activeTab = (user.role === 'ADMIN') ? 'dashboard' : 'clients';
         renderApp();
       } catch (err) {
         errorMsg.innerText = err.message;
@@ -80,20 +90,6 @@ function attachLoginEventListeners() {
       }
     });
   }
-
-  // Tasti scorciatoia per demo
-  document.querySelectorAll('.btn-demo-auth').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const u = btn.getAttribute('data-user');
-      const p = btn.getAttribute('data-pass');
-      document.getElementById('login-username').value = u;
-      document.getElementById('login-password').value = p;
-      const user = db.authenticate(u, p);
-      state.currentUser = user;
-      state.activeTab = (user.role === 'ADMIN') ? 'dashboard' : ((user.role === 'UFFICIO') ? 'clients' : 'adr_visits');
-      renderApp();
-    });
-  });
 }
 
 function attachMainEventListeners() {
@@ -122,7 +118,7 @@ function attachMainEventListeners() {
   if (btnCloseModal) btnCloseModal.addEventListener('click', () => { state.showProfileModal = false; renderApp(); });
   if (btnCancelProfile) btnCancelProfile.addEventListener('click', () => { state.showProfileModal = false; renderApp(); });
 
-  // Salva Modifiche Profilo
+  // Salva Modifiche Profilo Utente
   const profileForm = document.getElementById('profile-edit-form');
   if (profileForm) {
     profileForm.addEventListener('submit', (e) => {
@@ -159,6 +155,96 @@ function attachMainEventListeners() {
       }
     });
   });
+
+  // --- GESTIONE PERSONALE & UTENTI (ADMIN) ---
+  const btnToggleAddUser = document.getElementById('btn-toggle-add-user');
+  const addUserFormContainer = document.getElementById('add-user-form-container');
+  if (btnToggleAddUser && addUserFormContainer) {
+    btnToggleAddUser.addEventListener('click', () => {
+      addUserFormContainer.style.display = addUserFormContainer.style.display === 'none' ? 'block' : 'none';
+    });
+  }
+
+  const btnCancelAddUser = document.getElementById('btn-cancel-add-user');
+  if (btnCancelAddUser && addUserFormContainer) {
+    btnCancelAddUser.addEventListener('click', () => {
+      addUserFormContainer.style.display = 'none';
+    });
+  }
+
+  const btnSaveNewUser = document.getElementById('btn-save-new-user');
+  if (btnSaveNewUser) {
+    btnSaveNewUser.addEventListener('click', () => {
+      const username = document.getElementById('new-user-username').value.trim();
+      const password = document.getElementById('new-user-password').value.trim();
+      const name = document.getElementById('new-user-name').value.trim();
+      const role = document.getElementById('new-user-role').value;
+      const email = document.getElementById('new-user-email').value.trim();
+      const phone = document.getElementById('new-user-phone').value.trim();
+
+      if (!username || !password || !name) {
+        alert('Compila i campi obbligatori: Codice Utente, Password e Nome!');
+        return;
+      }
+
+      try {
+        db.addUser({ username, password, name, role, email, phone });
+        alert(`✅ Utente dipendente "${name}" (Codice ${username}) creato con successo!`);
+        renderApp();
+      } catch (err) {
+        alert(`Errore: ${err.message}`);
+      }
+    });
+  }
+
+  document.querySelectorAll('.btn-toggle-user-status').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-id');
+      const currentStatus = btn.getAttribute('data-status');
+      const newStatus = currentStatus === 'ACTIVE' ? 'DISABLED' : 'ACTIVE';
+      db.updateUser(id, { status: newStatus });
+      renderApp();
+    });
+  });
+
+  document.querySelectorAll('.btn-delete-user').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-id');
+      if (confirm('Sei sicuro di voler eliminare questo utente dipendente?')) {
+        try {
+          db.deleteUser(id);
+          renderApp();
+        } catch (err) {
+          alert(`Errore: ${err.message}`);
+        }
+      }
+    });
+  });
+
+  // --- MATRICE PERMESSI (ADMIN) ---
+  const matrixForm = document.getElementById('permissions-matrix-form');
+  if (matrixForm) {
+    matrixForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const roles = ['UFFICIO', 'ADR'];
+      const fields = ['canViewClients', 'canCreateClients', 'canEditClients', 'canDeleteClients', 'canGenerateQr', 'canGenerateOtp', 'canBleRefill', 'canUseSimulator'];
+      const newPerms = { UFFICIO: {}, ADR: {} };
+
+      roles.forEach(role => {
+        fields.forEach(field => {
+          const el = document.getElementById(`perm_${role}_${field}`);
+          if (el) {
+            newPerms[role][field] = el.checked;
+          }
+        });
+      });
+
+      db.updatePermissions(newPerms);
+      alert('✅ Matrice dei Permessi aggiornata con successo per tutti gli utenti!');
+      renderApp();
+    });
+  }
 
   // Esporta Report Consumi CSV (Admin View)
   const btnExportCsv = document.getElementById('btn-export-csv');
@@ -219,19 +305,23 @@ function attachMainEventListeners() {
         return;
       }
 
-      db.addClient({
-        name,
-        refPerson,
-        phone,
-        city,
-        address: city,
-        machineModel: machineModel || 'Didiesse Frog Revolution',
-        shortCode: shortCode || `${Math.floor(1000 + Math.random() * 9000)}`,
-        initialCredits
-      });
+      try {
+        db.addClient({
+          name,
+          refPerson,
+          phone,
+          city,
+          address: city,
+          machineModel: machineModel || 'Didiesse Frog Revolution',
+          shortCode: shortCode || `${Math.floor(1000 + Math.random() * 9000)}`,
+          initialCredits
+        });
 
-      alert(`✅ Cliente "${name}" registrato con successo ed associato alla scheda Deconto!`);
-      renderApp();
+        alert(`✅ Cliente "${name}" registrato con successo ed associato alla scheda Deconto!`);
+        renderApp();
+      } catch (err) {
+        alert(`Errore: ${err.message}`);
+      }
     });
   }
 
@@ -240,8 +330,12 @@ function attachMainEventListeners() {
     btn.addEventListener('click', () => {
       const id = btn.getAttribute('data-id');
       if (confirm('Sei sicuro di voler rimuovere questo cliente dal sistema?')) {
-        db.deleteClient(id);
-        renderApp();
+        try {
+          db.deleteClient(id);
+          renderApp();
+        } catch (err) {
+          alert(`Errore: ${err.message}`);
+        }
       }
     });
   });

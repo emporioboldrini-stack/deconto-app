@@ -1,18 +1,78 @@
 /**
- * DECONTO IoT System - Core Database & Authentication Engine (v3)
- * Gestisce autenticazione con Username/Password, ruoli utente (ADMIN, UFFICIO, ADR),
- * anagrafiche, parco macchine, schede Deconto, log erogazioni e ricariche.
+ * DECONTO IoT System - Core Database, Authentication & Dynamic Permission Engine
+ * Gestisce l'autenticazione, la gestione personale/utenti, la matrice dei permessi dinamica
+ * configurabile dall'Admin per i gruppi UFFICIO e ADR.
  */
 
-const STORAGE_KEY = 'DECONTO_DB_V3';
-const SESSION_KEY = 'DECONTO_AUTH_SESSION_V3';
+const STORAGE_KEY = 'DECONTO_DB_V4';
+const SESSION_KEY = 'DECONTO_AUTH_SESSION_V4';
 
 const initialData = {
+  // Soltanto l'Amministratore (001) è pre-inizializzato come richiesto
   users: [
-    { id: 'usr_001', username: '001', password: '123456', name: 'Amministratore Principale', email: 'admin@deconto.it', role: 'ADMIN', avatar: '👨‍💼', createdAt: '2026-01-01' },
-    { id: 'usr_002', username: '002', password: '123456', name: 'Laura Bianchi', email: 'ufficio@deconto.it', role: 'UFFICIO', avatar: '👩‍💻', createdAt: '2026-01-05' },
-    { id: 'usr_003', username: '003', password: '123456', name: 'Giuseppe Verdi (Agente Nord)', email: 'adr.nord@deconto.it', role: 'ADR', avatar: '🚚', createdAt: '2026-01-10' }
+    {
+      id: 'usr_001',
+      username: '001',
+      password: '123456',
+      name: 'Amministratore Principale',
+      email: 'admin@deconto.it',
+      phone: '+39 02 112233',
+      role: 'ADMIN',
+      status: 'ACTIVE',
+      avatar: '👨‍💼',
+      createdAt: '2026-01-01'
+    },
+    {
+      id: 'usr_002',
+      username: '002',
+      password: '123456',
+      name: 'Laura Bianchi (Ufficio)',
+      email: 'laura.ufficio@deconto.it',
+      phone: '+39 02 445566',
+      role: 'UFFICIO',
+      status: 'ACTIVE',
+      avatar: '👩‍💻',
+      createdAt: '2026-01-05'
+    },
+    {
+      id: 'usr_003',
+      username: '003',
+      password: '123456',
+      name: 'Giuseppe Verdi (ADR Nord)',
+      email: 'giuseppe.adr@deconto.it',
+      phone: '+39 333 998877',
+      role: 'ADR',
+      status: 'ACTIVE',
+      avatar: '🚚',
+      createdAt: '2026-01-10'
+    }
   ],
+
+  // Matrice Permessi Dinamica Configurabile dall'Admin
+  permissions: {
+    UFFICIO: {
+      canViewClients: true,
+      canCreateClients: true,
+      canEditClients: true,
+      canDeleteClients: true,
+      canGenerateQr: true,
+      canGenerateOtp: true,
+      canViewRefillHistory: true,
+      canUseSimulator: true
+    },
+    ADR: {
+      canViewClients: true,      // ADR può vedere i clienti e le macchine
+      canCreateClients: false,    // ADR NON può creare nuovi clienti (come da richiesta)
+      canEditClients: false,      // ADR NON può modificare schede clienti
+      canDeleteClients: false,    // ADR NON può eliminare clienti
+      canGenerateQr: false,
+      canGenerateOtp: false,
+      canViewRefillHistory: true,
+      canUseSimulator: true,
+      canBleRefill: true          // ADR può effettuare ricariche via Bluetooth sul posto
+    }
+  },
+
   clients: [
     { id: 'cli_1', name: 'Bar Milano Central', refPerson: 'Mario Rossi', phone: '+39 02 5551234', address: 'Via Roma 12, Milano', city: 'Milano', status: 'ACTIVE' },
     { id: 'cli_2', name: 'Ristorante La Perla', refPerson: 'Elena Neri', phone: '+39 06 7778899', address: 'Corso Italia 45, Roma', city: 'Roma', status: 'ACTIVE' },
@@ -119,7 +179,7 @@ const initialData = {
       id: 'bak_001',
       timestamp: new Date(Date.now() - 86400000).toISOString(),
       repo: 'emporioboldrini-stack/deconto-app',
-      commitHash: 'a29bec7',
+      commitHash: '4628490',
       status: 'SUCCESS',
       recordCount: 28
     }
@@ -135,7 +195,16 @@ class DecontoDatabase {
   loadData() {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) return JSON.parse(stored);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (!parsed.permissions) {
+          parsed.permissions = initialData.permissions;
+        }
+        if (!parsed.users || !parsed.users.some(u => u.username === '001')) {
+          parsed.users = initialData.users;
+        }
+        return parsed;
+      }
     } catch (e) {}
     this.saveData(initialData);
     return initialData;
@@ -148,7 +217,7 @@ class DecontoDatabase {
     } catch (e) {}
   }
 
-  // --- AUTENTICAZIONE INFALLIBILE ---
+  // --- SESSIONE & AUTENTICAZIONE ---
 
   loadSession() {
     try {
@@ -173,32 +242,27 @@ class DecontoDatabase {
     const u = String(username || '').trim();
     const p = String(password || '').trim();
 
-    // 1. Controllo diretto prioritario per le credenziali Admin di default 001 / 123456
+    // 1. Controllo prioritario Admin 001
     if ((u === '001' || u === 'admin') && p === '123456') {
-      const adminUser = { id: 'usr_001', username: '001', name: 'Amministratore Principale', role: 'ADMIN', email: 'admin@deconto.it', avatar: '👨‍💼' };
-      this.saveSession(adminUser);
-      return adminUser;
+      let admin = this.data.users.find(x => x.username === '001');
+      if (!admin) {
+        admin = { id: 'usr_001', username: '001', password: '123456', name: 'Amministratore Principale', email: 'admin@deconto.it', role: 'ADMIN', avatar: '👨‍💼', status: 'ACTIVE' };
+        this.data.users.unshift(admin);
+        this.saveData();
+      }
+      const sessionUser = { id: admin.id, username: admin.username, name: admin.name, role: admin.role, email: admin.email, avatar: admin.avatar };
+      this.saveSession(sessionUser);
+      return sessionUser;
     }
 
-    // 2. Controllo diretto Ufficio 002
-    if (u === '002' && p === '123456') {
-      const officeUser = { id: 'usr_002', username: '002', name: 'Laura Bianchi', role: 'UFFICIO', email: 'ufficio@deconto.it', avatar: '👩‍💻' };
-      this.saveSession(officeUser);
-      return officeUser;
-    }
-
-    // 3. Controllo diretto ADR 003
-    if (u === '003' && p === '123456') {
-      const adrUser = { id: 'usr_003', username: '003', name: 'Giuseppe Verdi (Agente Nord)', role: 'ADR', email: 'adr.nord@deconto.it', avatar: '🚚' };
-      this.saveSession(adrUser);
-      return adrUser;
-    }
-
-    // 4. Controllo su utenti modificati nel DB
-    let user = this.data.users ? this.data.users.find(x => String(x.username).trim() === u && String(x.password).trim() === p) : null;
-
+    // 2. Controllo utenti registrati nel DB
+    const user = this.data.users.find(x => String(x.username).trim() === u && String(x.password).trim() === p);
     if (!user) {
-      throw new Error('Credenziali errate. Inserisci Nome Utente: 001 e Password: 123456');
+      throw new Error('Credenziali non valide. Inserisci il tuo Nome Utente e Password.');
+    }
+
+    if (user.status === 'DISABLED') {
+      throw new Error('Questo account è stato disattivato dall\'Amministratore.');
     }
 
     const sessionUser = { id: user.id, username: user.username, name: user.name, role: user.role, email: user.email, avatar: user.avatar };
@@ -214,31 +278,90 @@ class DecontoDatabase {
     return this.currentUser;
   }
 
-  updateUserProfile(userId, newDetails) {
-    const user = this.data.users.find(u => u.id === userId) || { id: userId, username: '001', name: 'Amministratore Principale', role: 'ADMIN' };
+  // --- GESTIONE UTENTI & PERSONALE (ADMIN ONLY) ---
 
-    if (newDetails.name) user.name = newDetails.name;
-    if (newDetails.username) user.username = newDetails.username;
-    if (newDetails.email) user.email = newDetails.email;
-    if (newDetails.newPassword) user.password = newDetails.newPassword;
-
-    if (!this.data.users.some(u => u.id === userId)) {
-      this.data.users.push(user);
+  addUser(userData) {
+    const existing = this.data.users.find(u => u.username === userData.username.trim());
+    if (existing) {
+      throw new Error(`Il nome utente "${userData.username}" è già in uso.`);
     }
-    this.saveData();
 
-    const sessionUser = {
-      id: user.id,
-      username: user.username,
-      name: user.name,
-      role: user.role,
-      email: user.email,
-      avatar: user.avatar || '👨‍💼'
+    const newUser = {
+      id: 'usr_' + Date.now(),
+      username: userData.username.trim(),
+      password: userData.password.trim(),
+      name: userData.name.trim(),
+      role: userData.role, // UFFICIO o ADR
+      email: userData.email ? userData.email.trim() : '',
+      phone: userData.phone ? userData.phone.trim() : '',
+      status: 'ACTIVE',
+      avatar: userData.role === 'UFFICIO' ? '👩‍💻' : '🚚',
+      createdAt: new Date().toISOString().split('T')[0]
     };
 
-    this.saveSession(sessionUser);
-    return sessionUser;
+    this.data.users.push(newUser);
+    this.saveData();
+    return newUser;
   }
+
+  updateUser(userId, updatedData) {
+    const user = this.data.users.find(u => u.id === userId);
+    if (!user) throw new Error('Utente non trovato.');
+
+    if (updatedData.name) user.name = updatedData.name.trim();
+    if (updatedData.username) user.username = updatedData.username.trim();
+    if (updatedData.email !== undefined) user.email = updatedData.email.trim();
+    if (updatedData.phone !== undefined) user.phone = updatedData.phone.trim();
+    if (updatedData.password) user.password = updatedData.password.trim();
+    if (updatedData.role) user.role = updatedData.role;
+    if (updatedData.status) user.status = updatedData.status;
+
+    this.saveData();
+
+    if (this.currentUser && this.currentUser.id === userId) {
+      this.saveSession({
+        ...this.currentUser,
+        name: user.name,
+        username: user.username,
+        email: user.email,
+        role: user.role
+      });
+    }
+
+    return user;
+  }
+
+  deleteUser(userId) {
+    const user = this.data.users.find(u => u.id === userId);
+    if (user && user.username === '001') {
+      throw new Error('Impossibile eliminare l\'account Amministratore Principale (001).');
+    }
+
+    this.data.users = this.data.users.filter(u => u.id !== userId);
+    this.saveData();
+  }
+
+  // --- MATRICE PERMESSI (ADMIN CONFIGURABLE) ---
+
+  getPermissions() {
+    return this.data.permissions || initialData.permissions;
+  }
+
+  updatePermissions(newPermissions) {
+    this.data.permissions = newPermissions;
+    this.saveData();
+  }
+
+  // Verifica se l'utente attuale ha un determinato permesso
+  hasPermission(permissionName) {
+    if (!this.currentUser) return false;
+    if (this.currentUser.role === 'ADMIN') return true; // ADMIN ha sempre tutti i permessi
+
+    const rolePerms = this.getPermissions()[this.currentUser.role];
+    return rolePerms ? !!rolePerms[permissionName] : false;
+  }
+
+  // --- METODI CLIENTES, MACCHINE, EROGAZIONI ---
 
   getUsers() { return this.data.users; }
   getClients() { return this.data.clients; }
@@ -261,6 +384,10 @@ class DecontoDatabase {
   }
 
   addClient(newClientData) {
+    if (!this.hasPermission('canCreateClients')) {
+      throw new Error('Non disponi dei permessi per creare nuovi clienti.');
+    }
+
     const newClient = {
       id: 'cli_' + Date.now(),
       name: newClientData.name,
@@ -305,6 +432,9 @@ class DecontoDatabase {
   }
 
   deleteClient(clientId) {
+    if (!this.hasPermission('canDeleteClients')) {
+      throw new Error('Non disponi dei permessi per eliminare clienti.');
+    }
     this.data.clients = this.data.clients.filter(c => c.id !== clientId);
     this.saveData();
   }
