@@ -22,14 +22,14 @@ export function renderLoginScreen() {
             <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 6px; text-transform: uppercase;">
               Codice Accesso / Nome Utente:
             </label>
-            <input type="text" id="login-username" placeholder="Inserisci il tuo codice..." value="001" autocomplete="username" required style="width: 100%; padding: 12px 16px; font-size: 1.1rem; font-weight: 700; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 10px;">
+            <input type="text" id="login-username" placeholder="Inserisci il tuo codice..." value="" autocomplete="username" required style="width: 100%; padding: 12px 16px; font-size: 1.1rem; font-weight: 700; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 10px;">
           </div>
 
           <div style="margin-bottom: 24px;">
             <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 6px; text-transform: uppercase;">
               Password:
             </label>
-            <input type="password" id="login-password" placeholder="••••••" value="123456" autocomplete="current-password" required style="width: 100%; padding: 12px 16px; font-size: 1.1rem; font-weight: 700; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 10px;">
+            <input type="password" id="login-password" placeholder="••••••" value="" autocomplete="current-password" required style="width: 100%; padding: 12px 16px; font-size: 1.1rem; font-weight: 700; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 10px;">
           </div>
 
           <div id="login-error-msg" style="color: var(--accent-rose); font-size: 0.85rem; margin-bottom: 16px; display: none; text-align: center; font-weight: 600;">
@@ -40,10 +40,6 @@ export function renderLoginScreen() {
             🔐 ACCEDI ALLA PIATTAFORMA
           </button>
         </form>
-
-        <div style="margin-top: 24px; text-align: center; font-size: 0.75rem; color: var(--text-dim); border-top: 1px solid var(--border-subtle); padding-top: 16px;">
-          Amministratore predefinito: Codice <strong>001</strong> | Password <strong>123456</strong>
-        </div>
 
       </div>
 
