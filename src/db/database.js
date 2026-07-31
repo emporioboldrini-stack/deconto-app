@@ -1,14 +1,19 @@
 /**
- * DECONTO IoT System - Core Database, Authentication & Dynamic Permission Engine
- * Gestisce l'autenticazione, la gestione personale/utenti, la matrice dei permessi dinamica
- * configurabile dall'Admin per i gruppi UFFICIO e ADR.
+ * DECONTO IoT System - Core Database, Authentication & Dynamic Permission Engine (v5)
+ * Gestisce l'autenticazione, la gestione personale/utenti, la matrice dei permessi dinamica,
+ * la personalizzazione dei nomi delle categorie utenti e la telemetria estesa delle macchine.
  */
 
-const STORAGE_KEY = 'DECONTO_DB_V4';
-const SESSION_KEY = 'DECONTO_AUTH_SESSION_V4';
+const STORAGE_KEY = 'DECONTO_DB_V5';
+const SESSION_KEY = 'DECONTO_AUTH_SESSION_V5';
 
 const initialData = {
-  // Soltanto l'Amministratore (001) è pre-inizializzato come richiesto
+  // Personalizzazione Nomi Categorie / Ruoli
+  roleLabels: {
+    UFFICIO: 'UFFICIO & LOGISTICA',
+    ADR: 'AGENTE ADR (CONSEGNE)'
+  },
+
   users: [
     {
       id: 'usr_001',
@@ -26,7 +31,7 @@ const initialData = {
       id: 'usr_002',
       username: '002',
       password: '123456',
-      name: 'Laura Bianchi (Ufficio)',
+      name: 'Laura Bianchi',
       email: 'laura.ufficio@deconto.it',
       phone: '+39 02 445566',
       role: 'UFFICIO',
@@ -38,7 +43,7 @@ const initialData = {
       id: 'usr_003',
       username: '003',
       password: '123456',
-      name: 'Giuseppe Verdi (ADR Nord)',
+      name: 'Giuseppe Verdi (Agente Nord)',
       email: 'giuseppe.adr@deconto.it',
       phone: '+39 333 998877',
       role: 'ADR',
@@ -48,7 +53,6 @@ const initialData = {
     }
   ],
 
-  // Matrice Permessi Dinamica Configurabile dall'Admin
   permissions: {
     UFFICIO: {
       canViewClients: true,
@@ -61,15 +65,15 @@ const initialData = {
       canUseSimulator: true
     },
     ADR: {
-      canViewClients: true,      // ADR può vedere i clienti e le macchine
-      canCreateClients: false,    // ADR NON può creare nuovi clienti (come da richiesta)
-      canEditClients: false,      // ADR NON può modificare schede clienti
-      canDeleteClients: false,    // ADR NON può eliminare clienti
+      canViewClients: true,
+      canCreateClients: false,
+      canEditClients: false,
+      canDeleteClients: false,
       canGenerateQr: false,
       canGenerateOtp: false,
       canViewRefillHistory: true,
       canUseSimulator: true,
-      canBleRefill: true          // ADR può effettuare ricariche via Bluetooth sul posto
+      canBleRefill: true
     }
   },
 
@@ -98,6 +102,10 @@ const initialData = {
       relayStatus: 'CLOSED_OK',
       firmwareVersion: 'v2.1.0-ESP32-C6',
       isOnlineWifi: true,
+      rssi: -62, // Ottimo segnale Wi-Fi
+      machineExtractions: 1855,   // Battute fatte su questa macchina
+      lifetimeExtractions: 4920,  // Battute totali in tutta la vita della scheda
+      avgDailyCoffees: 12.4,
       lastSyncDate: new Date().toISOString()
     },
     {
@@ -112,6 +120,10 @@ const initialData = {
       relayStatus: 'CLOSED_OK',
       firmwareVersion: 'v2.1.0-ESP32-C6',
       isOnlineWifi: false,
+      rssi: -78,
+      machineExtractions: 3410,
+      lifetimeExtractions: 8120,
+      avgDailyCoffees: 24.8,
       lastSyncDate: new Date(Date.now() - 86400000 * 3).toISOString()
     },
     {
@@ -126,6 +138,10 @@ const initialData = {
       relayStatus: 'CLOSED_OK',
       firmwareVersion: 'v2.1.0-ESP32-C6',
       isOnlineWifi: false,
+      rssi: -84,
+      machineExtractions: 988,
+      lifetimeExtractions: 2150,
+      avgDailyCoffees: 5.2,
       lastSyncDate: new Date(Date.now() - 86400000 * 12).toISOString()
     },
     {
@@ -140,6 +156,10 @@ const initialData = {
       relayStatus: 'OPEN_LOCKED',
       firmwareVersion: 'v2.1.0-ESP32-C6',
       isOnlineWifi: true,
+      rssi: -58,
+      machineExtractions: 1240,
+      lifetimeExtractions: 3500,
+      avgDailyCoffees: 9.1,
       lastSyncDate: new Date().toISOString()
     }
   ],
@@ -168,18 +188,19 @@ const initialData = {
     }
   ],
   coffeeLogs: [
-    { id: 'log_1', boardId: 'board_3467', timestamp: new Date(Date.now() - 3600000 * 2).toISOString(), durationSeconds: 22, groupId: 1 },
-    { id: 'log_2', boardId: 'board_3467', timestamp: new Date(Date.now() - 3600000 * 4).toISOString(), durationSeconds: 21, groupId: 1 },
-    { id: 'log_3', boardId: 'board_5510', timestamp: new Date(Date.now() - 3600000 * 6).toISOString(), durationSeconds: 38, groupId: 1 },
-    { id: 'log_4', boardId: 'board_1289', timestamp: new Date(Date.now() - 3600000 * 10).toISOString(), durationSeconds: 20, groupId: 1 },
-    { id: 'log_5', boardId: 'board_1289', timestamp: new Date(Date.now() - 3600000 * 11).toISOString(), durationSeconds: 23, groupId: 2 }
+    { id: 'log_1', boardId: 'board_3467', timestamp: new Date(Date.now() - 3600000 * 1).toISOString(), durationSeconds: 22, groupId: 1 },
+    { id: 'log_2', boardId: 'board_3467', timestamp: new Date(Date.now() - 3600000 * 3).toISOString(), durationSeconds: 21, groupId: 1 },
+    { id: 'log_3', boardId: 'board_3467', timestamp: new Date(Date.now() - 3600000 * 5).toISOString(), durationSeconds: 24, groupId: 1 },
+    { id: 'log_4', boardId: 'board_5510', timestamp: new Date(Date.now() - 3600000 * 6).toISOString(), durationSeconds: 38, groupId: 1 },
+    { id: 'log_5', boardId: 'board_1289', timestamp: new Date(Date.now() - 3600000 * 10).toISOString(), durationSeconds: 20, groupId: 1 },
+    { id: 'log_6', boardId: 'board_1289', timestamp: new Date(Date.now() - 3600000 * 11).toISOString(), durationSeconds: 23, groupId: 2 }
   ],
   backupLogs: [
     {
       id: 'bak_001',
       timestamp: new Date(Date.now() - 86400000).toISOString(),
       repo: 'emporioboldrini-stack/deconto-app',
-      commitHash: '4628490',
+      commitHash: '13498e7',
       status: 'SUCCESS',
       recordCount: 28
     }
@@ -197,12 +218,9 @@ class DecontoDatabase {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (!parsed.permissions) {
-          parsed.permissions = initialData.permissions;
-        }
-        if (!parsed.users || !parsed.users.some(u => u.username === '001')) {
-          parsed.users = initialData.users;
-        }
+        if (!parsed.roleLabels) parsed.roleLabels = initialData.roleLabels;
+        if (!parsed.permissions) parsed.permissions = initialData.permissions;
+        if (!parsed.users || !parsed.users.some(u => u.username === '001')) parsed.users = initialData.users;
         return parsed;
       }
     } catch (e) {}
@@ -215,6 +233,17 @@ class DecontoDatabase {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
     } catch (e) {}
+  }
+
+  // --- NOMI CATEGORIE RUOLI PERSONALIZZABILI ---
+  getRoleLabels() {
+    return this.data.roleLabels || initialData.roleLabels;
+  }
+
+  updateRoleLabel(roleKey, newLabel) {
+    if (!this.data.roleLabels) this.data.roleLabels = { ...initialData.roleLabels };
+    this.data.roleLabels[roleKey] = newLabel.trim();
+    this.saveData();
   }
 
   // --- SESSIONE & AUTENTICAZIONE ---
@@ -242,7 +271,6 @@ class DecontoDatabase {
     const u = String(username || '').trim();
     const p = String(password || '').trim();
 
-    // 1. Controllo prioritario Admin 001
     if ((u === '001' || u === 'admin') && p === '123456') {
       let admin = this.data.users.find(x => x.username === '001');
       if (!admin) {
@@ -255,7 +283,6 @@ class DecontoDatabase {
       return sessionUser;
     }
 
-    // 2. Controllo utenti registrati nel DB
     const user = this.data.users.find(x => String(x.username).trim() === u && String(x.password).trim() === p);
     if (!user) {
       throw new Error('Credenziali non valide. Inserisci il tuo Nome Utente e Password.');
@@ -278,7 +305,7 @@ class DecontoDatabase {
     return this.currentUser;
   }
 
-  // --- GESTIONE UTENTI & PERSONALE (ADMIN ONLY) ---
+  // --- GESTIONE UTENTI & PERSONALE ---
 
   addUser(userData) {
     const existing = this.data.users.find(u => u.username === userData.username.trim());
@@ -291,7 +318,7 @@ class DecontoDatabase {
       username: userData.username.trim(),
       password: userData.password.trim(),
       name: userData.name.trim(),
-      role: userData.role, // UFFICIO o ADR
+      role: userData.role,
       email: userData.email ? userData.email.trim() : '',
       phone: userData.phone ? userData.phone.trim() : '',
       status: 'ACTIVE',
@@ -341,7 +368,7 @@ class DecontoDatabase {
     this.saveData();
   }
 
-  // --- MATRICE PERMESSI (ADMIN CONFIGURABLE) ---
+  // --- MATRICE PERMESSI ---
 
   getPermissions() {
     return this.data.permissions || initialData.permissions;
@@ -352,16 +379,13 @@ class DecontoDatabase {
     this.saveData();
   }
 
-  // Verifica se l'utente attuale ha un determinato permesso
   hasPermission(permissionName) {
     if (!this.currentUser) return false;
-    if (this.currentUser.role === 'ADMIN') return true; // ADMIN ha sempre tutti i permessi
+    if (this.currentUser.role === 'ADMIN') return true;
 
     const rolePerms = this.getPermissions()[this.currentUser.role];
     return rolePerms ? !!rolePerms[permissionName] : false;
   }
-
-  // --- METODI CLIENTES, MACCHINE, EROGAZIONI ---
 
   getUsers() { return this.data.users; }
   getClients() { return this.data.clients; }
@@ -422,6 +446,10 @@ class DecontoDatabase {
         relayStatus: 'CLOSED_OK',
         firmwareVersion: 'v2.1.0-ESP32-C6',
         isOnlineWifi: false,
+        rssi: -65,
+        machineExtractions: 0,
+        lifetimeExtractions: 0,
+        avgDailyCoffees: 10.0,
         lastSyncDate: new Date().toISOString()
       };
       this.data.decontoBoards.unshift(newBoard);
@@ -475,6 +503,9 @@ class DecontoDatabase {
     }
 
     board.remainingCredits -= 1;
+    board.machineExtractions = (board.machineExtractions || 0) + 1;
+    board.lifetimeExtractions = (board.lifetimeExtractions || 0) + 1;
+
     if (board.remainingCredits <= 0) {
       board.remainingCredits = 0;
       board.relayStatus = 'OPEN_LOCKED';
@@ -500,13 +531,14 @@ class DecontoDatabase {
   }
 
   exportCoffeeLogsCSV() {
-    let csv = 'ID_Log,Codice_Deconto,Cliente,Seriale_Macchina,Data_Ora,Durata_Secondi,Gruppo_Braccio\n';
+    let csv = 'ID_Log,Codice_Deconto,Cliente,Seriale_Macchina,Modello_Macchina,Data_Ora,Durata_Secondi,Gruppo_Braccio\n';
     this.data.coffeeLogs.forEach(log => {
       const details = this.getBoardFullDetails(log.boardId);
       const clientName = details && details.client ? details.client.name.replace(/,/g, ' ') : 'N/D';
       const mcSerial = details && details.machine ? details.machine.serialNumber : 'N/D';
+      const mcModel = details && details.machine ? details.machine.model.replace(/,/g, ' ') : 'N/D';
       const code = details && details.board ? details.board.shortCode : 'N/D';
-      csv += `${log.id},${code},"${clientName}",${mcSerial},${log.timestamp},${log.durationSeconds},${log.groupId}\n`;
+      csv += `${log.id},${code},"${clientName}",${mcSerial},"${mcModel}",${log.timestamp},${log.durationSeconds},${log.groupId}\n`;
     });
     return csv;
   }

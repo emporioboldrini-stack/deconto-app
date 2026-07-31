@@ -16,7 +16,8 @@ let state = {
   currentUser: db.getCurrentUser(), // Null se disconnesso
   activeTab: 'dashboard',
   showProfileModal: false,
-  editingStaffUserId: null
+  editingStaffUserId: null,
+  viewingDecontoCode: null
 };
 
 function renderApp() {
@@ -42,7 +43,7 @@ function renderApp() {
     } else if (state.activeTab === 'adr_visits') {
       mainContentHtml = renderAdrPanel(state.activeTab);
     } else {
-      mainContentHtml = renderAdminDashboard(state.activeTab);
+      mainContentHtml = renderAdminDashboard(state.activeTab, state.viewingDecontoCode);
     }
   } else if (user.role === 'UFFICIO' || user.role === 'ADR') {
     if (state.activeTab === 'adr_visits') {
@@ -154,6 +155,36 @@ function attachMainEventListeners() {
       }
     });
   });
+
+  // --- MODALE DETTAGLIATORE SCHEDA DECONTO (TELEMETRIA E LOG EROGAZIONI) ---
+  document.querySelectorAll('.btn-deconto-detail').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const code = btn.getAttribute('data-code');
+      state.viewingDecontoCode = code;
+      renderApp();
+    });
+  });
+
+  const btnCloseDecontoModal = document.getElementById('btn-close-deconto-modal');
+  const btnCloseDecontoModalFooter = document.getElementById('btn-close-deconto-modal-footer');
+  if (btnCloseDecontoModal) btnCloseDecontoModal.addEventListener('click', () => { state.viewingDecontoCode = null; renderApp(); });
+  if (btnCloseDecontoModalFooter) btnCloseDecontoModalFooter.addEventListener('click', () => { state.viewingDecontoCode = null; renderApp(); });
+
+  // --- RINOMINA NOMI CATEGORIE RUOLI (ADMIN) ---
+  const renameRoleForm = document.getElementById('rename-role-labels-form');
+  if (renameRoleForm) {
+    renameRoleForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const uff = document.getElementById('role_label_UFFICIO').value.trim();
+      const adr = document.getElementById('role_label_ADR').value.trim();
+
+      db.updateRoleLabel('UFFICIO', uff);
+      db.updateRoleLabel('ADR', adr);
+
+      alert('✅ Nomi delle Categorie Utente aggiornati con successo!');
+      renderApp();
+    });
+  }
 
   // --- GESTIONE PERSONALE & UTENTI (ADMIN) ---
   const btnToggleAddUser = document.getElementById('btn-toggle-add-user');

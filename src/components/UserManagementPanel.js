@@ -3,6 +3,7 @@ import { db } from '../db/database.js';
 export function renderUserManagementPanel(activeTab, editingUserId = null) {
   const users = db.getUsers();
   const permissions = db.getPermissions();
+  const roleLabels = db.getRoleLabels();
 
   let editModalHtml = '';
   if (editingUserId) {
@@ -35,8 +36,8 @@ export function renderUserManagementPanel(activeTab, editingUserId = null) {
                 <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Ruolo Assegnato:*</label>
                 <select id="edit-staff-role" ${userToEdit.username === '001' ? 'disabled' : ''} style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700;">
                   <option value="ADMIN" ${userToEdit.role === 'ADMIN' ? 'selected' : ''}>👨‍💼 ADMIN (Amministratore Totale)</option>
-                  <option value="UFFICIO" ${userToEdit.role === 'UFFICIO' ? 'selected' : ''}>👩‍💻 UFFICIO (Gestione Anagrafiche & OTP)</option>
-                  <option value="ADR" ${userToEdit.role === 'ADR' ? 'selected' : ''}>🚚 ADR (Agente Consegne & Bluetooth)</option>
+                  <option value="UFFICIO" ${userToEdit.role === 'UFFICIO' ? 'selected' : ''}>👩‍💻 ${roleLabels.UFFICIO || 'UFFICIO'}</option>
+                  <option value="ADR" ${userToEdit.role === 'ADR' ? 'selected' : ''}>🚚 ${roleLabels.ADR || 'ADR'}</option>
                 </select>
               </div>
 
@@ -70,22 +71,43 @@ export function renderUserManagementPanel(activeTab, editingUserId = null) {
     return `
       <div>
         <div style="margin-bottom: 24px;">
-          <h1 style="font-size: 1.8rem; font-weight: 800;">⚙️ Matrice Permessi & Abilitazioni Dinamiche</h1>
-          <p style="color: var(--text-muted);">Configura in modo granulare i permessi di visualizzazione, modifica e gestione per le varie tipologie di utenza</p>
+          <h1 style="font-size: 1.8rem; font-weight: 800;">⚙️ Matrice Permessi & Nomi Categorie Utente</h1>
+          <p style="color: var(--text-muted);">Personalizza i nomi delle categorie di dipendenti e configura i permessi di visualizzazione e gestione</p>
         </div>
 
-        <div style="margin-bottom: 24px; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px; padding: 16px; color: var(--accent-cyan);">
-          💡 <strong>Nota Amministratore</strong>: L'utente <strong>ADMIN (001)</strong> possiede sempre l'accesso completo a tutte le funzioni. Qui puoi attivare o disattivare i permessi per i ruoli <strong>UFFICIO</strong> e <strong>ADR</strong>.
+        <!-- Sezione 1: Personalizzazione Nomi Categorie / Ruoli -->
+        <div class="stat-card" style="margin-bottom: 24px; padding: 24px; border: 1px solid var(--accent-cyan);">
+          <h3 style="margin-top: 0; color: var(--accent-cyan); margin-bottom: 16px;">🏷️ Personalizzazione Nomi delle Categorie Utente:</h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
+            Puoi modificare il nome visualizzato per ciascun gruppo utente in qualunque momento (es. cambiare "UFFICIO" in "AMMINISTRAZIONE" o "LOGISTICA").
+          </p>
+
+          <form id="rename-role-labels-form" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 16px; align-items: end;">
+            <div>
+              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Nome Categoria Utenti 1 (ex UFFICIO):</label>
+              <input type="text" id="role_label_UFFICIO" value="${roleLabels.UFFICIO || 'UFFICIO'}" required style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700;">
+            </div>
+
+            <div>
+              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Nome Categoria Utenti 2 (ex ADR):</label>
+              <input type="text" id="role_label_ADR" value="${roleLabels.ADR || 'ADR'}" required style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700;">
+            </div>
+
+            <button type="submit" class="btn btn-secondary" style="padding: 10px 16px;">
+              💾 Salva Nomi Categorie
+            </button>
+          </form>
         </div>
 
+        <!-- Sezione 2: Matrice Permessi -->
         <form id="permissions-matrix-form">
           <div class="table-container" style="margin-bottom: 24px;">
             <table>
               <thead>
                 <tr>
                   <th>Funzionalità / Permesso Piattaforma</th>
-                  <th style="text-align: center; width: 180px;">👩‍💻 Categoria UFFICIO</th>
-                  <th style="text-align: center; width: 180px;">🚚 Categoria ADR</th>
+                  <th style="text-align: center; width: 220px;">👩‍💻 Categoria ${roleLabels.UFFICIO || 'UFFICIO'}</th>
+                  <th style="text-align: center; width: 220px;">🚚 Categoria ${roleLabels.ADR || 'ADR'}</th>
                 </tr>
               </thead>
               <tbody>
@@ -219,7 +241,7 @@ export function renderUserManagementPanel(activeTab, editingUserId = null) {
         </button>
       </div>
 
-      <!-- Form Nuovo Utente (Nascosto di Default) -->
+      <!-- Form Nuovo Utente -->
       <div id="add-user-form-container" class="stat-card" style="display: none; margin-bottom: 32px; padding: 24px; border: 2px solid var(--accent-cyan);">
         <h3 style="margin-top: 0; color: var(--accent-cyan); margin-bottom: 16px;">➕ Registrazione Nuovo Account Dipendente:</h3>
         
@@ -242,8 +264,8 @@ export function renderUserManagementPanel(activeTab, editingUserId = null) {
           <div>
             <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Ruolo Assegnato:*</label>
             <select id="new-user-role" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700;">
-              <option value="UFFICIO">👩‍💻 UFFICIO (Gestione Anagrafiche & OTP)</option>
-              <option value="ADR">🚚 ADR (Agente Consegne & Bluetooth)</option>
+              <option value="UFFICIO">👩‍💻 ${roleLabels.UFFICIO || 'UFFICIO'}</option>
+              <option value="ADR">🚚 ${roleLabels.ADR || 'ADR'}</option>
             </select>
           </div>
           <div>
@@ -289,7 +311,7 @@ export function renderUserManagementPanel(activeTab, editingUserId = null) {
                 </td>
                 <td><strong style="color: var(--accent-cyan); font-family: monospace; font-size: 1.1rem;">${u.username}</strong></td>
                 <td>
-                  ${u.role === 'ADMIN' ? '<span class="badge badge-danger">👨‍💼 ADMIN</span>' : (u.role === 'UFFICIO' ? '<span class="badge badge-info">👩‍💻 UFFICIO</span>' : '<span class="badge badge-warning">🚚 ADR</span>')}
+                  ${u.role === 'ADMIN' ? '<span class="badge badge-danger">👨‍💼 ADMIN</span>' : (u.role === 'UFFICIO' ? `<span class="badge badge-info">👩‍💻 ${roleLabels.UFFICIO || 'UFFICIO'}</span>` : `<span class="badge badge-warning">🚚 ${roleLabels.ADR || 'ADR'}</span>`)}
                 </td>
                 <td>
                   ${u.email ? `<small>${u.email}</small><br>` : ''}

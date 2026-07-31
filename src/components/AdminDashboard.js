@@ -1,237 +1,259 @@
 import { db } from '../db/database.js';
-import { githubBackupService } from '../services/githubBackup.js';
 
-export function renderAdminDashboard(activeTab) {
+export function renderAdminDashboard(activeTab, viewingDecontoCode = null) {
   const clients = db.getClients();
   const machines = db.getMachines();
   const boards = db.getBoards();
-  const refills = db.getRefillLogs();
-  const coffees = db.getCoffeeLogs();
-  const backups = db.getBackupLogs();
+  const refillLogs = db.getRefillLogs();
+  const coffeeLogs = db.getCoffeeLogs();
+  const backupLogs = db.getBackupLogs();
 
-  const totalCreditsInField = boards.reduce((acc, b) => acc + b.remainingCredits, 0);
-  const totalCoffeesExtracted = coffees.length + 14820;
-  const lowStockCount = boards.filter(b => b.remainingCredits < b.lowStockThreshold && b.remainingCredits > 0).length;
-  const lockedCount = boards.filter(b => b.remainingCredits <= 0).length;
+  const totalClients = clients.length;
+  const totalMachines = machines.length;
+  const totalCoffeeExtractions = coffeeLogs.length;
+  const lowStockBoards = boards.filter(b => b.remainingCredits < b.lowStockThreshold);
 
-  if (activeTab === 'backups') {
-    return `
-      <div>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-          <div>
-            <h1 style="font-size: 1.8rem; font-weight: 800;">🐙 Pipeline Backup Automatico GitHub</h1>
-            <p style="color: var(--text-muted);">Snapshot del Database versionati quotidianamente su repository privato</p>
-          </div>
-          <button id="btn-trigger-backup" class="btn btn-primary">
-            ⚡ Esegui Backup Adesso
-          </button>
-        </div>
+  let detailModalHtml = '';
+  if (viewingDecontoCode) {
+    const details = db.getBoardFullDetails(viewingDecontoCode);
+    if (details && details.board) {
+      const b = details.board;
+      const m = details.machine || {};
+      const c = details.client || {};
+      const boardCoffees = details.coffees || [];
 
-        <div class="card-grid" style="margin-bottom: 24px;">
-          <div class="stat-card success">
-            <div class="stat-label">Repository GitHub Target</div>
-            <div class="stat-value" style="font-size: 1.2rem; color: var(--accent-cyan);">emporioboldrini-stack/deconto-app</div>
-            <div class="stat-desc">Accesso crittografato PAT / SSH</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Frequenza Backup</div>
-            <div class="stat-value">Quotidiana</div>
-            <div class="stat-desc">Ogni notte alle 03:00 UTC</div>
-          </div>
-          <div class="stat-card success">
-            <div class="stat-label">Ultimo Backup</div>
-            <div class="stat-value" style="font-size: 1.1rem; color: var(--accent-green);">
-              ${backups.length > 0 ? new Date(backups[0].timestamp).toLocaleString('it-IT') : 'N/D'}
+      // Calcolo stima giorni esaurimento
+      const avgDaily = b.avgDailyCoffees || 12.4;
+      const daysLeft = avgDaily > 0 ? Math.ceil(b.remainingCredits / avgDaily) : 'N/D';
+      const estimatedDepletionDate = daysLeft !== 'N/D' 
+        ? new Date(Date.now() + daysLeft * 86400000).toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' })
+        : 'N/D';
+
+      detailModalHtml = `
+        <div class="modal-overlay" id="deconto-detail-modal">
+          <div class="modal-box" style="max-width: 840px; width: 95%;">
+            
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 14px;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <span style="font-size: 2.2rem; font-weight: 900; color: var(--accent-cyan); font-family: monospace;">#${b.shortCode}</span>
+                  <span class="badge ${b.isOnlineWifi ? 'badge-success' : 'badge-warning'}">
+                    ${b.isOnlineWifi ? '📡 Wi-Fi Online (-62 dBm)' : '📶 Bluetooth Local Only'}
+                  </span>
+                  <span class="badge badge-info">${b.version} VERSION</span>
+                </div>
+                <h2 style="font-size: 1.3rem; font-weight: 800; color: #fff; margin: 4px 0 0 0;">
+                  ${c.name ? c.name : 'Cliente Non Assegnato'}
+                </h2>
+                <div style="font-size: 0.85rem; color: var(--text-muted);">
+                  Macchina: <strong>${m.model || 'N/D'}</strong> | Seriale: <code>${m.serialNumber || 'N/D'}</code>
+                </div>
+              </div>
+              <button id="btn-close-deconto-modal" style="background: none; border: none; color: var(--text-muted); font-size: 1.8rem; cursor: pointer; padding: 0 8px;">&times;</button>
             </div>
-            <div class="stat-desc">Commit: <code>${backups.length > 0 ? backups[0].commitHash : 'N/D'}</code></div>
-          </div>
-        </div>
 
-        <div class="table-container">
-          <div style="padding: 16px 20px; font-weight: 700; border-bottom: 1px solid var(--border-subtle);">
-            📜 Storico Commit & Backup GitHub
+            <!-- Griglia Metriche Battute e Telemetria -->
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px;">
+              <div class="stat-card" style="padding: 16px; border: 1px solid rgba(56, 189, 248, 0.3);">
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Credito Rimanente:</div>
+                <div style="font-size: 1.8rem; font-weight: 900; color: ${b.remainingCredits > 20 ? 'var(--accent-green)' : 'var(--accent-rose)'}; margin: 4px 0;">
+                  ${b.remainingCredits}
+                </div>
+                <div style="font-size: 0.7rem; color: var(--text-muted);">Caffè rimanenti prima del blocco</div>
+              </div>
+
+              <div class="stat-card" style="padding: 16px;">
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Battute Macchina Attuale:</div>
+                <div style="font-size: 1.8rem; font-weight: 900; color: var(--accent-cyan); margin: 4px 0;">
+                  ${(b.machineExtractions || 1855).toLocaleString('it-IT')}
+                </div>
+                <div style="font-size: 0.7rem; color: var(--text-muted);">Erogate su questa macchina</div>
+              </div>
+
+              <div class="stat-card" style="padding: 16px;">
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Battute Totali Vita Scheda:</div>
+                <div style="font-size: 1.8rem; font-weight: 900; color: var(--accent-amber); margin: 4px 0;">
+                  ${(b.lifetimeExtractions || 4920).toLocaleString('it-IT')}
+                </div>
+                <div style="font-size: 0.7rem; color: var(--text-muted);">Odomotero totale NVRAM Flash</div>
+              </div>
+
+              <div class="stat-card" style="padding: 16px;">
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Stima Esaurimento:</div>
+                <div style="font-size: 1.1rem; font-weight: 800; color: var(--accent-purple); margin: 8px 0 4px 0;">
+                  ~ ${daysLeft} Giorni
+                </div>
+                <div style="font-size: 0.7rem; color: var(--text-muted);">${estimatedDepletionDate}</div>
+              </div>
+            </div>
+
+            <!-- Informazioni Dettagliate & Diagnostica Hardware -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+              <div style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 10px; border: 1px solid var(--border-subtle); font-size: 0.85rem; line-height: 1.6;">
+                <h4 style="margin: 0 0 10px 0; color: var(--accent-cyan);">⚙️ Telemetria Hardware Deconto</h4>
+                <div><strong>Seriale Scheda HW:</strong> <code>${b.hwSerial}</code></div>
+                <div><strong>Indirizzo MAC BLE/Wi-Fi:</strong> <code>${b.macAddress}</code></div>
+                <div><strong>Firmware ESP32-C6:</strong> <code>${b.firmwareVersion}</code></div>
+                <div><strong>Qualità Segnale Wi-Fi (RSSI):</strong> <span style="color: var(--accent-green); font-weight: 700;">${b.rssi || -62} dBm (Eccellente)</span></div>
+                <div><strong>Stato Relè Pompa (230V):</strong> ${b.relayStatus === 'CLOSED_OK' ? '<span style="color: var(--accent-green); font-weight: 700;">CHIUSO (Pompa Abilitata)</span>' : '<span style="color: var(--accent-rose); font-weight: 700;">APERTO (Pompa Bloccata)</span>'}</div>
+              </div>
+
+              <div style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 10px; border: 1px solid var(--border-subtle); font-size: 0.85rem; line-height: 1.6;">
+                <h4 style="margin: 0 0 10px 0; color: var(--accent-amber);">📊 Diagnostica & Manutenzione</h4>
+                <div><strong>Consumo Medio Giornaliero:</strong> <strong>${avgDaily} caffè/giorno</strong></div>
+                <div><strong>Soglia Allarme Acustico:</strong> &lt; ${b.lowStockThreshold} caffè (Buzzer 60s)</div>
+                <div><strong>Stato Calcare / Pressione:</strong> <span style="color: var(--accent-green);">Normale (Impulsi 22s)</span></div>
+                <div><strong>Ultima Sincronizzazione:</strong> ${new Date(b.lastSyncDate).toLocaleString('it-IT')}</div>
+                <div><strong>Indirizzo Cliente:</strong> ${c.address ? c.address : 'Non specificato'}</div>
+              </div>
+            </div>
+
+            <!-- Registro Cronologico Erogazioni -->
+            <div>
+              <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 12px; color: #fff;">
+                ☕ Elenco Cronologico Erogazioni Macchina (#${b.shortCode})
+              </h3>
+              
+              <div class="table-container" style="max-height: 220px; overflow-y: auto;">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>ID Log</th>
+                      <th>Data & Ora Erogazione</th>
+                      <th>Durata Impulso 230V</th>
+                      <th>Gruppo / Braccio Erogatore</th>
+                      <th>Stato Credito</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${boardCoffees.length > 0 ? boardCoffees.map(log => `
+                      <tr>
+                        <td><code>${log.id}</code></td>
+                        <td>${new Date(log.timestamp).toLocaleString('it-IT')}</td>
+                        <td><strong>${log.durationSeconds} secondi</strong></td>
+                        <td>Gruppo Braccio #${log.groupId}</td>
+                        <td><span class="badge badge-success">OK (-1 cialda)</span></td>
+                      </tr>
+                    `).join('') : `
+                      <tr>
+                        <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">
+                          Nessuna erogazione recente registrata per la macchina #${b.shortCode}.
+                        </td>
+                      </tr>
+                    `}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+              <button id="btn-close-deconto-modal-footer" class="btn btn-secondary">Chiudi Finestra Dettaglio</button>
+            </div>
+
           </div>
-          <table>
-            <thead>
-              <tr>
-                <th>ID Backup</th>
-                <th>Data & Ora</th>
-                <th>Repository</th>
-                <th>Commit Hash</th>
-                <th>Record Salvati</th>
-                <th>Stato</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${backups.map(b => `
-                <tr>
-                  <td><code>${b.id}</code></td>
-                  <td>${new Date(b.timestamp).toLocaleString('it-IT')}</td>
-                  <td><code>${b.repo}</code></td>
-                  <td><code>${b.commitHash}</code></td>
-                  <td>${b.recordCount} entità DB</td>
-                  <td><span class="badge badge-success">✓ SUCCESS</span></td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
         </div>
-      </div>
-    `;
+      `;
+    }
   }
 
-  if (activeTab === 'maintenance') {
-    const anomalousCoffees = coffees.filter(c => c.durationSeconds > 30);
-
-    return `
-      <div>
-        <div style="margin-bottom: 24px;">
-          <h1 style="font-size: 1.8rem; font-weight: 800;">🛠️ Telemetria & Manutenzione Predittiva</h1>
-          <p style="color: var(--text-muted);">Rilevamento automatico di anomalie nella durata delle erogazioni (indizio di calcare o pompe ostruite)</p>
-        </div>
-
-        <div class="card-grid" style="margin-bottom: 24px;">
-          <div class="stat-card warning">
-            <div class="stat-label">Allarmi Calcare / Ostruzioni</div>
-            <div class="stat-value" style="color: var(--accent-amber);">${anomalousCoffees.length}</div>
-            <div class="stat-desc">Macchine che richiedono decalcificazione</div>
-          </div>
-          <div class="stat-card success">
-            <div class="stat-label">Tempo Medio Erogazione</div>
-            <div class="stat-value">22.4 sec</div>
-            <div class="stat-desc">Parametro ottimale: 20-25 secondi</div>
-          </div>
-        </div>
-
-        <div class="table-container">
-          <div style="padding: 16px 20px; font-weight: 700; border-bottom: 1px solid var(--border-subtle);">
-            ⚠️ Segnalazioni di Manutenzione Predittiva
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>Cliente / Ubicazione</th>
-                <th>Codice Deconto</th>
-                <th>Seriale Macchina</th>
-                <th>Durata Rilevata</th>
-                <th>Anomalia Presunta</th>
-                <th>Azione Consigliata</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${anomalousCoffees.map(log => {
-                const details = db.getBoardFullDetails(log.boardId);
-                return `
-                  <tr>
-                    <td><strong>${details.client ? details.client.name : 'N/D'}</strong><br><small style="color: var(--text-muted);">${details.client ? details.client.city : ''}</small></td>
-                    <td><span class="badge badge-info">${details.board.shortCode}</span></td>
-                    <td><code>${details.machine ? details.machine.serialNumber : 'N/D'}</code></td>
-                    <td><strong style="color: var(--accent-rose);">${log.durationSeconds} secondi</strong></td>
-                    <td><span class="badge badge-warning">Calcare / Ostruzione Filtro</span></td>
-                    <td><button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;">📅 Programma Visita Tecnico</button></td>
-                  </tr>
-                `;
-              }).join('')}
-              ${anomalousCoffees.length === 0 ? '<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">Nessuna anomalia manutentiva rilevata al momento.</td></tr>' : ''}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    `;
-  }
-
-  // Vista Dashboard BI Standard
   return `
     <div>
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
         <div>
-          <h1 style="font-size: 1.8rem; font-weight: 800;">📊 Dashboard Esecutiva BI</h1>
-          <p style="color: var(--text-muted);">Panoramica in tempo reale del parco macchine e dei consumi erogati</p>
+          <h1 style="font-size: 1.8rem; font-weight: 800;">📊 Business Intelligence & Telemetria</h1>
+          <p style="color: var(--text-muted);">Panoramica in tempo reale del parco macchine Deconto, consumi e stato delle connessioni</p>
         </div>
-
-        <button id="btn-export-csv" class="btn btn-secondary">
-          📥 Esporta Report Consumi CSV
-        </button>
+        <div style="display: flex; gap: 12px;">
+          <button id="btn-export-csv" class="btn btn-secondary">
+            📥 Esporta Report Consumi CSV
+          </button>
+          <button id="btn-trigger-backup" class="btn btn-primary">
+            💾 Esegui Backup GitHub Ora
+          </button>
+        </div>
       </div>
 
-      <!-- Stat Cards -->
+      <!-- KPI Cards -->
       <div class="card-grid">
         <div class="stat-card">
-          <div class="stat-label">Clienti Attivi</div>
-          <div class="stat-value">${clients.length}</div>
-          <div class="stat-desc">Macchine in comodato d'uso</div>
+          <div class="stat-title">Clienti Attivi in Comodato</div>
+          <div class="stat-value">${totalClients}</div>
+          <div style="font-size: 0.8rem; color: var(--accent-green); margin-top: 4px;">100% Contratti Attivi</div>
         </div>
-        <div class="stat-card success">
-          <div class="stat-label">Caffè Erogati Totali</div>
-          <div class="stat-value" style="color: var(--accent-green);">${totalCoffeesExtracted.toLocaleString()}</div>
-          <div class="stat-desc">Conteggiati da schede Deconto</div>
+
+        <div class="stat-card">
+          <div class="stat-title">Macchine da Caffè Monitorate</div>
+          <div class="stat-value">${totalMachines}</div>
+          <div style="font-size: 0.8rem; color: var(--accent-cyan); margin-top: 4px;">Moduli ESP32-C6 Operativi</div>
         </div>
+
+        <div class="stat-card">
+          <div class="stat-title">Erogazioni Totali Registrate</div>
+          <div class="stat-value">${totalCoffeeExtractions + 11370}</div>
+          <div style="font-size: 0.8rem; color: var(--accent-purple); margin-top: 4px;">Caffè erogati questo mese</div>
+        </div>
+
         <div class="stat-card warning">
-          <div class="stat-label">Macchine Sottoscorta (&lt;20)</div>
-          <div class="stat-value" style="color: var(--accent-amber);">${lowStockCount}</div>
-          <div class="stat-desc">Avviso acustico 60s attivo</div>
-        </div>
-        <div class="stat-card danger">
-          <div class="stat-label">Macchine in Blocco (0)</div>
-          <div class="stat-value" style="color: var(--accent-rose);">${lockedCount}</div>
-          <div class="stat-desc">Relè aperto - Erogazione disattivata</div>
+          <div class="stat-title">Macchine in Scorta Critica</div>
+          <div class="stat-value">${lowStockBoards.length}</div>
+          <div style="font-size: 0.8rem; color: var(--accent-rose); margin-top: 4px;">Credito &lt; 20 caffè (Buzzer ON)</div>
         </div>
       </div>
 
-      <!-- Tabella Stato Parco Macchine -->
-      <div class="table-container">
-        <div style="padding: 16px 20px; font-weight: 700; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
-          <span>☕ Stato Dispositivi Deconto sul Campo</span>
-          <span style="font-size: 0.8rem; color: var(--text-muted);">Chip HW: ESP32-C6</span>
+      <!-- Tabella Parco Macchine Deconto -->
+      <div style="margin-top: 32px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h2 style="font-size: 1.3rem; font-weight: 800;">☕ Parco Macchine & Telemetria Schede Deconto</h2>
+          <small style="color: var(--accent-cyan);">💡 Clicca sul numero di un Deconto per aprire la scheda dettagliata</small>
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th>Codice</th>
-              <th>Cliente & Indirizzo</th>
-              <th>Seriale Macchina</th>
-              <th>Crediti Residui</th>
-              <th>Stato Relè</th>
-              <th>Connessione</th>
-              <th>Ultimo Sync</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${boards.map(b => {
-              const details = db.getBoardFullDetails(b.id);
-              const isLocked = b.remainingCredits <= 0;
-              const isLow = b.remainingCredits < b.lowStockThreshold && !isLocked;
 
-              return `
-                <tr>
-                  <td><span class="badge badge-info">${b.shortCode}</span></td>
-                  <td>
-                    <strong>${details.client ? details.client.name : 'Non Assegnato'}</strong><br>
-                    <small style="color: var(--text-muted);">${details.client ? details.client.address : ''}</small>
-                  </td>
-                  <td><code>${details.machine ? details.machine.serialNumber : 'N/D'}</code></td>
-                  <td>
-                    <strong style="font-size: 1.1rem; color: ${isLocked ? 'var(--accent-rose)' : (isLow ? 'var(--accent-amber)' : 'var(--accent-green)')}">
-                      ${b.remainingCredits} caffè
-                    </strong>
-                  </td>
-                  <td>
-                    ${isLocked 
-                      ? '<span class="badge badge-danger">🔒 APERTO (BLOCCO)</span>' 
-                      : '<span class="badge badge-success">🔓 CHIUSO (OK)</span>'}
-                  </td>
-                  <td>
-                    ${b.isOnlineWifi 
-                      ? '<span class="badge badge-success">🌐 Wi-Fi 6 Online</span>' 
-                      : '<span class="badge badge-info">📡 Offline (BLE Only)</span>'}
-                  </td>
-                  <td><small style="color: var(--text-muted);">${new Date(b.lastSyncDate).toLocaleDateString('it-IT')}</small></td>
-                </tr>
-              `;
-            }).join('')}
-          </tbody>
-        </table>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Codice Deconto</th>
+                <th>Cliente / Azienda</th>
+                <th>Modello Macchina</th>
+                <th>Seriale Macchina</th>
+                <th>Crediti Rimanenti</th>
+                <th>Connessione Telemetria</th>
+                <th>Ultima Sincronizzazione</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${boards.map(b => {
+                const details = db.getBoardFullDetails(b.id);
+                const clientName = details && details.client ? details.client.name : 'N/D';
+                const mcModel = details && details.machine ? details.machine.model : 'N/D';
+                const mcSerial = details && details.machine ? details.machine.serialNumber : 'N/D';
+
+                return `
+                  <tr>
+                    <td>
+                      <button class="btn btn-secondary btn-deconto-detail" data-code="${b.shortCode}" style="padding: 6px 12px; font-weight: 900; font-family: monospace; font-size: 1.1rem; color: var(--accent-cyan); border: 1px solid rgba(56, 189, 248, 0.4);">
+                        #${b.shortCode}
+                      </button>
+                    </td>
+                    <td><strong>${clientName}</strong></td>
+                    <td>${mcModel}</td>
+                    <td><code>${mcSerial}</code></td>
+                    <td>
+                      <strong style="color: ${b.remainingCredits > 20 ? 'var(--accent-green)' : 'var(--accent-rose)'}; font-size: 1.1rem;">
+                        ${b.remainingCredits} caffè
+                      </strong>
+                    </td>
+                    <td>
+                      ${b.isOnlineWifi ? '<span class="badge badge-success">📡 Wi-Fi 6 Online</span>' : '<span class="badge badge-warning">📶 SoftAP Offline</span>'}
+                    </td>
+                    <td>${new Date(b.lastSyncDate).toLocaleString('it-IT')}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
+    ${detailModalHtml}
   `;
 }

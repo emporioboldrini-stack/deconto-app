@@ -224,7 +224,7 @@ export function renderOfficePanel(activeTab) {
         `}
       </div>
 
-      <!-- Form Nuovo Cliente (Solo se abilitato dall'Admin) -->
+      <!-- Form Nuovo Cliente -->
       ${canCreate ? `
         <div id="add-client-form-container" class="stat-card" style="display: none; margin-bottom: 32px; padding: 24px; border: 2px solid var(--accent-cyan);">
           <h3 style="margin-top: 0; color: var(--accent-cyan); margin-bottom: 16px;">➕ Registrazione Nuovo Cliente & Scheda Deconto:</h3>
@@ -270,7 +270,7 @@ export function renderOfficePanel(activeTab) {
         </div>
       ` : ''}
 
-      <!-- Tabella Clienti -->
+      <!-- Tabella Clienti (Con Modello Macchina AND Seriale Macchina) -->
       <div class="table-container">
         <table>
           <thead>
@@ -278,7 +278,8 @@ export function renderOfficePanel(activeTab) {
               <th>Cliente / Azienda</th>
               <th>Referente & Contatti</th>
               <th>Città</th>
-              <th>Macchina Assegnata</th>
+              <th>Modello Macchina</th>
+              <th>Seriale Macchina</th>
               <th>Deconto ID</th>
               <th>Credito Attuale</th>
               <th>Azioni</th>
@@ -294,7 +295,8 @@ export function renderOfficePanel(activeTab) {
                   <td><strong>${c.name}</strong></td>
                   <td>${c.refPerson}<br><small style="color: var(--text-muted);">${c.phone}</small></td>
                   <td>${c.city}</td>
-                  <td><code>${machine ? machine.model : 'N/D'}</code></td>
+                  <td><strong>${machine ? machine.model : 'N/D'}</strong></td>
+                  <td><code>${machine ? machine.serialNumber : 'N/D'}</code></td>
                   <td>${board ? `<span class="badge badge-info">${board.shortCode}</span>` : 'Non Assegnato'}</td>
                   <td>
                     ${board ? `<strong style="color: ${board.remainingCredits > 20 ? 'var(--accent-green)' : 'var(--accent-rose)'}">${board.remainingCredits} caffè</strong>` : 'N/D'}
