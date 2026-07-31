@@ -19,7 +19,13 @@ let state = {
   showProfileModal: false,
   editingStaffUserId: null,
   editingClientId: null,
-  viewingDecontoCode: null
+  viewingDecontoCode: null,
+
+  // Stato Ricerca & Ordinamento Dashboard
+  dashSearchQuery: '',
+  dashSearchCategory: 'ALL',
+  dashSortColumn: 'shortCode',
+  dashSortDirection: 'DESC'
 };
 
 function renderApp() {
@@ -47,7 +53,14 @@ function renderApp() {
     } else if (state.activeTab === 'adr_visits') {
       mainContentHtml = renderAdrPanel(state.activeTab);
     } else {
-      mainContentHtml = renderAdminDashboard(state.activeTab, state.viewingDecontoCode);
+      mainContentHtml = renderAdminDashboard(
+        state.activeTab, 
+        state.viewingDecontoCode, 
+        state.dashSearchQuery, 
+        state.dashSearchCategory, 
+        state.dashSortColumn, 
+        state.dashSortDirection
+      );
     }
   } else if (user.role === 'UFFICIO' || user.role === 'ADR') {
     if (state.activeTab === 'adr_visits') {
@@ -157,6 +170,47 @@ function attachMainEventListeners() {
         state.activeTab = tab;
         renderApp();
       }
+    });
+  });
+
+  // --- DASHBOARD: RICERCA MULTI-CATEGORIA & ORDINAMENTO COLONNE ---
+  const btnDashSearch = document.getElementById('btn-dash-search');
+  const dashSearchInput = document.getElementById('dash-search-input');
+  if (btnDashSearch && dashSearchInput) {
+    btnDashSearch.addEventListener('click', () => {
+      state.dashSearchQuery = dashSearchInput.value;
+      state.dashSearchCategory = document.getElementById('dash-search-category').value;
+      renderApp();
+    });
+
+    dashSearchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        state.dashSearchQuery = dashSearchInput.value;
+        state.dashSearchCategory = document.getElementById('dash-search-category').value;
+        renderApp();
+      }
+    });
+  }
+
+  const btnDashReset = document.getElementById('btn-dash-reset');
+  if (btnDashReset) {
+    btnDashReset.addEventListener('click', () => {
+      state.dashSearchQuery = '';
+      state.dashSearchCategory = 'ALL';
+      renderApp();
+    });
+  }
+
+  document.querySelectorAll('.th-sortable').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.getAttribute('data-col');
+      if (state.dashSortColumn === col) {
+        state.dashSortDirection = state.dashSortDirection === 'ASC' ? 'DESC' : 'ASC';
+      } else {
+        state.dashSortColumn = col;
+        state.dashSortDirection = 'ASC';
+      }
+      renderApp();
     });
   });
 

@@ -1,17 +1,92 @@
 import { db } from '../db/database.js';
 
-export function renderAdminDashboard(activeTab, viewingDecontoCode = null) {
+export function renderAdminDashboard(
+  activeTab, 
+  viewingDecontoCode = null, 
+  searchQuery = '', 
+  searchCategory = 'ALL', 
+  sortColumn = 'shortCode', 
+  sortDirection = 'DESC'
+) {
   const clients = db.getClients();
   const machines = db.getMachines();
   const boards = db.getBoards();
-  const refillLogs = db.getRefillLogs();
   const coffeeLogs = db.getCoffeeLogs();
-  const backupLogs = db.getBackupLogs();
 
   const totalClients = clients.length;
   const totalMachines = machines.length;
   const totalCoffeeExtractions = coffeeLogs.length;
   const lowStockBoards = boards.filter(b => b.remainingCredits < b.lowStockThreshold);
+
+  // 1. Filtraggio per Ricerca Multi-Categoria
+  let filteredBoards = boards.filter(b => {
+    if (!searchQuery.trim()) return true;
+
+    const q = searchQuery.toLowerCase().trim();
+    const details = db.getBoardFullDetails(b.id);
+    const clientName = (details && details.client ? details.client.name : '').toLowerCase();
+    const mcModel = (details && details.machine ? details.machine.model : '').toLowerCase();
+    const mcSerial = (details && details.machine ? details.machine.serialNumber : '').toLowerCase();
+    const shortCode = String(b.shortCode).toLowerCase();
+    const credits = String(b.remainingCredits);
+    const conn = b.isOnlineWifi ? 'wi-fi 6 online' : 'softap offline';
+    const syncDate = new Date(b.lastSyncDate).toLocaleString('it-IT').toLowerCase();
+
+    if (searchCategory === 'SHORT_CODE') return shortCode.includes(q);
+    if (searchCategory === 'CLIENT') return clientName.includes(q);
+    if (searchCategory === 'MODEL') return mcModel.includes(q);
+    if (searchCategory === 'CREDITS') return credits.includes(q);
+    if (searchCategory === 'CONNECTION') return conn.includes(q);
+    if (searchCategory === 'SYNC_DATE') return syncDate.includes(q);
+
+    // Default 'ALL'
+    return shortCode.includes(q) || clientName.includes(q) || mcModel.includes(q) || mcSerial.includes(q) || credits.includes(q) || conn.includes(q) || syncDate.includes(q);
+  });
+
+  // 2. Indicizzazione e Ordinamento Dinamico con Freccette
+  filteredBoards.sort((a, b) => {
+    const detailsA = db.getBoardFullDetails(a.id);
+    const detailsB = db.getBoardFullDetails(b.id);
+    const clientA = detailsA && detailsA.client ? detailsA.client.name : '';
+    const clientB = detailsB && detailsB.client ? detailsB.client.name : '';
+    const modelA = detailsA && detailsA.machine ? detailsA.machine.model : '';
+    const modelB = detailsB && detailsB.machine ? detailsB.machine.model : '';
+
+    let valA, valB;
+
+    if (sortColumn === 'shortCode') {
+      valA = parseInt(a.shortCode, 10);
+      valB = parseInt(b.shortCode, 10);
+    } else if (sortColumn === 'client') {
+      valA = clientA.toLowerCase();
+      valB = clientB.toLowerCase();
+    } else if (sortColumn === 'model') {
+      valA = modelA.toLowerCase();
+      valB = modelB.toLowerCase();
+    } else if (sortColumn === 'credits') {
+      valA = a.remainingCredits;
+      valB = b.remainingCredits;
+    } else if (sortColumn === 'connection') {
+      valA = a.isOnlineWifi ? 1 : 0;
+      valB = b.isOnlineWifi ? 1 : 0;
+    } else if (sortColumn === 'syncDate') {
+      valA = new Date(a.lastSyncDate).getTime();
+      valB = new Date(b.lastSyncDate).getTime();
+    } else {
+      valA = parseInt(a.shortCode, 10);
+      valB = parseInt(b.shortCode, 10);
+    }
+
+    if (valA < valB) return sortDirection === 'ASC' ? -1 : 1;
+    if (valA > valB) return sortDirection === 'ASC' ? 1 : -1;
+    return 0;
+  });
+
+  // Helper Freccette Ordinamento
+  const getSortIcon = (col) => {
+    if (sortColumn !== col) return '<span style="color: var(--text-dim); opacity: 0.5;"> ⇅</span>';
+    return sortDirection === 'ASC' ? '<span style="color: var(--accent-cyan);"> ▲</span>' : '<span style="color: var(--accent-cyan);"> ▼</span>';
+  };
 
   let detailModalHtml = '';
   if (viewingDecontoCode) {
@@ -22,7 +97,6 @@ export function renderAdminDashboard(activeTab, viewingDecontoCode = null) {
       const c = details.client || {};
       const boardCoffees = details.coffees || [];
 
-      // Calcolo stima giorni esaurimento
       const avgDaily = b.avgDailyCoffees || 12.4;
       const daysLeft = avgDaily > 0 ? Math.ceil(b.remainingCredits / avgDaily) : 'N/D';
       const estimatedDepletionDate = daysLeft !== 'N/D' 
@@ -200,28 +274,75 @@ export function renderAdminDashboard(activeTab, viewingDecontoCode = null) {
         </div>
       </div>
 
-      <!-- Tabella Parco Macchine Deconto -->
-      <div style="margin-top: 32px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-          <h2 style="font-size: 1.3rem; font-weight: 800;">☕ Parco Macchine & Telemetria Schede Deconto</h2>
-          <small style="color: var(--accent-cyan);">💡 Clicca sul numero di un Deconto per aprire la scheda dettagliata</small>
+      <!-- Barra di Ricerca Multi-Categoria e Indicizzazione -->
+      <div style="margin-top: 32px;" class="stat-card" style="padding: 20px;">
+        <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 10px;">
+          🔍 Ricerca Avanzata Multi-Categoria nel Parco Macchine:
+        </div>
+        
+        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+          <input type="text" id="dash-search-input" value="${searchQuery}" placeholder="Digita termine da cercare..." style="flex: 2; min-width: 220px; padding: 10px 14px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.95rem;">
+
+          <select id="dash-search-category" style="flex: 1; min-width: 180px; padding: 10px 14px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 8px; font-weight: 700; font-size: 0.9rem;">
+            <option value="ALL" ${searchCategory === 'ALL' ? 'selected' : ''}>🔍 Tutti i Campi</option>
+            <option value="SHORT_CODE" ${searchCategory === 'SHORT_CODE' ? 'selected' : ''}>🔢 Numero Deconto</option>
+            <option value="CLIENT" ${searchCategory === 'CLIENT' ? 'selected' : ''}>🏢 Nome Cliente</option>
+            <option value="MODEL" ${searchCategory === 'MODEL' ? 'selected' : ''}>☕ Modello Macchina</option>
+            <option value="CREDITS" ${searchCategory === 'CREDITS' ? 'selected' : ''}>☕ Battute Rimanenti</option>
+            <option value="CONNECTION" ${searchCategory === 'CONNECTION' ? 'selected' : ''}>📡 Tipo Connessione</option>
+            <option value="SYNC_DATE" ${searchCategory === 'SYNC_DATE' ? 'selected' : ''}>📅 Data Ultima Sync</option>
+          </select>
+
+          <button id="btn-dash-search" class="btn btn-primary" style="padding: 10px 20px; font-weight: 800;">
+            🔍 CERCA
+          </button>
+          
+          <button id="btn-dash-reset" class="btn btn-secondary" style="padding: 10px 16px;">
+            ✖️ Reset Filtri
+          </button>
+        </div>
+
+        ${searchQuery ? `
+          <div style="margin-top: 10px; font-size: 0.8rem; color: var(--accent-cyan);">
+            Trovate <strong>${filteredBoards.length}</strong> macchine corrispondenti alla ricerca "${searchQuery}"
+          </div>
+        ` : ''}
+      </div>
+
+      <!-- Tabella Parco Macchine Deconto Indicizzata e Ordinabile -->
+      <div style="margin-top: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <h2 style="font-size: 1.3rem; font-weight: 800; margin: 0;">☕ Parco Macchine Indicizzato</h2>
+          <small style="color: var(--text-muted);">Clicca sulle intestazioni della tabella per ordinare dal più alto al più basso o viceversa (▲ / ▼)</small>
         </div>
 
         <div class="table-container">
           <table>
             <thead>
               <tr>
-                <th>Codice Deconto</th>
-                <th>Cliente / Azienda</th>
-                <th>Modello Macchina</th>
+                <th style="cursor: pointer; user-select: none;" class="th-sortable" data-col="shortCode">
+                  Numero Deconto ${getSortIcon('shortCode')}
+                </th>
+                <th style="cursor: pointer; user-select: none;" class="th-sortable" data-col="client">
+                  Cliente / Azienda ${getSortIcon('client')}
+                </th>
+                <th style="cursor: pointer; user-select: none;" class="th-sortable" data-col="model">
+                  Modello Macchina ${getSortIcon('model')}
+                </th>
                 <th>Seriale Macchina</th>
-                <th>Crediti Rimanenti</th>
-                <th>Connessione Telemetria</th>
-                <th>Ultima Sincronizzazione</th>
+                <th style="cursor: pointer; user-select: none;" class="th-sortable" data-col="credits">
+                  Battute Rimanenti ${getSortIcon('credits')}
+                </th>
+                <th style="cursor: pointer; user-select: none;" class="th-sortable" data-col="connection">
+                  Tipo Connessione ${getSortIcon('connection')}
+                </th>
+                <th style="cursor: pointer; user-select: none;" class="th-sortable" data-col="syncDate">
+                  Data Ultima Sync ${getSortIcon('syncDate')}
+                </th>
               </tr>
             </thead>
             <tbody>
-              ${boards.map(b => {
+              ${filteredBoards.length > 0 ? filteredBoards.map(b => {
                 const details = db.getBoardFullDetails(b.id);
                 const clientName = details && details.client ? details.client.name : 'N/D';
                 const mcModel = details && details.machine ? details.machine.model : 'N/D';
@@ -248,7 +369,13 @@ export function renderAdminDashboard(activeTab, viewingDecontoCode = null) {
                     <td>${new Date(b.lastSyncDate).toLocaleString('it-IT')}</td>
                   </tr>
                 `;
-              }).join('')}
+              }).join('') : `
+                <tr>
+                  <td colspan="7" style="text-align: center; padding: 32px; color: var(--text-muted);">
+                    Nessuna macchina trovata per i criteri di ricerca selezionati.
+                  </td>
+                </tr>
+              `}
             </tbody>
           </table>
         </div>
