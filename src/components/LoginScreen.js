@@ -1,19 +1,27 @@
+import { db } from '../db/database.js';
+
 export function renderLoginScreen() {
+  const settings = db.getSettings();
+
   return `
     <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at top right, #1f2937, #090d16); padding: 20px;">
       
       <div style="max-width: 440px; width: 100%; background: rgba(31, 41, 55, 0.7); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; padding: 40px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);">
         
         <div style="text-align: center; margin-bottom: 32px;">
-          <div style="width: 64px; height: 64px; background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple)); border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; margin: 0 auto 16px auto; box-shadow: var(--shadow-glow);">
-            ☕
+          <!-- Logo Personalizzato o Predefinito -->
+          <div style="width: 72px; height: 72px; background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple)); border-radius: 20px; display: flex; align-items: center; justify-content: center; overflow: hidden; margin: 0 auto 16px auto; box-shadow: var(--shadow-glow);">
+            ${settings.customLogoUrl 
+              ? `<img src="${settings.customLogoUrl}" style="width: 100%; height: 100%; object-fit: cover;" alt="Logo App">` 
+              : `<span style="font-size: 2.5rem;">☕</span>`}
           </div>
           
+          <!-- Titolo & Sottotitolo Personalizzabili dalle Impostazioni -->
           <h1 style="font-size: 1.8rem; font-weight: 800; background: linear-gradient(135deg, #ffffff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-            DECONTO IoT System
+            ${settings.brandTitle || 'DECONTO'}
           </h1>
-          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
-            Accesso Riservato agli Operatori Autorizzati
+          <p style="font-size: 0.85rem; color: var(--accent-cyan); font-weight: 600; margin-top: 4px;">
+            ${settings.brandSubtitle || 'IoT Vending System'}
           </p>
         </div>
 
