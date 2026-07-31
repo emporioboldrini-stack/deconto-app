@@ -1,14 +1,13 @@
 /**
- * DECONTO IoT System - Core Database, Authentication & Dynamic Permission Engine (v5)
+ * DECONTO IoT System - Core Database, Authentication & Dynamic Permission Engine (v6)
  * Gestisce l'autenticazione, la gestione personale/utenti, la matrice dei permessi dinamica,
- * la personalizzazione dei nomi delle categorie utenti e la telemetria estesa delle macchine.
+ * la modifica completa delle schede clienti, macchine e Deconto.
  */
 
-const STORAGE_KEY = 'DECONTO_DB_V5';
-const SESSION_KEY = 'DECONTO_AUTH_SESSION_V5';
+const STORAGE_KEY = 'DECONTO_DB_V6';
+const SESSION_KEY = 'DECONTO_AUTH_SESSION_V6';
 
 const initialData = {
-  // Personalizzazione Nomi Categorie / Ruoli
   roleLabels: {
     UFFICIO: 'UFFICIO & LOGISTICA',
     ADR: 'AGENTE ADR (CONSEGNE)'
@@ -102,9 +101,9 @@ const initialData = {
       relayStatus: 'CLOSED_OK',
       firmwareVersion: 'v2.1.0-ESP32-C6',
       isOnlineWifi: true,
-      rssi: -62, // Ottimo segnale Wi-Fi
-      machineExtractions: 1855,   // Battute fatte su questa macchina
-      lifetimeExtractions: 4920,  // Battute totali in tutta la vita della scheda
+      rssi: -62,
+      machineExtractions: 1855,
+      lifetimeExtractions: 4920,
       avgDailyCoffees: 12.4,
       lastSyncDate: new Date().toISOString()
     },
@@ -200,7 +199,7 @@ const initialData = {
       id: 'bak_001',
       timestamp: new Date(Date.now() - 86400000).toISOString(),
       repo: 'emporioboldrini-stack/deconto-app',
-      commitHash: '13498e7',
+      commitHash: '53a9f3c',
       status: 'SUCCESS',
       recordCount: 28
     }
@@ -235,7 +234,6 @@ class DecontoDatabase {
     } catch (e) {}
   }
 
-  // --- NOMI CATEGORIE RUOLI PERSONALIZZABILI ---
   getRoleLabels() {
     return this.data.roleLabels || initialData.roleLabels;
   }
@@ -245,8 +243,6 @@ class DecontoDatabase {
     this.data.roleLabels[roleKey] = newLabel.trim();
     this.saveData();
   }
-
-  // --- SESSIONE & AUTENTICAZIONE ---
 
   loadSession() {
     try {
@@ -304,8 +300,6 @@ class DecontoDatabase {
   getCurrentUser() {
     return this.currentUser;
   }
-
-  // --- GESTIONE UTENTI & PERSONALE ---
 
   addUser(userData) {
     const existing = this.data.users.find(u => u.username === userData.username.trim());
@@ -367,8 +361,6 @@ class DecontoDatabase {
     this.data.users = this.data.users.filter(u => u.id !== userId);
     this.saveData();
   }
-
-  // --- MATRICE PERMESSI ---
 
   getPermissions() {
     return this.data.permissions || initialData.permissions;
@@ -457,6 +449,49 @@ class DecontoDatabase {
 
     this.saveData();
     return newClient;
+  }
+
+  // --- MODIFICA COMPLETA SCHEDA CLIENTE, MACCHINA E DECONTO ---
+  updateClientAndMachine(clientId, updateData) {
+    if (!this.hasPermission('canEditClients')) {
+      throw new Error('Non disponi dei permessi per modificare le schede clienti.');
+    }
+
+    const client = this.data.clients.find(c => c.id === clientId);
+    if (!client) throw new Error('Cliente non trovato.');
+
+    // 1. Aggiorna dati anagrafici cliente
+    if (updateData.name) client.name = updateData.name.trim();
+    if (updateData.refPerson) client.refPerson = updateData.refPerson.trim();
+    if (updateData.phone) client.phone = updateData.phone.trim();
+    if (updateData.city !== undefined) client.city = updateData.city.trim();
+    if (updateData.address !== undefined) client.address = updateData.address.trim();
+
+    // 2. Aggiorna dati macchina da caffè
+    const machine = this.data.machines.find(m => m.clientId === clientId);
+    if (machine) {
+      if (updateData.machineModel) machine.model = updateData.machineModel.trim();
+      if (updateData.machineSerial) machine.serialNumber = updateData.machineSerial.trim();
+    }
+
+    // 3. Aggiorna dati scheda Deconto associata
+    if (machine) {
+      const board = this.data.decontoBoards.find(b => b.machineId === machine.id);
+      if (board) {
+        if (updateData.shortCode) board.shortCode = updateData.shortCode.trim();
+        if (updateData.remainingCredits !== undefined && updateData.remainingCredits !== '') {
+          board.remainingCredits = parseInt(updateData.remainingCredits, 10);
+          if (board.remainingCredits > 0) board.relayStatus = 'CLOSED_OK';
+        }
+        if (updateData.lowStockThreshold !== undefined && updateData.lowStockThreshold !== '') {
+          board.lowStockThreshold = parseInt(updateData.lowStockThreshold, 10);
+        }
+        if (updateData.boardVersion) board.version = updateData.boardVersion;
+      }
+    }
+
+    this.saveData();
+    return client;
   }
 
   deleteClient(clientId) {

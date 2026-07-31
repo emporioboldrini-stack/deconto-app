@@ -1,6 +1,6 @@
 import { db } from '../db/database.js';
 
-export function renderOfficePanel(activeTab) {
+export function renderOfficePanel(activeTab, editingClientId = null) {
   const clients = db.getClients();
   const boards = db.getBoards();
   const refills = db.getRefillLogs();
@@ -8,6 +8,102 @@ export function renderOfficePanel(activeTab) {
   const canCreate = db.hasPermission('canCreateClients');
   const canEdit = db.hasPermission('canEditClients');
   const canDelete = db.hasPermission('canDeleteClients');
+
+  let editClientModalHtml = '';
+  if (editingClientId) {
+    const clientToEdit = clients.find(c => c.id === editingClientId);
+    const machineToEdit = clientToEdit ? db.getMachines().find(m => m.clientId === clientToEdit.id) : null;
+    const boardToEdit = machineToEdit ? db.getBoards().find(b => b.machineId === machineToEdit.id) : null;
+
+    if (clientToEdit) {
+      editClientModalHtml = `
+        <div class="modal-overlay" id="edit-client-modal">
+          <div class="modal-box" style="max-width: 680px; width: 95%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px;">
+              <h2 style="font-size: 1.3rem; font-weight: 800; color: #fff; margin: 0;">
+                ✏️ Modifica Scheda Cliente & Impostazioni Macchina
+              </h2>
+              <button id="btn-close-edit-client-modal" style="background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer;">&times;</button>
+            </div>
+
+            <form id="edit-client-form">
+              <input type="hidden" id="edit-client-id" value="${clientToEdit.id}">
+
+              <!-- Sezione 1: Anagrafica Cliente -->
+              <h4 style="color: var(--accent-cyan); margin: 0 0 12px 0;">1. Dati Anagrafici Cliente & Contatti:</h4>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div>
+                  <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Ragione Sociale / Cliente:*</label>
+                  <input type="text" id="edit-cli-name" value="${clientToEdit.name}" required style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700;">
+                </div>
+                <div>
+                  <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Persona di Riferimento:*</label>
+                  <input type="text" id="edit-cli-ref" value="${clientToEdit.refPerson}" required style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+                <div>
+                  <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Telefono / WhatsApp:*</label>
+                  <input type="text" id="edit-cli-phone" value="${clientToEdit.phone}" required style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+                </div>
+                <div>
+                  <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Città:</label>
+                  <input type="text" id="edit-cli-city" value="${clientToEdit.city || ''}" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+                </div>
+                <div>
+                  <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Indirizzo Completo:</label>
+                  <input type="text" id="edit-cli-address" value="${clientToEdit.address || ''}" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+                </div>
+              </div>
+
+              <!-- Sezione 2: Macchina da Caffè -->
+              <h4 style="color: var(--accent-purple); margin: 16px 0 12px 0;">2. Configurazione Macchina da Caffè:</h4>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+                <div>
+                  <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Modello Macchina da Caffè:</label>
+                  <input type="text" id="edit-cli-mc-model" value="${machineToEdit ? machineToEdit.model : ''}" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700;">
+                </div>
+                <div>
+                  <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Seriale Macchina (Targhetta):</label>
+                  <input type="text" id="edit-cli-mc-serial" value="${machineToEdit ? machineToEdit.serialNumber : ''}" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-family: monospace;">
+                </div>
+              </div>
+
+              <!-- Sezione 3: Dispositivo Deconto -->
+              <h4 style="color: var(--accent-amber); margin: 16px 0 12px 0;">3. Crediti & Scheda Deconto IoT:</h4>
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+                <div>
+                  <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Codice Deconto (4 cifre):</label>
+                  <input type="text" id="edit-cli-shortcode" value="${boardToEdit ? boardToEdit.shortCode : ''}" maxlength="4" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 800; font-family: monospace;">
+                </div>
+                <div>
+                  <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Crediti Rimanenti (Caffè):</label>
+                  <input type="number" id="edit-cli-credits" value="${boardToEdit ? boardToEdit.remainingCredits : 200}" style="width: 100%; padding: 10px; background: var(--bg-primary); color: var(--accent-green); border: 1px solid var(--border-color); border-radius: 6px; font-weight: 900;">
+                </div>
+                <div>
+                  <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Soglia Buzzer (Caffè):</label>
+                  <input type="number" id="edit-cli-threshold" value="${boardToEdit ? boardToEdit.lowStockThreshold : 20}" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+                </div>
+                <div>
+                  <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Versione Hardware:</label>
+                  <select id="edit-cli-board-version" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700;">
+                    <option value="BASIC" ${boardToEdit && boardToEdit.version === 'BASIC' ? 'selected' : ''}>BASIC (1 Braccio)</option>
+                    <option value="PRO" ${boardToEdit && boardToEdit.version === 'PRO' ? 'selected' : ''}>PRO (Multi Braccio)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button type="button" id="btn-cancel-edit-client" class="btn btn-secondary">Annulla</button>
+                <button type="submit" class="btn btn-primary" style="padding: 10px 20px;">💾 Salva Tutte le Modifiche Scheda</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+  }
 
   if (activeTab === 'qr_generator') {
     return `
@@ -270,7 +366,7 @@ export function renderOfficePanel(activeTab) {
         </div>
       ` : ''}
 
-      <!-- Tabella Clienti (Con Modello Macchina AND Seriale Macchina) -->
+      <!-- Tabella Clienti (Con Tasto Modifica Completo) -->
       <div class="table-container">
         <table>
           <thead>
@@ -302,11 +398,21 @@ export function renderOfficePanel(activeTab) {
                     ${board ? `<strong style="color: ${board.remainingCredits > 20 ? 'var(--accent-green)' : 'var(--accent-rose)'}">${board.remainingCredits} caffè</strong>` : 'N/D'}
                   </td>
                   <td>
-                    ${canDelete ? `
-                      <button class="btn btn-secondary btn-del-client" data-id="${c.id}" style="padding: 6px 12px; font-size: 0.8rem; color: var(--accent-rose);">🗑️ Rimuovi</button>
-                    ` : `
-                      <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" disabled>👁️ Dettagli</button>
-                    `}
+                    <div style="display: flex; gap: 6px;">
+                      ${canEdit ? `
+                        <button class="btn btn-secondary btn-edit-client" data-id="${c.id}" style="padding: 6px 10px; font-size: 0.8rem; color: var(--accent-cyan);">
+                          ✏️ Modifica
+                        </button>
+                      ` : ''}
+                      ${canDelete ? `
+                        <button class="btn btn-secondary btn-del-client" data-id="${c.id}" style="padding: 6px 10px; font-size: 0.8rem; color: var(--accent-rose);">
+                          🗑️ Rimuovi
+                        </button>
+                      ` : ''}
+                      ${!canEdit && !canDelete ? `
+                        <button class="btn btn-secondary" style="padding: 6px 10px; font-size: 0.8rem;" disabled>👁️ Lettura</button>
+                      ` : ''}
+                    </div>
                   </td>
                 </tr>
               `;
@@ -315,5 +421,6 @@ export function renderOfficePanel(activeTab) {
         </table>
       </div>
     </div>
+    ${editClientModalHtml}
   `;
 }

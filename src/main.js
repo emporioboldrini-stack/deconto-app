@@ -17,6 +17,7 @@ let state = {
   activeTab: 'dashboard',
   showProfileModal: false,
   editingStaffUserId: null,
+  editingClientId: null,
   viewingDecontoCode: null
 };
 
@@ -39,7 +40,7 @@ function renderApp() {
     mainContentHtml = renderUserManagementPanel(state.activeTab, state.editingStaffUserId);
   } else if (user.role === 'ADMIN') {
     if (state.activeTab === 'clients' || state.activeTab === 'qr_generator' || state.activeTab === 'otp_generator' || state.activeTab === 'refills_history') {
-      mainContentHtml = renderOfficePanel(state.activeTab);
+      mainContentHtml = renderOfficePanel(state.activeTab, state.editingClientId);
     } else if (state.activeTab === 'adr_visits') {
       mainContentHtml = renderAdrPanel(state.activeTab);
     } else {
@@ -49,7 +50,7 @@ function renderApp() {
     if (state.activeTab === 'adr_visits') {
       mainContentHtml = renderAdrPanel(state.activeTab);
     } else {
-      mainContentHtml = renderOfficePanel(state.activeTab);
+      mainContentHtml = renderOfficePanel(state.activeTab, state.editingClientId);
     }
   }
 
@@ -155,6 +156,61 @@ function attachMainEventListeners() {
       }
     });
   });
+
+  // --- MODIFICA SCHEDA CLIENTE & MACCHINA & DECONTO (OFFICE VIEW) ---
+  document.querySelectorAll('.btn-edit-client').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-id');
+      state.editingClientId = id;
+      renderApp();
+    });
+  });
+
+  const btnCloseEditClient = document.getElementById('btn-close-edit-client-modal');
+  const btnCancelEditClient = document.getElementById('btn-cancel-edit-client');
+  if (btnCloseEditClient) btnCloseEditClient.addEventListener('click', () => { state.editingClientId = null; renderApp(); });
+  if (btnCancelEditClient) btnCancelEditClient.addEventListener('click', () => { state.editingClientId = null; renderApp(); });
+
+  const editClientForm = document.getElementById('edit-client-form');
+  if (editClientForm) {
+    editClientForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const clientId = document.getElementById('edit-client-id').value;
+      const name = document.getElementById('edit-cli-name').value;
+      const refPerson = document.getElementById('edit-cli-ref').value;
+      const phone = document.getElementById('edit-cli-phone').value;
+      const city = document.getElementById('edit-cli-city').value;
+      const address = document.getElementById('edit-cli-address').value;
+      const machineModel = document.getElementById('edit-cli-mc-model').value;
+      const machineSerial = document.getElementById('edit-cli-mc-serial').value;
+      const shortCode = document.getElementById('edit-cli-shortcode').value;
+      const remainingCredits = document.getElementById('edit-cli-credits').value;
+      const lowStockThreshold = document.getElementById('edit-cli-threshold').value;
+      const boardVersion = document.getElementById('edit-cli-board-version').value;
+
+      try {
+        db.updateClientAndMachine(clientId, {
+          name,
+          refPerson,
+          phone,
+          city,
+          address,
+          machineModel,
+          machineSerial,
+          shortCode,
+          remainingCredits,
+          lowStockThreshold,
+          boardVersion
+        });
+
+        state.editingClientId = null;
+        alert('✅ Scheda Cliente, Macchina e Deconto aggiornata con successo!');
+        renderApp();
+      } catch (err) {
+        alert(`Errore: ${err.message}`);
+      }
+    });
+  }
 
   // --- MODALE DETTAGLIATORE SCHEDA DECONTO (TELEMETRIA E LOG EROGAZIONI) ---
   document.querySelectorAll('.btn-deconto-detail').forEach(btn => {
