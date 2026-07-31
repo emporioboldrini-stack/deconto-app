@@ -15,7 +15,8 @@ import { renderHardwareSimulator } from './components/HardwareSimulator.js';
 let state = {
   currentUser: db.getCurrentUser(), // Null se disconnesso
   activeTab: 'dashboard',
-  showProfileModal: false
+  showProfileModal: false,
+  editingStaffUserId: null
 };
 
 function renderApp() {
@@ -34,7 +35,7 @@ function renderApp() {
   if (state.activeTab === 'simulator') {
     mainContentHtml = renderHardwareSimulator();
   } else if (state.activeTab === 'user_management' || state.activeTab === 'permissions_matrix') {
-    mainContentHtml = renderUserManagementPanel(state.activeTab);
+    mainContentHtml = renderUserManagementPanel(state.activeTab, state.editingStaffUserId);
   } else if (user.role === 'ADMIN') {
     if (state.activeTab === 'clients' || state.activeTab === 'qr_generator' || state.activeTab === 'otp_generator' || state.activeTab === 'refills_history') {
       mainContentHtml = renderOfficePanel(state.activeTab);
@@ -103,7 +104,7 @@ function attachMainEventListeners() {
     });
   }
 
-  // Modifica Profilo Tasto
+  // Modifica Profilo Utente Corrente
   const btnProfile = document.getElementById('btn-open-profile-modal');
   if (btnProfile) {
     btnProfile.addEventListener('click', () => {
@@ -112,13 +113,11 @@ function attachMainEventListeners() {
     });
   }
 
-  // Chiusura Modal Profilo
   const btnCloseModal = document.getElementById('btn-close-profile-modal');
   const btnCancelProfile = document.getElementById('btn-cancel-profile');
   if (btnCloseModal) btnCloseModal.addEventListener('click', () => { state.showProfileModal = false; renderApp(); });
   if (btnCancelProfile) btnCancelProfile.addEventListener('click', () => { state.showProfileModal = false; renderApp(); });
 
-  // Salva Modifiche Profilo Utente
   const profileForm = document.getElementById('profile-edit-form');
   if (profileForm) {
     profileForm.addEventListener('submit', (e) => {
@@ -190,6 +189,51 @@ function attachMainEventListeners() {
       try {
         db.addUser({ username, password, name, role, email, phone });
         alert(`✅ Utente dipendente "${name}" (Codice ${username}) creato con successo!`);
+        renderApp();
+      } catch (err) {
+        alert(`Errore: ${err.message}`);
+      }
+    });
+  }
+
+  // Modifica Utente Dipendente (Modal Edit Staff)
+  document.querySelectorAll('.btn-edit-staff-user').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-id');
+      state.editingStaffUserId = id;
+      renderApp();
+    });
+  });
+
+  const btnCloseEditStaff = document.getElementById('btn-close-edit-staff-modal');
+  const btnCancelEditStaff = document.getElementById('btn-cancel-edit-staff');
+  if (btnCloseEditStaff) btnCloseEditStaff.addEventListener('click', () => { state.editingStaffUserId = null; renderApp(); });
+  if (btnCancelEditStaff) btnCancelEditStaff.addEventListener('click', () => { state.editingStaffUserId = null; renderApp(); });
+
+  const editStaffForm = document.getElementById('edit-staff-form');
+  if (editStaffForm) {
+    editStaffForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const userId = document.getElementById('edit-staff-id').value;
+      const username = document.getElementById('edit-staff-username') ? document.getElementById('edit-staff-username').value : undefined;
+      const name = document.getElementById('edit-staff-name').value;
+      const role = document.getElementById('edit-staff-role') ? document.getElementById('edit-staff-role').value : undefined;
+      const email = document.getElementById('edit-staff-email').value;
+      const phone = document.getElementById('edit-staff-phone').value;
+      const password = document.getElementById('edit-staff-password').value;
+
+      try {
+        db.updateUser(userId, {
+          username,
+          name,
+          role,
+          email,
+          phone,
+          password: password ? password.trim() : undefined
+        });
+
+        state.editingStaffUserId = null;
+        alert('✅ Scheda Utente aggiornata con successo!');
         renderApp();
       } catch (err) {
         alert(`Errore: ${err.message}`);

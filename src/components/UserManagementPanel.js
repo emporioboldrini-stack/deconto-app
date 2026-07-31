@@ -1,8 +1,70 @@
 import { db } from '../db/database.js';
 
-export function renderUserManagementPanel(activeTab) {
+export function renderUserManagementPanel(activeTab, editingUserId = null) {
   const users = db.getUsers();
   const permissions = db.getPermissions();
+
+  let editModalHtml = '';
+  if (editingUserId) {
+    const userToEdit = users.find(u => u.id === editingUserId);
+    if (userToEdit) {
+      editModalHtml = `
+        <div class="modal-overlay" id="edit-staff-modal">
+          <div class="modal-box" style="max-width: 520px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px;">
+              <h2 style="font-size: 1.3rem; font-weight: 800; color: #fff; margin: 0;">
+                ✏️ Modifica Utente Dipendente
+              </h2>
+              <button id="btn-close-edit-staff-modal" style="background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer;">&times;</button>
+            </div>
+
+            <form id="edit-staff-form">
+              <input type="hidden" id="edit-staff-id" value="${userToEdit.id}">
+
+              <div style="margin-bottom: 16px;">
+                <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Codice Accesso / Username:*</label>
+                <input type="text" id="edit-staff-username" value="${userToEdit.username}" required ${userToEdit.username === '001' ? 'disabled' : ''} style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700;">
+              </div>
+
+              <div style="margin-bottom: 16px;">
+                <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Nome & Cognome:*</label>
+                <input type="text" id="edit-staff-name" value="${userToEdit.name}" required style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+              </div>
+
+              <div style="margin-bottom: 16px;">
+                <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Ruolo Assegnato:*</label>
+                <select id="edit-staff-role" ${userToEdit.username === '001' ? 'disabled' : ''} style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700;">
+                  <option value="ADMIN" ${userToEdit.role === 'ADMIN' ? 'selected' : ''}>👨‍💼 ADMIN (Amministratore Totale)</option>
+                  <option value="UFFICIO" ${userToEdit.role === 'UFFICIO' ? 'selected' : ''}>👩‍💻 UFFICIO (Gestione Anagrafiche & OTP)</option>
+                  <option value="ADR" ${userToEdit.role === 'ADR' ? 'selected' : ''}>🚚 ADR (Agente Consegne & Bluetooth)</option>
+                </select>
+              </div>
+
+              <div style="margin-bottom: 16px;">
+                <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Email:</label>
+                <input type="email" id="edit-staff-email" value="${userToEdit.email || ''}" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+              </div>
+
+              <div style="margin-bottom: 16px;">
+                <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Telefono / Mobile:</label>
+                <input type="text" id="edit-staff-phone" value="${userToEdit.phone || ''}" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+              </div>
+
+              <div style="margin-bottom: 24px;">
+                <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Nuova Password (lascia vuoto per non cambiare):</label>
+                <input type="password" id="edit-staff-password" placeholder="Nuova password..." style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+              </div>
+
+              <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button type="button" id="btn-cancel-edit-staff" class="btn btn-secondary">Annulla</button>
+                <button type="submit" class="btn btn-primary">💾 Salva Modifiche Dipendente</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+  }
 
   if (activeTab === 'permissions_matrix') {
     return `
@@ -144,13 +206,13 @@ export function renderUserManagementPanel(activeTab) {
     `;
   }
 
-  // Vista Default: Gestione Personale & Utenti
+  // Vista Gestione Personale
   return `
     <div>
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
         <div>
           <h1 style="font-size: 1.8rem; font-weight: 800;">👥 Gestione Personale & Account Utenti</h1>
-          <p style="color: var(--text-muted);">Registrazione del personale dipendente, assegnazione ruoli e modifica credenziali</p>
+          <p style="color: var(--text-muted);">Registrazione del personale dipendente, modifica schede, assegnazione ruoli e reset credenziali</p>
         </div>
         <button id="btn-toggle-add-user" class="btn btn-primary">
           ➕ Nuovo Utente Personale
@@ -237,14 +299,19 @@ export function renderUserManagementPanel(activeTab) {
                   ${u.status === 'ACTIVE' ? '<span class="badge badge-success">Attivo</span>' : '<span class="badge badge-danger">Disattivato</span>'}
                 </td>
                 <td>
-                  ${u.username !== '001' ? `
-                    <button class="btn btn-secondary btn-toggle-user-status" data-id="${u.id}" data-status="${u.status}" style="padding: 4px 8px; font-size: 0.75rem;">
-                      ${u.status === 'ACTIVE' ? '⏸️ Disattiva' : '▶️ Attiva'}
+                  <div style="display: flex; gap: 6px;">
+                    <button class="btn btn-secondary btn-edit-staff-user" data-id="${u.id}" style="padding: 4px 8px; font-size: 0.75rem; color: var(--accent-cyan);">
+                      ✏️ Modifica
                     </button>
-                    <button class="btn btn-secondary btn-delete-user" data-id="${u.id}" style="padding: 4px 8px; font-size: 0.75rem; color: var(--accent-rose);">
-                      🗑️ Elimina
-                    </button>
-                  ` : '<small style="color: var(--text-muted);">Account Principale (Protetto)</small>'}
+                    ${u.username !== '001' ? `
+                      <button class="btn btn-secondary btn-toggle-user-status" data-id="${u.id}" data-status="${u.status}" style="padding: 4px 8px; font-size: 0.75rem;">
+                        ${u.status === 'ACTIVE' ? '⏸️ Disattiva' : '▶️ Attiva'}
+                      </button>
+                      <button class="btn btn-secondary btn-delete-user" data-id="${u.id}" style="padding: 4px 8px; font-size: 0.75rem; color: var(--accent-rose);">
+                        🗑️ Elimina
+                      </button>
+                    ` : ''}
+                  </div>
                 </td>
               </tr>
             `).join('')}
@@ -252,5 +319,6 @@ export function renderUserManagementPanel(activeTab) {
         </table>
       </div>
     </div>
+    ${editModalHtml}
   `;
 }

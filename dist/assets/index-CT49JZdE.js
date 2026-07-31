@@ -334,7 +334,61 @@
         </table>
       </div>
     </div>
-  `}function u(e){let t=r.getUsers(),n=r.getPermissions();return e===`permissions_matrix`?`
+  `}function u(e,t=null){let n=r.getUsers(),i=r.getPermissions(),a=``;if(t){let e=n.find(e=>e.id===t);e&&(a=`
+        <div class="modal-overlay" id="edit-staff-modal">
+          <div class="modal-box" style="max-width: 520px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px;">
+              <h2 style="font-size: 1.3rem; font-weight: 800; color: #fff; margin: 0;">
+                ✏️ Modifica Utente Dipendente
+              </h2>
+              <button id="btn-close-edit-staff-modal" style="background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer;">&times;</button>
+            </div>
+
+            <form id="edit-staff-form">
+              <input type="hidden" id="edit-staff-id" value="${e.id}">
+
+              <div style="margin-bottom: 16px;">
+                <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Codice Accesso / Username:*</label>
+                <input type="text" id="edit-staff-username" value="${e.username}" required ${e.username===`001`?`disabled`:``} style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700;">
+              </div>
+
+              <div style="margin-bottom: 16px;">
+                <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Nome & Cognome:*</label>
+                <input type="text" id="edit-staff-name" value="${e.name}" required style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+              </div>
+
+              <div style="margin-bottom: 16px;">
+                <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Ruolo Assegnato:*</label>
+                <select id="edit-staff-role" ${e.username===`001`?`disabled`:``} style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700;">
+                  <option value="ADMIN" ${e.role===`ADMIN`?`selected`:``}>👨‍💼 ADMIN (Amministratore Totale)</option>
+                  <option value="UFFICIO" ${e.role===`UFFICIO`?`selected`:``}>👩‍💻 UFFICIO (Gestione Anagrafiche & OTP)</option>
+                  <option value="ADR" ${e.role===`ADR`?`selected`:``}>🚚 ADR (Agente Consegne & Bluetooth)</option>
+                </select>
+              </div>
+
+              <div style="margin-bottom: 16px;">
+                <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Email:</label>
+                <input type="email" id="edit-staff-email" value="${e.email||``}" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+              </div>
+
+              <div style="margin-bottom: 16px;">
+                <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Telefono / Mobile:</label>
+                <input type="text" id="edit-staff-phone" value="${e.phone||``}" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+              </div>
+
+              <div style="margin-bottom: 24px;">
+                <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Nuova Password (lascia vuoto per non cambiare):</label>
+                <input type="password" id="edit-staff-password" placeholder="Nuova password..." style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+              </div>
+
+              <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button type="button" id="btn-cancel-edit-staff" class="btn btn-secondary">Annulla</button>
+                <button type="submit" class="btn btn-primary">💾 Salva Modifiche Dipendente</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `)}return e===`permissions_matrix`?`
       <div>
         <div style="margin-bottom: 24px;">
           <h1 style="font-size: 1.8rem; font-weight: 800;">⚙️ Matrice Permessi & Abilitazioni Dinamiche</h1>
@@ -362,10 +416,10 @@
                     <small style="color: var(--text-muted);">Permette di consultare la lista dei clienti e delle macchine da caffè</small>
                   </td>
                   <td style="text-align: center;">
-                    <input type="checkbox" id="perm_UFFICIO_canViewClients" ${n.UFFICIO.canViewClients?`checked`:``} style="width: 20px; height: 20px;">
+                    <input type="checkbox" id="perm_UFFICIO_canViewClients" ${i.UFFICIO.canViewClients?`checked`:``} style="width: 20px; height: 20px;">
                   </td>
                   <td style="text-align: center;">
-                    <input type="checkbox" id="perm_ADR_canViewClients" ${n.ADR.canViewClients?`checked`:``} style="width: 20px; height: 20px;">
+                    <input type="checkbox" id="perm_ADR_canViewClients" ${i.ADR.canViewClients?`checked`:``} style="width: 20px; height: 20px;">
                   </td>
                 </tr>
 
@@ -375,10 +429,10 @@
                     <small style="color: var(--text-muted);">Permette di aggiungere nuovi clienti e associare schede Deconto</small>
                   </td>
                   <td style="text-align: center;">
-                    <input type="checkbox" id="perm_UFFICIO_canCreateClients" ${n.UFFICIO.canCreateClients?`checked`:``} style="width: 20px; height: 20px;">
+                    <input type="checkbox" id="perm_UFFICIO_canCreateClients" ${i.UFFICIO.canCreateClients?`checked`:``} style="width: 20px; height: 20px;">
                   </td>
                   <td style="text-align: center;">
-                    <input type="checkbox" id="perm_ADR_canCreateClients" ${n.ADR.canCreateClients?`checked`:``} style="width: 20px; height: 20px;">
+                    <input type="checkbox" id="perm_ADR_canCreateClients" ${i.ADR.canCreateClients?`checked`:``} style="width: 20px; height: 20px;">
                   </td>
                 </tr>
 
@@ -388,10 +442,10 @@
                     <small style="color: var(--text-muted);">Permette di modificare i dati anagrafici e la configurazione delle macchine</small>
                   </td>
                   <td style="text-align: center;">
-                    <input type="checkbox" id="perm_UFFICIO_canEditClients" ${n.UFFICIO.canEditClients?`checked`:``} style="width: 20px; height: 20px;">
+                    <input type="checkbox" id="perm_UFFICIO_canEditClients" ${i.UFFICIO.canEditClients?`checked`:``} style="width: 20px; height: 20px;">
                   </td>
                   <td style="text-align: center;">
-                    <input type="checkbox" id="perm_ADR_canEditClients" ${n.ADR.canEditClients?`checked`:``} style="width: 20px; height: 20px;">
+                    <input type="checkbox" id="perm_ADR_canEditClients" ${i.ADR.canEditClients?`checked`:``} style="width: 20px; height: 20px;">
                   </td>
                 </tr>
 
@@ -401,10 +455,10 @@
                     <small style="color: var(--text-muted);">Permette di rimuovere definitivamente i clienti dal sistema</small>
                   </td>
                   <td style="text-align: center;">
-                    <input type="checkbox" id="perm_UFFICIO_canDeleteClients" ${n.UFFICIO.canDeleteClients?`checked`:``} style="width: 20px; height: 20px;">
+                    <input type="checkbox" id="perm_UFFICIO_canDeleteClients" ${i.UFFICIO.canDeleteClients?`checked`:``} style="width: 20px; height: 20px;">
                   </td>
                   <td style="text-align: center;">
-                    <input type="checkbox" id="perm_ADR_canDeleteClients" ${n.ADR.canDeleteClients?`checked`:``} style="width: 20px; height: 20px;">
+                    <input type="checkbox" id="perm_ADR_canDeleteClients" ${i.ADR.canDeleteClients?`checked`:``} style="width: 20px; height: 20px;">
                   </td>
                 </tr>
 
@@ -414,10 +468,10 @@
                     <small style="color: var(--text-muted);">Permette di configurare e stampare le etichette fisiche adesive</small>
                   </td>
                   <td style="text-align: center;">
-                    <input type="checkbox" id="perm_UFFICIO_canGenerateQr" ${n.UFFICIO.canGenerateQr?`checked`:``} style="width: 20px; height: 20px;">
+                    <input type="checkbox" id="perm_UFFICIO_canGenerateQr" ${i.UFFICIO.canGenerateQr?`checked`:``} style="width: 20px; height: 20px;">
                   </td>
                   <td style="text-align: center;">
-                    <input type="checkbox" id="perm_ADR_canGenerateQr" ${n.ADR.canGenerateQr?`checked`:``} style="width: 20px; height: 20px;">
+                    <input type="checkbox" id="perm_ADR_canGenerateQr" ${i.ADR.canGenerateQr?`checked`:``} style="width: 20px; height: 20px;">
                   </td>
                 </tr>
 
@@ -427,10 +481,10 @@
                     <small style="color: var(--text-muted);">Permette di generare ed inviare link di ricarica WhatsApp ai clienti</small>
                   </td>
                   <td style="text-align: center;">
-                    <input type="checkbox" id="perm_UFFICIO_canGenerateOtp" ${n.UFFICIO.canGenerateOtp?`checked`:``} style="width: 20px; height: 20px;">
+                    <input type="checkbox" id="perm_UFFICIO_canGenerateOtp" ${i.UFFICIO.canGenerateOtp?`checked`:``} style="width: 20px; height: 20px;">
                   </td>
                   <td style="text-align: center;">
-                    <input type="checkbox" id="perm_ADR_canGenerateOtp" ${n.ADR.canGenerateOtp?`checked`:``} style="width: 20px; height: 20px;">
+                    <input type="checkbox" id="perm_ADR_canGenerateOtp" ${i.ADR.canGenerateOtp?`checked`:``} style="width: 20px; height: 20px;">
                   </td>
                 </tr>
 
@@ -440,10 +494,10 @@
                     <small style="color: var(--text-muted);">Permette di ricaricare le macchine via Bluetooth avvicinandosi allo smartphone</small>
                   </td>
                   <td style="text-align: center;">
-                    <input type="checkbox" id="perm_UFFICIO_canBleRefill" ${n.UFFICIO.canBleRefill?`checked`:``} style="width: 20px; height: 20px;">
+                    <input type="checkbox" id="perm_UFFICIO_canBleRefill" ${i.UFFICIO.canBleRefill?`checked`:``} style="width: 20px; height: 20px;">
                   </td>
                   <td style="text-align: center;">
-                    <input type="checkbox" id="perm_ADR_canBleRefill" ${n.ADR.canBleRefill?`checked`:``} style="width: 20px; height: 20px;">
+                    <input type="checkbox" id="perm_ADR_canBleRefill" ${i.ADR.canBleRefill?`checked`:``} style="width: 20px; height: 20px;">
                   </td>
                 </tr>
 
@@ -453,10 +507,10 @@
                     <small style="color: var(--text-muted);">Permette di accedere al simulatore di test delle macchine da caffè</small>
                   </td>
                   <td style="text-align: center;">
-                    <input type="checkbox" id="perm_UFFICIO_canUseSimulator" ${n.UFFICIO.canUseSimulator?`checked`:``} style="width: 20px; height: 20px;">
+                    <input type="checkbox" id="perm_UFFICIO_canUseSimulator" ${i.UFFICIO.canUseSimulator?`checked`:``} style="width: 20px; height: 20px;">
                   </td>
                   <td style="text-align: center;">
-                    <input type="checkbox" id="perm_ADR_canUseSimulator" ${n.ADR.canUseSimulator?`checked`:``} style="width: 20px; height: 20px;">
+                    <input type="checkbox" id="perm_ADR_canUseSimulator" ${i.ADR.canUseSimulator?`checked`:``} style="width: 20px; height: 20px;">
                   </td>
                 </tr>
               </tbody>
@@ -475,7 +529,7 @@
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
         <div>
           <h1 style="font-size: 1.8rem; font-weight: 800;">👥 Gestione Personale & Account Utenti</h1>
-          <p style="color: var(--text-muted);">Registrazione del personale dipendente, assegnazione ruoli e modifica credenziali</p>
+          <p style="color: var(--text-muted);">Registrazione del personale dipendente, modifica schede, assegnazione ruoli e reset credenziali</p>
         </div>
         <button id="btn-toggle-add-user" class="btn btn-primary">
           ➕ Nuovo Utente Personale
@@ -539,7 +593,7 @@
             </tr>
           </thead>
           <tbody>
-            ${t.map(e=>`
+            ${n.map(e=>`
               <tr>
                 <td>
                   <div style="display: flex; align-items: center; gap: 10px;">
@@ -562,14 +616,19 @@
                   ${e.status===`ACTIVE`?`<span class="badge badge-success">Attivo</span>`:`<span class="badge badge-danger">Disattivato</span>`}
                 </td>
                 <td>
-                  ${e.username===`001`?`<small style="color: var(--text-muted);">Account Principale (Protetto)</small>`:`
-                    <button class="btn btn-secondary btn-toggle-user-status" data-id="${e.id}" data-status="${e.status}" style="padding: 4px 8px; font-size: 0.75rem;">
-                      ${e.status===`ACTIVE`?`⏸️ Disattiva`:`▶️ Attiva`}
+                  <div style="display: flex; gap: 6px;">
+                    <button class="btn btn-secondary btn-edit-staff-user" data-id="${e.id}" style="padding: 4px 8px; font-size: 0.75rem; color: var(--accent-cyan);">
+                      ✏️ Modifica
                     </button>
-                    <button class="btn btn-secondary btn-delete-user" data-id="${e.id}" style="padding: 4px 8px; font-size: 0.75rem; color: var(--accent-rose);">
-                      🗑️ Elimina
-                    </button>
-                  `}
+                    ${e.username===`001`?``:`
+                      <button class="btn btn-secondary btn-toggle-user-status" data-id="${e.id}" data-status="${e.status}" style="padding: 4px 8px; font-size: 0.75rem;">
+                        ${e.status===`ACTIVE`?`⏸️ Disattiva`:`▶️ Attiva`}
+                      </button>
+                      <button class="btn btn-secondary btn-delete-user" data-id="${e.id}" style="padding: 4px 8px; font-size: 0.75rem; color: var(--accent-rose);">
+                        🗑️ Elimina
+                      </button>
+                    `}
+                  </div>
                 </td>
               </tr>
             `).join(``)}
@@ -577,6 +636,7 @@
         </table>
       </div>
     </div>
+    ${a}
   `}function d(e){let t=r.getClients(),n=r.getBoards(),i=r.getRefillLogs(),a=r.hasPermission(`canCreateClients`);r.hasPermission(`canEditClients`);let o=r.hasPermission(`canDeleteClients`);return e===`qr_generator`?`
       <div>
         <div style="margin-bottom: 24px;">
@@ -1054,7 +1114,7 @@
 
       </div>
     </div>
-  `}var m={currentUser:r.getCurrentUser(),activeTab:`dashboard`,showProfileModal:!1};function h(){let e=document.getElementById(`app`);if(!m.currentUser){e.innerHTML=s(),g();return}let t=m.currentUser,n=``;m.activeTab===`simulator`?n=p():m.activeTab===`user_management`||m.activeTab===`permissions_matrix`?n=u(m.activeTab):t.role===`ADMIN`?n=m.activeTab===`clients`||m.activeTab===`qr_generator`||m.activeTab===`otp_generator`||m.activeTab===`refills_history`?d(m.activeTab):m.activeTab===`adr_visits`?f(m.activeTab):l(m.activeTab):(t.role===`UFFICIO`||t.role===`ADR`)&&(n=m.activeTab===`adr_visits`?f(m.activeTab):d(m.activeTab));let r=``;m.showProfileModal&&(r=c(t)),e.innerHTML=`
+  `}var m={currentUser:r.getCurrentUser(),activeTab:`dashboard`,showProfileModal:!1,editingStaffUserId:null};function h(){let e=document.getElementById(`app`);if(!m.currentUser){e.innerHTML=s(),g();return}let t=m.currentUser,n=``;m.activeTab===`simulator`?n=p():m.activeTab===`user_management`||m.activeTab===`permissions_matrix`?n=u(m.activeTab,m.editingStaffUserId):t.role===`ADMIN`?n=m.activeTab===`clients`||m.activeTab===`qr_generator`||m.activeTab===`otp_generator`||m.activeTab===`refills_history`?d(m.activeTab):m.activeTab===`adr_visits`?f(m.activeTab):l(m.activeTab):(t.role===`UFFICIO`||t.role===`ADR`)&&(n=m.activeTab===`adr_visits`?f(m.activeTab):d(m.activeTab));let r=``;m.showProfileModal&&(r=c(t)),e.innerHTML=`
     <div class="app-container">
       ${o(t,m.activeTab)}
       <main class="main-content">
@@ -1062,4 +1122,4 @@
       </main>
     </div>
     ${r}
-  `,_()}function g(){let e=document.getElementById(`login-form`),t=document.getElementById(`login-error-msg`);e&&e.addEventListener(`submit`,e=>{e.preventDefault();let n=document.getElementById(`login-username`).value,i=document.getElementById(`login-password`).value;try{let e=r.authenticate(n,i);m.currentUser=e,m.activeTab=e.role===`ADMIN`?`dashboard`:`clients`,h()}catch(e){t.innerText=e.message,t.style.display=`block`}})}function _(){let e=document.getElementById(`btn-logout`);e&&e.addEventListener(`click`,()=>{r.logout(),m.currentUser=null,h()});let t=document.getElementById(`btn-open-profile-modal`);t&&t.addEventListener(`click`,()=>{m.showProfileModal=!0,h()});let n=document.getElementById(`btn-close-profile-modal`),o=document.getElementById(`btn-cancel-profile`);n&&n.addEventListener(`click`,()=>{m.showProfileModal=!1,h()}),o&&o.addEventListener(`click`,()=>{m.showProfileModal=!1,h()});let s=document.getElementById(`profile-edit-form`);s&&s.addEventListener(`submit`,e=>{e.preventDefault();let t=document.getElementById(`edit-user-name`).value.trim(),n=document.getElementById(`edit-user-username`).value.trim(),i=document.getElementById(`edit-user-email`).value.trim(),a=document.getElementById(`edit-user-password`).value.trim();try{m.currentUser=r.updateUserProfile(m.currentUser.id,{name:t,username:n,email:i,newPassword:a||void 0}),m.showProfileModal=!1,alert(`✅ Credenziali e Profilo aggiornati con successo!`),h()}catch(e){alert(`Errore: ${e.message}`)}}),document.querySelectorAll(`.nav-item`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-tab`);t&&(m.activeTab=t,h())})});let c=document.getElementById(`btn-toggle-add-user`),l=document.getElementById(`add-user-form-container`);c&&l&&c.addEventListener(`click`,()=>{l.style.display=l.style.display===`none`?`block`:`none`});let u=document.getElementById(`btn-cancel-add-user`);u&&l&&u.addEventListener(`click`,()=>{l.style.display=`none`});let d=document.getElementById(`btn-save-new-user`);d&&d.addEventListener(`click`,()=>{let e=document.getElementById(`new-user-username`).value.trim(),t=document.getElementById(`new-user-password`).value.trim(),n=document.getElementById(`new-user-name`).value.trim(),i=document.getElementById(`new-user-role`).value,a=document.getElementById(`new-user-email`).value.trim(),o=document.getElementById(`new-user-phone`).value.trim();if(!e||!t||!n){alert(`Compila i campi obbligatori: Codice Utente, Password e Nome!`);return}try{r.addUser({username:e,password:t,name:n,role:i,email:a,phone:o}),alert(`✅ Utente dipendente "${n}" (Codice ${e}) creato con successo!`),h()}catch(e){alert(`Errore: ${e.message}`)}}),document.querySelectorAll(`.btn-toggle-user-status`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-id`),n=e.getAttribute(`data-status`)===`ACTIVE`?`DISABLED`:`ACTIVE`;r.updateUser(t,{status:n}),h()})}),document.querySelectorAll(`.btn-delete-user`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-id`);if(confirm(`Sei sicuro di voler eliminare questo utente dipendente?`))try{r.deleteUser(t),h()}catch(e){alert(`Errore: ${e.message}`)}})});let f=document.getElementById(`permissions-matrix-form`);f&&f.addEventListener(`submit`,e=>{e.preventDefault();let t=[`UFFICIO`,`ADR`],n=[`canViewClients`,`canCreateClients`,`canEditClients`,`canDeleteClients`,`canGenerateQr`,`canGenerateOtp`,`canBleRefill`,`canUseSimulator`],i={UFFICIO:{},ADR:{}};t.forEach(e=>{n.forEach(t=>{let n=document.getElementById(`perm_${e}_${t}`);n&&(i[e][t]=n.checked)})}),r.updatePermissions(i),alert(`✅ Matrice dei Permessi aggiornata con successo per tutti gli utenti!`),h()});let p=document.getElementById(`btn-export-csv`);p&&p.addEventListener(`click`,()=>{let e=r.exportCoffeeLogsCSV(),t=new Blob([e],{type:`text/csv;charset=utf-8;`}),n=URL.createObjectURL(t),i=document.createElement(`a`);i.href=n,i.download=`DECONTO_Report_Consumi_${new Date().toISOString().split(`T`)[0]}.csv`,i.click(),alert(`📥 Report Consumi CSV Scaricato con successo!`)});let g=document.getElementById(`btn-trigger-backup`);g&&g.addEventListener(`click`,async()=>{g.disabled=!0,g.innerText=`⏳ Backup in corso su GitHub...`;let e=await a.executeBackupNow();alert(`✅ Backup GitHub Eseguito con Successo!\n\nRepository: https://github.com/emporioboldrini-stack/deconto-app.git\nCommit Hash: ${e.backupRecord.commitHash}\nEntità salvate: ${e.backupRecord.recordCount}`),h()});let _=document.getElementById(`btn-toggle-add-client`),v=document.getElementById(`add-client-form-container`);_&&v&&_.addEventListener(`click`,()=>{v.style.display=v.style.display===`none`?`block`:`none`});let y=document.getElementById(`btn-cancel-add-client`);y&&v&&y.addEventListener(`click`,()=>{v.style.display=`none`});let b=document.getElementById(`btn-save-new-client`);b&&b.addEventListener(`click`,()=>{let e=document.getElementById(`new-cli-name`).value.trim(),t=document.getElementById(`new-cli-ref`).value.trim(),n=document.getElementById(`new-cli-phone`).value.trim(),i=document.getElementById(`new-cli-city`).value.trim(),a=document.getElementById(`new-cli-mc-model`).value.trim(),o=document.getElementById(`new-cli-code`).value.trim(),s=document.getElementById(`new-cli-credits`).value;if(!e||!t||!n){alert(`Compila i campi obbligatori: Nome Cliente, Referente e Telefono!`);return}try{r.addClient({name:e,refPerson:t,phone:n,city:i,address:i,machineModel:a||`Didiesse Frog Revolution`,shortCode:o||`${Math.floor(1e3+Math.random()*9e3)}`,initialCredits:s}),alert(`✅ Cliente "${e}" registrato con successo ed associato alla scheda Deconto!`),h()}catch(e){alert(`Errore: ${e.message}`)}}),document.querySelectorAll(`.btn-del-client`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-id`);if(confirm(`Sei sicuro di voler rimuovere questo cliente dal sistema?`))try{r.deleteClient(t),h()}catch(e){alert(`Errore: ${e.message}`)}})});let x=document.getElementById(`btn-generate-otp`);x&&x.addEventListener(`click`,()=>{let e=document.getElementById(`otp-board-select`).value,t=parseInt(document.getElementById(`otp-credits-select`).value,10),n=`OTP-${Math.floor(1e3+Math.random()*9e3)}-${Math.random().toString(36).substring(2,7).toUpperCase()}`,r=`https://deconto-vending-app.web.app/?short=${e}&otp=${n}&c=${t}`;document.getElementById(`otp-code-val`).innerText=n,document.getElementById(`otp-link-val`).innerText=r,alert(`✅ Token OTP Generato per Deconto #${e} (+${t} Caffè)!`)});let S=document.getElementById(`btn-send-whatsapp`);S&&S.addEventListener(`click`,()=>{let e=`Gentile cliente, ecco il link per ricaricare la tua macchina da caffè Deconto: ${document.getElementById(`otp-link-val`).innerText}`;window.open(`https://wa.me/?text=${encodeURIComponent(e)}`,`_blank`)});let C=document.getElementById(`btn-copy-otp-link`);C&&C.addEventListener(`click`,()=>{let e=document.getElementById(`otp-link-val`).innerText;navigator.clipboard.writeText(e),alert(`📋 Link Ricarica Copiato negli appunti!`)});let w=document.getElementById(`btn-print-qr`);w&&w.addEventListener(`click`,()=>{window.print()});let T=document.getElementById(`qr-header-input`);T&&T.addEventListener(`input`,e=>{document.getElementById(`lbl-header-title`).innerText=`☕ ${e.target.value.toUpperCase()} ☕`});let E=document.getElementById(`qr-board-select`);E&&E.addEventListener(`change`,e=>{let t=r.getBoardFullDetails(e.target.value);t&&(document.getElementById(`lbl-short-code-display`).innerText=t.board.shortCode,document.getElementById(`lbl-mc-sn`).innerText=t.machine?t.machine.serialNumber:`N/D`,document.getElementById(`lbl-hw-sn`).innerText=t.board.hwSerial)});let D=document.getElementById(`btn-adr-ble-connect`);D&&D.addEventListener(`click`,async()=>{let e=document.getElementById(`adr-code-input`).value.trim(),t=parseInt(document.getElementById(`adr-credits-select`).value,10),n=document.getElementById(`adr-status-box`);if(!e){alert(`Inserisci il codice a 4 cifre!`);return}n.style.display=`block`,n.innerHTML=`📡 Scansione Bluetooth BLE per <strong>DECONTO_${e}</strong> in corso...`;try{await i.sendRefillOtpToken(e,t,`ADR_BLE_MANUAL`),r.performRefill({boardShortCode:e,credits:t,method:`BLE_PWA`,operatorId:m.currentUser?m.currentUser.id:`usr_003`}),n.innerHTML=`<span style="color: var(--accent-green);">✅ Ricarica Completata! Accreditate <strong>+${t} cialde</strong> sulla macchina #${e}. Relè Ripristinato.</span>`,setTimeout(()=>h(),2e3)}catch(e){n.innerHTML=`<span style="color: var(--accent-rose);">❌ Errore connessione: ${e.message}</span>`}}),document.querySelectorAll(`.btn-adr-quick-fill`).forEach(e=>{e.addEventListener(`click`,async()=>{let t=e.getAttribute(`data-code`);await i.sendRefillOtpToken(t,200,`ADR_QUICK_BLE`),r.performRefill({boardShortCode:t,credits:200,method:`BLE_PWA`,operatorId:m.currentUser?m.currentUser.id:`usr_003`}),alert(`✅ Ricaricate +200 cialde via Bluetooth sulla macchina #${t}!`),h()})});let O=document.getElementById(`sim-board-select`);O&&O.addEventListener(`change`,e=>{let t=e.target.value,n=r.getBoardFullDetails(t);n&&(document.getElementById(`sim-badge-code`).innerText=`DECONTO ${t}`,document.getElementById(`sim-credits-display`).innerText=n.board.remainingCredits)});let k=document.getElementById(`btn-sim-brew`);k&&k.addEventListener(`click`,()=>{let e=document.getElementById(`sim-board-select`),t=e?e.value:`3467`;document.getElementById(`signal-sense-volts`).innerText=`230V AC (Impulso)`,document.getElementById(`signal-sense-badge`).className=`badge badge-warning`,document.getElementById(`signal-sense-badge`).innerText=`EROGAZIONE IN CORSO`;let n=r.registerCoffeeExtraction(t,22,1);setTimeout(()=>{if(document.getElementById(`signal-sense-volts`).innerText=`0V AC`,document.getElementById(`signal-sense-badge`).className=`badge badge-info`,document.getElementById(`signal-sense-badge`).innerText=`INATTIVO`,n&&n.success){let e=document.getElementById(`sim-console-log`);e.innerHTML+=`[EXTRACTION]: Caffè erogato! Credito rimanente: ${n.remainingCredits}.<br>`,e.scrollTop=e.scrollHeight,n.isLowStock&&(e.innerHTML+=`<span style="color: var(--accent-amber);">[BUZZER 60s]: CREDITO &lt; 20! SEGNALE ACUSTICO ATTIVATO (BIP... BIP...).</span><br>`)}else if(n&&!n.success){let e=document.getElementById(`sim-console-log`);e.innerHTML+=`<span style="color: var(--accent-rose);">[HARDWARE LOCK]: CREDITO 0! RELÈ APERTO. POMPA DISATTIVATA.</span><br>`}h()},800)});let A=document.getElementById(`btn-sim-reset`);A&&A.addEventListener(`click`,()=>{let e=document.getElementById(`sim-board-select`),t=e?e.value:`3467`;r.performRefill({boardShortCode:t,credits:200,method:`TEST_BENCH`,operatorId:m.currentUser?m.currentUser.id:`usr_001`}),alert(`✅ Ricaricate +200 cialde di prova sulla macchina #${t}!`),h()})}document.addEventListener(`DOMContentLoaded`,h);
+  `,_()}function g(){let e=document.getElementById(`login-form`),t=document.getElementById(`login-error-msg`);e&&e.addEventListener(`submit`,e=>{e.preventDefault();let n=document.getElementById(`login-username`).value,i=document.getElementById(`login-password`).value;try{let e=r.authenticate(n,i);m.currentUser=e,m.activeTab=e.role===`ADMIN`?`dashboard`:`clients`,h()}catch(e){t.innerText=e.message,t.style.display=`block`}})}function _(){let e=document.getElementById(`btn-logout`);e&&e.addEventListener(`click`,()=>{r.logout(),m.currentUser=null,h()});let t=document.getElementById(`btn-open-profile-modal`);t&&t.addEventListener(`click`,()=>{m.showProfileModal=!0,h()});let n=document.getElementById(`btn-close-profile-modal`),o=document.getElementById(`btn-cancel-profile`);n&&n.addEventListener(`click`,()=>{m.showProfileModal=!1,h()}),o&&o.addEventListener(`click`,()=>{m.showProfileModal=!1,h()});let s=document.getElementById(`profile-edit-form`);s&&s.addEventListener(`submit`,e=>{e.preventDefault();let t=document.getElementById(`edit-user-name`).value.trim(),n=document.getElementById(`edit-user-username`).value.trim(),i=document.getElementById(`edit-user-email`).value.trim(),a=document.getElementById(`edit-user-password`).value.trim();try{m.currentUser=r.updateUserProfile(m.currentUser.id,{name:t,username:n,email:i,newPassword:a||void 0}),m.showProfileModal=!1,alert(`✅ Credenziali e Profilo aggiornati con successo!`),h()}catch(e){alert(`Errore: ${e.message}`)}}),document.querySelectorAll(`.nav-item`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-tab`);t&&(m.activeTab=t,h())})});let c=document.getElementById(`btn-toggle-add-user`),l=document.getElementById(`add-user-form-container`);c&&l&&c.addEventListener(`click`,()=>{l.style.display=l.style.display===`none`?`block`:`none`});let u=document.getElementById(`btn-cancel-add-user`);u&&l&&u.addEventListener(`click`,()=>{l.style.display=`none`});let d=document.getElementById(`btn-save-new-user`);d&&d.addEventListener(`click`,()=>{let e=document.getElementById(`new-user-username`).value.trim(),t=document.getElementById(`new-user-password`).value.trim(),n=document.getElementById(`new-user-name`).value.trim(),i=document.getElementById(`new-user-role`).value,a=document.getElementById(`new-user-email`).value.trim(),o=document.getElementById(`new-user-phone`).value.trim();if(!e||!t||!n){alert(`Compila i campi obbligatori: Codice Utente, Password e Nome!`);return}try{r.addUser({username:e,password:t,name:n,role:i,email:a,phone:o}),alert(`✅ Utente dipendente "${n}" (Codice ${e}) creato con successo!`),h()}catch(e){alert(`Errore: ${e.message}`)}}),document.querySelectorAll(`.btn-edit-staff-user`).forEach(e=>{e.addEventListener(`click`,()=>{m.editingStaffUserId=e.getAttribute(`data-id`),h()})});let f=document.getElementById(`btn-close-edit-staff-modal`),p=document.getElementById(`btn-cancel-edit-staff`);f&&f.addEventListener(`click`,()=>{m.editingStaffUserId=null,h()}),p&&p.addEventListener(`click`,()=>{m.editingStaffUserId=null,h()});let g=document.getElementById(`edit-staff-form`);g&&g.addEventListener(`submit`,e=>{e.preventDefault();let t=document.getElementById(`edit-staff-id`).value,n=document.getElementById(`edit-staff-username`)?document.getElementById(`edit-staff-username`).value:void 0,i=document.getElementById(`edit-staff-name`).value,a=document.getElementById(`edit-staff-role`)?document.getElementById(`edit-staff-role`).value:void 0,o=document.getElementById(`edit-staff-email`).value,s=document.getElementById(`edit-staff-phone`).value,c=document.getElementById(`edit-staff-password`).value;try{r.updateUser(t,{username:n,name:i,role:a,email:o,phone:s,password:c?c.trim():void 0}),m.editingStaffUserId=null,alert(`✅ Scheda Utente aggiornata con successo!`),h()}catch(e){alert(`Errore: ${e.message}`)}}),document.querySelectorAll(`.btn-toggle-user-status`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-id`),n=e.getAttribute(`data-status`)===`ACTIVE`?`DISABLED`:`ACTIVE`;r.updateUser(t,{status:n}),h()})}),document.querySelectorAll(`.btn-delete-user`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-id`);if(confirm(`Sei sicuro di voler eliminare questo utente dipendente?`))try{r.deleteUser(t),h()}catch(e){alert(`Errore: ${e.message}`)}})});let _=document.getElementById(`permissions-matrix-form`);_&&_.addEventListener(`submit`,e=>{e.preventDefault();let t=[`UFFICIO`,`ADR`],n=[`canViewClients`,`canCreateClients`,`canEditClients`,`canDeleteClients`,`canGenerateQr`,`canGenerateOtp`,`canBleRefill`,`canUseSimulator`],i={UFFICIO:{},ADR:{}};t.forEach(e=>{n.forEach(t=>{let n=document.getElementById(`perm_${e}_${t}`);n&&(i[e][t]=n.checked)})}),r.updatePermissions(i),alert(`✅ Matrice dei Permessi aggiornata con successo per tutti gli utenti!`),h()});let v=document.getElementById(`btn-export-csv`);v&&v.addEventListener(`click`,()=>{let e=r.exportCoffeeLogsCSV(),t=new Blob([e],{type:`text/csv;charset=utf-8;`}),n=URL.createObjectURL(t),i=document.createElement(`a`);i.href=n,i.download=`DECONTO_Report_Consumi_${new Date().toISOString().split(`T`)[0]}.csv`,i.click(),alert(`📥 Report Consumi CSV Scaricato con successo!`)});let y=document.getElementById(`btn-trigger-backup`);y&&y.addEventListener(`click`,async()=>{y.disabled=!0,y.innerText=`⏳ Backup in corso su GitHub...`;let e=await a.executeBackupNow();alert(`✅ Backup GitHub Eseguito con Successo!\n\nRepository: https://github.com/emporioboldrini-stack/deconto-app.git\nCommit Hash: ${e.backupRecord.commitHash}\nEntità salvate: ${e.backupRecord.recordCount}`),h()});let b=document.getElementById(`btn-toggle-add-client`),x=document.getElementById(`add-client-form-container`);b&&x&&b.addEventListener(`click`,()=>{x.style.display=x.style.display===`none`?`block`:`none`});let S=document.getElementById(`btn-cancel-add-client`);S&&x&&S.addEventListener(`click`,()=>{x.style.display=`none`});let C=document.getElementById(`btn-save-new-client`);C&&C.addEventListener(`click`,()=>{let e=document.getElementById(`new-cli-name`).value.trim(),t=document.getElementById(`new-cli-ref`).value.trim(),n=document.getElementById(`new-cli-phone`).value.trim(),i=document.getElementById(`new-cli-city`).value.trim(),a=document.getElementById(`new-cli-mc-model`).value.trim(),o=document.getElementById(`new-cli-code`).value.trim(),s=document.getElementById(`new-cli-credits`).value;if(!e||!t||!n){alert(`Compila i campi obbligatori: Nome Cliente, Referente e Telefono!`);return}try{r.addClient({name:e,refPerson:t,phone:n,city:i,address:i,machineModel:a||`Didiesse Frog Revolution`,shortCode:o||`${Math.floor(1e3+Math.random()*9e3)}`,initialCredits:s}),alert(`✅ Cliente "${e}" registrato con successo ed associato alla scheda Deconto!`),h()}catch(e){alert(`Errore: ${e.message}`)}}),document.querySelectorAll(`.btn-del-client`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-id`);if(confirm(`Sei sicuro di voler rimuovere questo cliente dal sistema?`))try{r.deleteClient(t),h()}catch(e){alert(`Errore: ${e.message}`)}})});let w=document.getElementById(`btn-generate-otp`);w&&w.addEventListener(`click`,()=>{let e=document.getElementById(`otp-board-select`).value,t=parseInt(document.getElementById(`otp-credits-select`).value,10),n=`OTP-${Math.floor(1e3+Math.random()*9e3)}-${Math.random().toString(36).substring(2,7).toUpperCase()}`,r=`https://deconto-vending-app.web.app/?short=${e}&otp=${n}&c=${t}`;document.getElementById(`otp-code-val`).innerText=n,document.getElementById(`otp-link-val`).innerText=r,alert(`✅ Token OTP Generato per Deconto #${e} (+${t} Caffè)!`)});let T=document.getElementById(`btn-send-whatsapp`);T&&T.addEventListener(`click`,()=>{let e=`Gentile cliente, ecco il link per ricaricare la tua macchina da caffè Deconto: ${document.getElementById(`otp-link-val`).innerText}`;window.open(`https://wa.me/?text=${encodeURIComponent(e)}`,`_blank`)});let E=document.getElementById(`btn-copy-otp-link`);E&&E.addEventListener(`click`,()=>{let e=document.getElementById(`otp-link-val`).innerText;navigator.clipboard.writeText(e),alert(`📋 Link Ricarica Copiato negli appunti!`)});let D=document.getElementById(`btn-print-qr`);D&&D.addEventListener(`click`,()=>{window.print()});let O=document.getElementById(`qr-header-input`);O&&O.addEventListener(`input`,e=>{document.getElementById(`lbl-header-title`).innerText=`☕ ${e.target.value.toUpperCase()} ☕`});let k=document.getElementById(`qr-board-select`);k&&k.addEventListener(`change`,e=>{let t=r.getBoardFullDetails(e.target.value);t&&(document.getElementById(`lbl-short-code-display`).innerText=t.board.shortCode,document.getElementById(`lbl-mc-sn`).innerText=t.machine?t.machine.serialNumber:`N/D`,document.getElementById(`lbl-hw-sn`).innerText=t.board.hwSerial)});let A=document.getElementById(`btn-adr-ble-connect`);A&&A.addEventListener(`click`,async()=>{let e=document.getElementById(`adr-code-input`).value.trim(),t=parseInt(document.getElementById(`adr-credits-select`).value,10),n=document.getElementById(`adr-status-box`);if(!e){alert(`Inserisci il codice a 4 cifre!`);return}n.style.display=`block`,n.innerHTML=`📡 Scansione Bluetooth BLE per <strong>DECONTO_${e}</strong> in corso...`;try{await i.sendRefillOtpToken(e,t,`ADR_BLE_MANUAL`),r.performRefill({boardShortCode:e,credits:t,method:`BLE_PWA`,operatorId:m.currentUser?m.currentUser.id:`usr_003`}),n.innerHTML=`<span style="color: var(--accent-green);">✅ Ricarica Completata! Accreditate <strong>+${t} cialde</strong> sulla macchina #${e}. Relè Ripristinato.</span>`,setTimeout(()=>h(),2e3)}catch(e){n.innerHTML=`<span style="color: var(--accent-rose);">❌ Errore connessione: ${e.message}</span>`}}),document.querySelectorAll(`.btn-adr-quick-fill`).forEach(e=>{e.addEventListener(`click`,async()=>{let t=e.getAttribute(`data-code`);await i.sendRefillOtpToken(t,200,`ADR_QUICK_BLE`),r.performRefill({boardShortCode:t,credits:200,method:`BLE_PWA`,operatorId:m.currentUser?m.currentUser.id:`usr_003`}),alert(`✅ Ricaricate +200 cialde via Bluetooth sulla macchina #${t}!`),h()})});let j=document.getElementById(`sim-board-select`);j&&j.addEventListener(`change`,e=>{let t=e.target.value,n=r.getBoardFullDetails(t);n&&(document.getElementById(`sim-badge-code`).innerText=`DECONTO ${t}`,document.getElementById(`sim-credits-display`).innerText=n.board.remainingCredits)});let M=document.getElementById(`btn-sim-brew`);M&&M.addEventListener(`click`,()=>{let e=document.getElementById(`sim-board-select`),t=e?e.value:`3467`;document.getElementById(`signal-sense-volts`).innerText=`230V AC (Impulso)`,document.getElementById(`signal-sense-badge`).className=`badge badge-warning`,document.getElementById(`signal-sense-badge`).innerText=`EROGAZIONE IN CORSO`;let n=r.registerCoffeeExtraction(t,22,1);setTimeout(()=>{if(document.getElementById(`signal-sense-volts`).innerText=`0V AC`,document.getElementById(`signal-sense-badge`).className=`badge badge-info`,document.getElementById(`signal-sense-badge`).innerText=`INATTIVO`,n&&n.success){let e=document.getElementById(`sim-console-log`);e.innerHTML+=`[EXTRACTION]: Caffè erogato! Credito rimanente: ${n.remainingCredits}.<br>`,e.scrollTop=e.scrollHeight,n.isLowStock&&(e.innerHTML+=`<span style="color: var(--accent-amber);">[BUZZER 60s]: CREDITO &lt; 20! SEGNALE ACUSTICO ATTIVATO (BIP... BIP...).</span><br>`)}else if(n&&!n.success){let e=document.getElementById(`sim-console-log`);e.innerHTML+=`<span style="color: var(--accent-rose);">[HARDWARE LOCK]: CREDITO 0! RELÈ APERTO. POMPA DISATTIVATA.</span><br>`}h()},800)});let N=document.getElementById(`btn-sim-reset`);N&&N.addEventListener(`click`,()=>{let e=document.getElementById(`sim-board-select`),t=e?e.value:`3467`;r.performRefill({boardShortCode:t,credits:200,method:`TEST_BENCH`,operatorId:m.currentUser?m.currentUser.id:`usr_001`}),alert(`✅ Ricaricate +200 cialde di prova sulla macchina #${t}!`),h()})}document.addEventListener(`DOMContentLoaded`,h);
