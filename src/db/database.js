@@ -1,13 +1,19 @@
 /**
- * DECONTO IoT System - Core Database, Authentication & Dynamic Permission Engine (v6)
+ * DECONTO IoT System - Core Database, Authentication & Dynamic Permission Engine (v7)
  * Gestisce l'autenticazione, la gestione personale/utenti, la matrice dei permessi dinamica,
- * la modifica completa delle schede clienti, macchine e Deconto.
+ * la personalizzazione del logo aziendale e del sottotitolo nella voce menu Impostazioni.
  */
 
-const STORAGE_KEY = 'DECONTO_DB_V6';
-const SESSION_KEY = 'DECONTO_AUTH_SESSION_V6';
+const STORAGE_KEY = 'DECONTO_DB_V7';
+const SESSION_KEY = 'DECONTO_AUTH_SESSION_V7';
 
 const initialData = {
+  settings: {
+    customLogoUrl: null, // null = Icona emoji ☕ predefinita
+    brandTitle: 'DECONTO',
+    brandSubtitle: 'IoT Vending System'
+  },
+
   roleLabels: {
     UFFICIO: 'UFFICIO & LOGISTICA',
     ADR: 'AGENTE ADR (CONSEGNE)'
@@ -199,7 +205,7 @@ const initialData = {
       id: 'bak_001',
       timestamp: new Date(Date.now() - 86400000).toISOString(),
       repo: 'emporioboldrini-stack/deconto-app',
-      commitHash: '53a9f3c',
+      commitHash: '634a210',
       status: 'SUCCESS',
       recordCount: 28
     }
@@ -217,6 +223,7 @@ class DecontoDatabase {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
+        if (!parsed.settings) parsed.settings = initialData.settings;
         if (!parsed.roleLabels) parsed.roleLabels = initialData.roleLabels;
         if (!parsed.permissions) parsed.permissions = initialData.permissions;
         if (!parsed.users || !parsed.users.some(u => u.username === '001')) parsed.users = initialData.users;
@@ -232,6 +239,19 @@ class DecontoDatabase {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
     } catch (e) {}
+  }
+
+  // --- IMPOSTAZIONI GENERALI (LOGO & LOGO TEXT) ---
+  getSettings() {
+    return this.data.settings || initialData.settings;
+  }
+
+  updateSettings(newSettings) {
+    this.data.settings = {
+      ...this.getSettings(),
+      ...newSettings
+    };
+    this.saveData();
   }
 
   getRoleLabels() {
@@ -451,7 +471,6 @@ class DecontoDatabase {
     return newClient;
   }
 
-  // --- MODIFICA COMPLETA SCHEDA CLIENTE, MACCHINA E DECONTO ---
   updateClientAndMachine(clientId, updateData) {
     if (!this.hasPermission('canEditClients')) {
       throw new Error('Non disponi dei permessi per modificare le schede clienti.');
@@ -460,21 +479,18 @@ class DecontoDatabase {
     const client = this.data.clients.find(c => c.id === clientId);
     if (!client) throw new Error('Cliente non trovato.');
 
-    // 1. Aggiorna dati anagrafici cliente
     if (updateData.name) client.name = updateData.name.trim();
     if (updateData.refPerson) client.refPerson = updateData.refPerson.trim();
     if (updateData.phone) client.phone = updateData.phone.trim();
     if (updateData.city !== undefined) client.city = updateData.city.trim();
     if (updateData.address !== undefined) client.address = updateData.address.trim();
 
-    // 2. Aggiorna dati macchina da caffè
     const machine = this.data.machines.find(m => m.clientId === clientId);
     if (machine) {
       if (updateData.machineModel) machine.model = updateData.machineModel.trim();
       if (updateData.machineSerial) machine.serialNumber = updateData.machineSerial.trim();
     }
 
-    // 3. Aggiorna dati scheda Deconto associata
     if (machine) {
       const board = this.data.decontoBoards.find(b => b.machineId === machine.id);
       if (board) {

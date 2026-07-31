@@ -3,11 +3,11 @@ import { db } from '../db/database.js';
 export function renderSidebar(currentUser, activeTab) {
   const user = currentUser || { name: 'Utente Ospite', role: 'ADMIN', username: '001', avatar: '👨‍💼' };
   const permissions = db.getPermissions();
+  const settings = db.getSettings();
 
   let navItems = [];
 
   if (user.role === 'ADMIN') {
-    // ADMIN vede TUTTO ed ha controllo completo
     navItems = [
       { id: 'dashboard', label: '📊 Dashboard BI', icon: '📈' },
       { id: 'user_management', label: '👥 Gestione Personale', icon: '👤' },
@@ -19,10 +19,10 @@ export function renderSidebar(currentUser, activeTab) {
       { id: 'adr_visits', label: '🗺️ Giro Consegne ADR', icon: '🚚' },
       { id: 'maintenance', label: '🛠️ Manutenzione Predittiva', icon: '⚠️' },
       { id: 'backups', label: '💾 Backup GitHub', icon: '🐙' },
-      { id: 'simulator', label: '☕ Simulatore Macchina HW', icon: '⚡' }
+      { id: 'simulator', label: '☕ Simulatore Macchina HW', icon: '⚡' },
+      { id: 'settings', label: '⚙️ Impostazioni', icon: '🛠️' }
     ];
   } else {
-    // Ruoli UFFICIO e ADR: Voci filtrate in base alla Matrice dei Permessi impostata dall'Admin
     const rolePerms = permissions[user.role] || {};
 
     if (rolePerms.canViewClients) {
@@ -43,15 +43,23 @@ export function renderSidebar(currentUser, activeTab) {
     if (rolePerms.canUseSimulator) {
       navItems.push({ id: 'simulator', label: '☕ Simulatore Macchina HW', icon: '⚡' });
     }
+    navItems.push({ id: 'settings', label: '⚙️ Impostazioni', icon: '🛠️' });
   }
 
   return `
     <aside class="sidebar">
+      <!-- Header con Logo Personalizzato da PC e Sottotitolo Modificabile -->
       <div class="brand-logo">
-        <div class="brand-icon">☕</div>
+        <div class="brand-icon" style="overflow: hidden; padding: 0;">
+          ${settings.customLogoUrl 
+            ? `<img src="${settings.customLogoUrl}" style="width: 100%; height: 100%; object-fit: cover; border-radius: inherit;" alt="Logo">` 
+            : `<span style="font-size: 1.5rem;">☕</span>`}
+        </div>
         <div>
-          <div class="brand-title">DECONTO</div>
-          <div style="font-size: 0.75rem; color: var(--accent-cyan); font-weight: 600;">IoT Vending System</div>
+          <div class="brand-title">${settings.brandTitle || 'DECONTO'}</div>
+          <div style="font-size: 0.75rem; color: var(--accent-cyan); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">
+            ${settings.brandSubtitle || 'IoT Vending System'}
+          </div>
         </div>
       </div>
 
@@ -81,7 +89,7 @@ export function renderSidebar(currentUser, activeTab) {
 
       <div class="nav-group">
         <div style="font-size: 0.75rem; color: var(--text-dim); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; padding-left: 8px;">
-          Menu Abilitato
+          Menu Principale
         </div>
         ${navItems.map(item => `
           <div class="nav-item ${item.id === activeTab ? 'active' : ''}" data-tab="${item.id}">

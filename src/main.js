@@ -9,6 +9,7 @@ import { renderAdminDashboard } from './components/AdminDashboard.js';
 import { renderUserManagementPanel } from './components/UserManagementPanel.js';
 import { renderOfficePanel } from './components/OfficePanel.js';
 import { renderAdrPanel } from './components/AdrPanel.js';
+import { renderSettingsPanel } from './components/SettingsPanel.js';
 import { renderClientDiyPanel } from './components/ClientDiyPanel.js';
 import { renderHardwareSimulator } from './components/HardwareSimulator.js';
 
@@ -34,7 +35,9 @@ function renderApp() {
   const user = state.currentUser;
   let mainContentHtml = '';
 
-  if (state.activeTab === 'simulator') {
+  if (state.activeTab === 'settings') {
+    mainContentHtml = renderSettingsPanel();
+  } else if (state.activeTab === 'simulator') {
     mainContentHtml = renderHardwareSimulator();
   } else if (state.activeTab === 'user_management' || state.activeTab === 'permissions_matrix') {
     mainContentHtml = renderUserManagementPanel(state.activeTab, state.editingStaffUserId);
@@ -156,6 +159,53 @@ function attachMainEventListeners() {
       }
     });
   });
+
+  // --- IMPOSTAZIONI: CARICAMENTO LOGO DA PC & SOTTOTITOLO BRAND ---
+  const logoFileInput = document.getElementById('setting-logo-file');
+  if (logoFileInput) {
+    logoFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        if (!file.type.startsWith('image/')) {
+          alert('Seleziona un file immagine valido (PNG, JPG, SVG).');
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          const base64Image = event.target.result;
+          db.updateSettings({ customLogoUrl: base64Image });
+          alert('✅ Nuovo Logo Aziendale caricato con successo!');
+          renderApp();
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
+  const btnResetLogo = document.getElementById('btn-reset-logo');
+  if (btnResetLogo) {
+    btnResetLogo.addEventListener('click', () => {
+      if (confirm('Ripristinare il logo predefinito con icona caffè ☕?')) {
+        db.updateSettings({ customLogoUrl: null });
+        alert('✅ Logo predefinito ripristinato!');
+        renderApp();
+      }
+    });
+  }
+
+  const settingsBrandForm = document.getElementById('settings-brand-form');
+  if (settingsBrandForm) {
+    settingsBrandForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const brandTitle = document.getElementById('setting-brand-title').value.trim();
+      const brandSubtitle = document.getElementById('setting-brand-subtitle').value.trim();
+
+      db.updateSettings({ brandTitle, brandSubtitle });
+      alert('✅ Titolo e Sottotitolo Brand salvati con successo!');
+      renderApp();
+    });
+  }
 
   // --- MODIFICA SCHEDA CLIENTE & MACCHINA & DECONTO (OFFICE VIEW) ---
   document.querySelectorAll('.btn-edit-client').forEach(btn => {
