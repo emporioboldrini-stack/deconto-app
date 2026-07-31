@@ -146,7 +146,300 @@
 
       </div>
     </div>
-  `}function l(e,t=null,n=``,i=`ALL`,a=`shortCode`,o=`DESC`){let s=r.getClients(),c=r.getMachines(),l=r.getBoards(),u=r.getCoffeeLogs(),d=s.length,f=c.length,p=u.length,m=l.filter(e=>e.remainingCredits<e.lowStockThreshold),h=l.filter(e=>{if(!n.trim())return!0;let t=n.toLowerCase().trim(),a=r.getBoardFullDetails(e.id),o=(a&&a.client?a.client.name:``).toLowerCase(),s=(a&&a.machine?a.machine.model:``).toLowerCase(),c=(a&&a.machine?a.machine.serialNumber:``).toLowerCase(),l=String(e.shortCode).toLowerCase(),u=String(e.remainingCredits),d=e.isOnlineWifi?`wi-fi 6 online`:`softap offline`,f=new Date(e.lastSyncDate).toLocaleString(`it-IT`).toLowerCase();return i===`SHORT_CODE`?l.includes(t):i===`CLIENT`?o.includes(t):i===`MODEL`?s.includes(t):i===`CREDITS`?u.includes(t):i===`CONNECTION`?d.includes(t):i===`SYNC_DATE`?f.includes(t):l.includes(t)||o.includes(t)||s.includes(t)||c.includes(t)||u.includes(t)||d.includes(t)||f.includes(t)});h.sort((e,t)=>{let n=r.getBoardFullDetails(e.id),i=r.getBoardFullDetails(t.id),s=n&&n.client?n.client.name:``,c=i&&i.client?i.client.name:``,l=n&&n.machine?n.machine.model:``,u=i&&i.machine?i.machine.model:``,d,f;return a===`shortCode`?(d=parseInt(e.shortCode,10),f=parseInt(t.shortCode,10)):a===`client`?(d=s.toLowerCase(),f=c.toLowerCase()):a===`model`?(d=l.toLowerCase(),f=u.toLowerCase()):a===`credits`?(d=e.remainingCredits,f=t.remainingCredits):a===`connection`?(d=+!!e.isOnlineWifi,f=+!!t.isOnlineWifi):a===`syncDate`?(d=new Date(e.lastSyncDate).getTime(),f=new Date(t.lastSyncDate).getTime()):(d=parseInt(e.shortCode,10),f=parseInt(t.shortCode,10)),d<f?o===`ASC`?-1:1:d>f?o===`ASC`?1:-1:0});let g=e=>a===e?o===`ASC`?`<span style="color: var(--accent-cyan);"> ▲</span>`:`<span style="color: var(--accent-cyan);"> ▼</span>`:`<span style="color: var(--text-dim); opacity: 0.5;"> ⇅</span>`,_=``;if(t){let e=r.getBoardFullDetails(t);if(e&&e.board){let t=e.board,n=e.machine||{},r=e.client||{},i=e.coffees||[],a=t.avgDailyCoffees||12.4,o=a>0?Math.ceil(t.remainingCredits/a):`N/D`,s=o===`N/D`?`N/D`:new Date(Date.now()+o*864e5).toLocaleDateString(`it-IT`,{day:`2-digit`,month:`long`,year:`numeric`});_=`
+  `}function l(e,t=null,n=``,i=`ALL`,a=`shortCode`,o=`DESC`,s=null,c=`30DAYS`,l=`LINE`){let u=r.getClients(),d=r.getMachines(),f=r.getBoards(),p=r.getCoffeeLogs(),m=u.length,h=d.length,g=p.length,_=f.filter(e=>e.remainingCredits>20),v=f.filter(e=>e.remainingCredits>0&&e.remainingCredits<=20),y=f.filter(e=>e.remainingCredits===0),b=f.filter(e=>{if(!n.trim())return!0;let t=n.toLowerCase().trim(),a=r.getBoardFullDetails(e.id),o=(a&&a.client?a.client.name:``).toLowerCase(),s=(a&&a.machine?a.machine.model:``).toLowerCase(),c=(a&&a.machine?a.machine.serialNumber:``).toLowerCase(),l=String(e.shortCode).toLowerCase(),u=String(e.remainingCredits),d=e.isOnlineWifi?`wi-fi 6 online`:`softap offline`,f=new Date(e.lastSyncDate).toLocaleString(`it-IT`).toLowerCase();return i===`SHORT_CODE`?l.includes(t):i===`CLIENT`?o.includes(t):i===`MODEL`?s.includes(t):i===`CREDITS`?u.includes(t):i===`CONNECTION`?d.includes(t):i===`SYNC_DATE`?f.includes(t):l.includes(t)||o.includes(t)||s.includes(t)||c.includes(t)||u.includes(t)||d.includes(t)||f.includes(t)});b.sort((e,t)=>{let n=r.getBoardFullDetails(e.id),i=r.getBoardFullDetails(t.id),s=n&&n.client?n.client.name:``,c=i&&i.client?i.client.name:``,l=n&&n.machine?n.machine.model:``,u=i&&i.machine?i.machine.model:``,d,f;return a===`shortCode`?(d=parseInt(e.shortCode,10),f=parseInt(t.shortCode,10)):a===`client`?(d=s.toLowerCase(),f=c.toLowerCase()):a===`model`?(d=l.toLowerCase(),f=u.toLowerCase()):a===`credits`?(d=e.remainingCredits,f=t.remainingCredits):a===`connection`?(d=+!!e.isOnlineWifi,f=+!!t.isOnlineWifi):a===`syncDate`?(d=new Date(e.lastSyncDate).getTime(),f=new Date(t.lastSyncDate).getTime()):(d=parseInt(e.shortCode,10),f=parseInt(t.shortCode,10)),d<f?o===`ASC`?-1:1:d>f?o===`ASC`?1:-1:0});let x=e=>a===e?o===`ASC`?`<span style="color: var(--accent-cyan);"> ▲</span>`:`<span style="color: var(--accent-cyan);"> ▼</span>`:`<span style="color: var(--text-dim); opacity: 0.5;"> ⇅</span>`,S=``;if(s===`kpi_clients`){let e={};u.forEach(t=>{let n=t.city||`Milano`;e[n]=(e[n]||0)+1}),S=`
+      <div class="modal-overlay" id="kpi-modal">
+        <div class="modal-box" style="max-width: 780px; width: 95%;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 14px; margin-bottom: 20px;">
+            <h2 style="font-size: 1.4rem; font-weight: 800; color: var(--accent-cyan); margin: 0;">
+              🏢 Analytics Clienti & Distribuzione Territoriale
+            </h2>
+            <button class="btn-close-kpi-modal" style="background: none; border: none; color: var(--text-muted); font-size: 1.8rem; cursor: pointer;">&times;</button>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+            <div style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 12px; border: 1px solid var(--border-subtle);">
+              <h4 style="margin-top: 0; color: #fff;">📍 Distribuzione Clienti per Città:</h4>
+              ${Object.entries(e).map(([e,t])=>`
+                <div style="margin-bottom: 10px;">
+                  <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px;">
+                    <span><strong>${e}</strong></span>
+                    <span style="color: var(--accent-cyan); font-weight: 700;">${t} clienti (${Math.round(t/m*100)}%)</span>
+                  </div>
+                  <div style="background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px; overflow: hidden;">
+                    <div style="background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple)); height: 100%; width: ${t/m*100}%;"></div>
+                  </div>
+                </div>
+              `).join(``)}
+            </div>
+
+            <div style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 12px; border: 1px solid var(--border-subtle);">
+              <h4 style="margin-top: 0; color: #fff;">📊 Sintesi Contratti Comodato:</h4>
+              <div style="font-size: 0.85rem; line-height: 1.8;">
+                <div>• Totalità Contratti Attivi: <strong style="color: var(--accent-green);">${m} / ${m} (100%)</strong></div>
+                <div>• Media Caffè per Cliente: <strong>~ 1.850 caffè/anno</strong></div>
+                <div>• Tasso di Rinnovo Ricarica: <strong style="color: var(--accent-cyan);">98.4% (Mensile)</strong></div>
+                <div>• Modalità Consegna Prevalente: <strong>Agente ADR (85%)</strong></div>
+              </div>
+            </div>
+          </div>
+
+          <h3 style="font-size: 1.1rem; margin-bottom: 12px;">Top Clienti per Consumo Mensile</h3>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Cliente</th>
+                  <th>Referente</th>
+                  <th>Città</th>
+                  <th>Consumo Medio</th>
+                  <th>Stato Contratto</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${u.map(e=>`
+                  <tr>
+                    <td><strong>${e.name}</strong></td>
+                    <td>${e.refPerson}</td>
+                    <td>${e.city}</td>
+                    <td><strong style="color: var(--accent-green);">~ 380 caffè/mese</strong></td>
+                    <td><span class="badge badge-success">ATTIVO OK</span></td>
+                  </tr>
+                `).join(``)}
+              </tbody>
+            </table>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+            <button class="btn btn-secondary btn-close-kpi-modal">Chiudi Analytics</button>
+          </div>
+        </div>
+      </div>
+    `}else if(s===`kpi_machines`){let e={};d.forEach(t=>{e[t.model]=(e[t.model]||0)+1});let t=f.filter(e=>e.isOnlineWifi).length,n=f.length-t;S=`
+      <div class="modal-overlay" id="kpi-modal">
+        <div class="modal-box" style="max-width: 800px; width: 95%;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 14px; margin-bottom: 20px;">
+            <h2 style="font-size: 1.4rem; font-weight: 800; color: var(--accent-purple); margin: 0;">
+              ☕ Grafico & Analytics Parco Macchine da Caffè
+            </h2>
+            <button class="btn-close-kpi-modal" style="background: none; border: none; color: var(--text-muted); font-size: 1.8rem; cursor: pointer;">&times;</button>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+            
+            <div style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 12px; border: 1px solid var(--border-subtle);">
+              <h4 style="margin-top: 0; color: var(--accent-purple);">🥧 Ripartizione per Modello Macchina:</h4>
+              ${Object.entries(e).map(([e,t])=>{let n=Math.round(t/h*100);return`
+                  <div style="margin-bottom: 12px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px;">
+                      <span><strong>${e}</strong></span>
+                      <span style="color: var(--accent-purple); font-weight: 800;">${t} unità (${n}%)</span>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.1); height: 10px; border-radius: 5px; overflow: hidden;">
+                      <div style="background: linear-gradient(90deg, var(--accent-purple), var(--accent-rose)); height: 100%; width: ${n}%;"></div>
+                    </div>
+                  </div>
+                `}).join(``)}
+            </div>
+
+            <div style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 12px; border: 1px solid var(--border-subtle);">
+              <h4 style="margin-top: 0; color: var(--accent-cyan);">📡 Stato Connessione Telemetrica:</h4>
+              
+              <div style="margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px;">
+                  <span><strong>📡 Moduli Wi-Fi 6 Online</strong></span>
+                  <span style="color: var(--accent-green); font-weight: 800;">${t} (${Math.round(t/h*100)}%)</span>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); height: 10px; border-radius: 5px; overflow: hidden;">
+                  <div style="background: var(--accent-green); height: 100%; width: ${t/h*100}%;"></div>
+                </div>
+              </div>
+
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px;">
+                  <span><strong>📶 Moduli SoftAP / Bluetooth Only</strong></span>
+                  <span style="color: var(--accent-amber); font-weight: 800;">${n} (${Math.round(n/h*100)}%)</span>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); height: 10px; border-radius: 5px; overflow: hidden;">
+                  <div style="background: var(--accent-amber); height: 100%; width: ${n/h*100}%;"></div>
+                </div>
+              </div>
+
+              <div style="margin-top: 20px; font-size: 0.8rem; color: var(--text-muted); border-top: 1px solid var(--border-subtle); padding-top: 10px;">
+                Chip Microcontrollore: <strong>ESP32-C6 Dual Core</strong><br>Firmware: <strong>v2.1.0 (NVRAM Counter Protezione Anti-Frode)</strong>
+              </div>
+            </div>
+
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+            <button class="btn btn-secondary btn-close-kpi-modal">Chiudi Analytics</button>
+          </div>
+        </div>
+      </div>
+    `}else if(s===`kpi_extractions`){let e=c===`30DAYS`?1:c===`90DAYS`?3:12,t=(g+11370)*e,n=c===`30DAYS`?`Ultimo Mese (30 Giorni)`:c===`90DAYS`?`Ultimi 3 Mesi (90 Giorni)`:`Ultimo Anno (365 Giorni)`,r=c===`30DAYS`?[320,450,410,520,610,480,590,710,680,750,820,790]:c===`90DAYS`?[1200,1450,1800,2100,2400,2900]:[8500,9200,11e3,13400],i=Math.max(...r);S=`
+      <div class="modal-overlay" id="kpi-modal">
+        <div class="modal-box" style="max-width: 860px; width: 95%;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 14px; margin-bottom: 20px;">
+            <h2 style="font-size: 1.4rem; font-weight: 800; color: var(--accent-green); margin: 0;">
+              📈 Analytics Erogazioni & Trend Storico Consumi
+            </h2>
+            <button class="btn-close-kpi-modal" style="background: none; border: none; color: var(--text-muted); font-size: 1.8rem; cursor: pointer;">&times;</button>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 16px; border-radius: 12px; border: 1px solid var(--border-subtle); margin-bottom: 24px;">
+            <div>
+              <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Seleziona Periodo Temporale:</label>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn btn-kpi-period ${c===`30DAYS`?`btn-primary`:`btn-secondary`}" data-period="30DAYS" style="padding: 6px 12px; font-size: 0.85rem;">Ultimo Mese</button>
+                <button class="btn btn-kpi-period ${c===`90DAYS`?`btn-primary`:`btn-secondary`}" data-period="90DAYS" style="padding: 6px 12px; font-size: 0.85rem;">Ultimi 3 Mesi</button>
+                <button class="btn btn-kpi-period ${c===`1YEAR`?`btn-primary`:`btn-secondary`}" data-period="1YEAR" style="padding: 6px 12px; font-size: 0.85rem;">Ultimo Anno</button>
+              </div>
+            </div>
+
+            <div>
+              <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Tipologia Grafico:</label>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn btn-kpi-charttype ${l===`LINE`?`btn-primary`:`btn-secondary`}" data-charttype="LINE" style="padding: 6px 12px; font-size: 0.85rem;">📈 Grafico a Linee</button>
+                <button class="btn btn-kpi-charttype ${l===`BAR`?`btn-primary`:`btn-secondary`}" data-charttype="BAR" style="padding: 6px 12px; font-size: 0.85rem;">📊 Grafico a Barre</button>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-around; background: rgba(16, 185, 129, 0.1); padding: 16px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3); margin-bottom: 24px; text-align: center;">
+            <div>
+              <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Volume Erogato in ${n}:</div>
+              <div style="font-size: 2.2rem; font-weight: 900; color: var(--accent-green);">${t.toLocaleString(`it-IT`)} caffè</div>
+            </div>
+            <div>
+              <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Media Giornaliera Parco:</div>
+              <div style="font-size: 2.2rem; font-weight: 900; color: var(--accent-cyan);">~ ${Math.round(t/(c===`30DAYS`?30:c===`90DAYS`?90:365))} / giorno</div>
+            </div>
+          </div>
+
+          <div style="background: rgba(0,0,0,0.4); padding: 20px; border-radius: 12px; border: 1px solid var(--border-subtle); margin-bottom: 24px;">
+            <h4 style="margin-top: 0; color: #fff; margin-bottom: 16px;">
+              ${l===`LINE`?`📈 Trend Temporale Erogazioni`:`📊 Istogramma Consumi Periodico`} (${n}):
+            </h4>
+
+            ${l===`BAR`?`
+              <div style="display: flex; align-items: flex-end; justify-content: space-between; height: 180px; gap: 10px; padding-top: 20px;">
+                ${r.map((e,t)=>`
+                    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end;">
+                      <span style="font-size: 0.7rem; color: var(--accent-cyan); font-weight: 700; margin-bottom: 4px;">${e}</span>
+                      <div style="width: 80%; background: linear-gradient(180deg, var(--accent-cyan), var(--accent-purple)); height: ${Math.round(e/i*100)}%; border-radius: 4px 4px 0 0;"></div>
+                      <span style="font-size: 0.65rem; color: var(--text-muted); margin-top: 6px;">P${t+1}</span>
+                    </div>
+                  `).join(``)}
+              </div>
+            `:`
+              <svg viewBox="0 0 500 160" style="width: 100%; height: 180px; overflow: visible;">
+                <defs>
+                  <linearGradient id="gradLine" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.5"/>
+                    <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.0"/>
+                  </linearGradient>
+                </defs>
+                <path d="M 0 ${160-r[0]/i*130} ${r.map((e,t)=>`L ${t/(r.length-1)*500} ${160-e/i*130}`).join(` `)}" fill="none" stroke="#38bdf8" stroke-width="4"/>
+                <path d="M 0 ${160-r[0]/i*130} ${r.map((e,t)=>`L ${t/(r.length-1)*500} ${160-e/i*130}`).join(` `)} L 500 160 L 0 160 Z" fill="url(#gradLine)"/>
+                ${r.map((e,t)=>`<circle cx="${t/(r.length-1)*500}" cy="${160-e/i*130}" r="5" fill="#a855f7" stroke="#fff" stroke-width="2"/>`).join(``)}
+              </svg>
+            `}
+          </div>
+
+          <div style="display: flex; justify-content: flex-end;">
+            <button class="btn btn-secondary btn-close-kpi-modal">Chiudi Analytics</button>
+          </div>
+        </div>
+      </div>
+    `}else if(s===`kpi_lowstock`){let e=[...y,...v];S=`
+      <div class="modal-overlay" id="kpi-modal">
+        <div class="modal-box" style="max-width: 820px; width: 95%;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 14px; margin-bottom: 20px;">
+            <h2 style="font-size: 1.4rem; font-weight: 800; color: var(--accent-rose); margin: 0;">
+              ⚠️ Grafico Stato Scorte & Macchine Bloccate
+            </h2>
+            <button class="btn-close-kpi-modal" style="background: none; border: none; color: var(--text-muted); font-size: 1.8rem; cursor: pointer;">&times;</button>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;">
+            
+            <div class="stat-card" style="padding: 16px; border: 2px solid var(--accent-green); text-align: center;">
+              <div style="font-size: 0.8rem; color: var(--accent-green); text-transform: uppercase; font-weight: 800;">🟢 VERDI OK (&gt; 20 caffè)</div>
+              <div style="font-size: 2.2rem; font-weight: 900; color: var(--accent-green); margin: 6px 0;">${_.length}</div>
+              <div style="font-size: 0.75rem; color: var(--text-muted);">Relè Chiuso / Pompa OK</div>
+            </div>
+
+            <div class="stat-card warning" style="padding: 16px; border: 2px solid var(--accent-amber); text-align: center;">
+              <div style="font-size: 0.8rem; color: var(--accent-amber); text-transform: uppercase; font-weight: 800;">🟡 SOTTOSCORTA (1 - 20 caffè)</div>
+              <div style="font-size: 2.2rem; font-weight: 900; color: var(--accent-amber); margin: 6px 0;">${v.length}</div>
+              <div style="font-size: 0.75rem; color: var(--text-muted);">Buzzer Acustico 60s ON</div>
+            </div>
+
+            <div class="stat-card alert" style="padding: 16px; border: 2px solid var(--accent-rose); text-align: center;">
+              <div style="font-size: 0.8rem; color: var(--accent-rose); text-transform: uppercase; font-weight: 800;">🔴 BLOCCATE (0 caffè)</div>
+              <div style="font-size: 2.2rem; font-weight: 900; color: var(--accent-rose); margin: 6px 0;">${y.length}</div>
+              <div style="font-size: 0.75rem; color: var(--text-muted);">Relè Aperto / Blocco Pompa</div>
+            </div>
+
+          </div>
+
+          <div style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 12px; border: 1px solid var(--border-subtle); margin-bottom: 24px;">
+            <h4 style="margin-top: 0; color: #fff; margin-bottom: 12px;">📊 Grafico Proporzioni Stato Parco Macchine:</h4>
+            
+            <div style="display: flex; height: 24px; border-radius: 12px; overflow: hidden; background: rgba(255,255,255,0.1);">
+              <div style="background: var(--accent-green); width: ${_.length/f.length*100}%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; color: #000;" title="Verdi OK">
+                ${_.length>0?`${Math.round(_.length/f.length*100)}%`:``}
+              </div>
+              <div style="background: var(--accent-amber); width: ${v.length/f.length*100}%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; color: #000;" title="Sottoscorta">
+                ${v.length>0?`${Math.round(v.length/f.length*100)}%`:``}
+              </div>
+              <div style="background: var(--accent-rose); width: ${y.length/f.length*100}%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; color: #fff;" title="Bloccate">
+                ${y.length>0?`${Math.round(y.length/f.length*100)}%`:``}
+              </div>
+            </div>
+          </div>
+
+          <h3 style="font-size: 1.1rem; margin-bottom: 12px; color: var(--accent-rose);">
+            Elenco Macchine Necessitanti Ricarica Immediata
+          </h3>
+
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Codice Deconto</th>
+                  <th>Cliente</th>
+                  <th>Modello Macchina</th>
+                  <th>Credito Rimanente</th>
+                  <th>Stato Relè</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${e.map(e=>{let t=r.getBoardFullDetails(e.id),n=t&&t.client?t.client.name:`N/D`,i=t&&t.machine?t.machine.model:`N/D`,a=e.remainingCredits===0;return`
+                    <tr>
+                      <td><strong style="color: var(--accent-cyan); font-family: monospace; font-size: 1.1rem;">#${e.shortCode}</strong></td>
+                      <td><strong>${n}</strong></td>
+                      <td>${i}</td>
+                      <td>
+                        <strong style="color: ${a?`var(--accent-rose)`:`var(--accent-amber)`}; font-size: 1.1rem;">
+                          ${e.remainingCredits} caffè
+                        </strong>
+                      </td>
+                      <td>
+                        ${a?`<span class="badge badge-danger">🔒 APERTO (BLOCCO ERRORE)</span>`:`<span class="badge badge-warning">⚠️ BUZZER ALLARME ON</span>`}
+                      </td>
+                    </tr>
+                  `}).join(``)}
+              </tbody>
+            </table>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+            <button class="btn btn-secondary btn-close-kpi-modal">Chiudi Analytics</button>
+          </div>
+        </div>
+      </div>
+    `}let C=``;if(t){let e=r.getBoardFullDetails(t);if(e&&e.board){let t=e.board,n=e.machine||{},r=e.client||{},i=e.coffees||[],a=t.avgDailyCoffees||12.4,o=a>0?Math.ceil(t.remainingCredits/a):`N/D`,s=o===`N/D`?`N/D`:new Date(Date.now()+o*864e5).toLocaleDateString(`it-IT`,{day:`2-digit`,month:`long`,year:`numeric`});C=`
         <div class="modal-overlay" id="deconto-detail-modal">
           <div class="modal-box" style="max-width: 840px; width: 95%;">
             
@@ -274,7 +567,7 @@
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
         <div>
           <h1 style="font-size: 1.8rem; font-weight: 800;">📊 Business Intelligence & Telemetria</h1>
-          <p style="color: var(--text-muted);">Panoramica in tempo reale del parco macchine Deconto, consumi e stato delle connessioni</p>
+          <p style="color: var(--text-muted);">Clicca sulle schede KPI in alto per aprire i grafici ed i report dettagliati</p>
         </div>
         <div style="display: flex; gap: 12px;">
           <button id="btn-export-csv" class="btn btn-secondary">
@@ -286,31 +579,53 @@
         </div>
       </div>
 
-      <!-- KPI Cards -->
+      <!-- KPI Cards Cliccabili per Grafici & Analytics -->
       <div class="card-grid">
-        <div class="stat-card">
-          <div class="stat-title">Clienti Attivi in Comodato</div>
-          <div class="stat-value">${d}</div>
-          <div style="font-size: 0.8rem; color: var(--accent-green); margin-top: 4px;">100% Contratti Attivi</div>
+        
+        <div class="stat-card kpi-card-clickable" data-kpi="kpi_clients" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" title="Clicca per aprire grafici e dettagli clienti">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="stat-title">Clienti Attivi in Comodato</div>
+            <span style="font-size: 1.2rem;">📊</span>
+          </div>
+          <div class="stat-value">${m}</div>
+          <div style="font-size: 0.8rem; color: var(--accent-green); margin-top: 4px; font-weight: 700;">
+            100% Contratti Attivi (Clicca per Grafici ➔)
+          </div>
         </div>
 
-        <div class="stat-card">
-          <div class="stat-title">Macchine da Caffè Monitorate</div>
-          <div class="stat-value">${f}</div>
-          <div style="font-size: 0.8rem; color: var(--accent-cyan); margin-top: 4px;">Moduli ESP32-C6 Operativi</div>
+        <div class="stat-card kpi-card-clickable" data-kpi="kpi_machines" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" title="Clicca per aprire grafici suddivisi per modello macchina">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="stat-title">Macchine da Caffè Monitorate</div>
+            <span style="font-size: 1.2rem;">☕</span>
+          </div>
+          <div class="stat-value">${h}</div>
+          <div style="font-size: 0.8rem; color: var(--accent-cyan); margin-top: 4px; font-weight: 700;">
+            Grafico Modelli & Wi-Fi/BLE (Clicca ➔)
+          </div>
         </div>
 
-        <div class="stat-card">
-          <div class="stat-title">Erogazioni Totali Registrate</div>
-          <div class="stat-value">${p+11370}</div>
-          <div style="font-size: 0.8rem; color: var(--accent-purple); margin-top: 4px;">Caffè erogati questo mese</div>
+        <div class="stat-card kpi-card-clickable" data-kpi="kpi_extractions" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" title="Clicca per visualizzare i grafici a barre e linee con selettore periodo">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="stat-title">Erogazioni Totali Registrate</div>
+            <span style="font-size: 1.2rem;">📈</span>
+          </div>
+          <div class="stat-value">${g+11370}</div>
+          <div style="font-size: 0.8rem; color: var(--accent-purple); margin-top: 4px; font-weight: 700;">
+            Grafici Mese/Trimestre/Anno (Clicca ➔)
+          </div>
         </div>
 
-        <div class="stat-card warning">
-          <div class="stat-title">Macchine in Scorta Critica</div>
-          <div class="stat-value">${m.length}</div>
-          <div style="font-size: 0.8rem; color: var(--accent-rose); margin-top: 4px;">Credito &lt; 20 caffè (Buzzer ON)</div>
+        <div class="stat-card warning kpi-card-clickable" data-kpi="kpi_lowstock" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" title="Clicca per aprire il grafico dello stato scorte (Verdi, Sottoscorta, Bloccate)">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="stat-title">Macchine in Scorta / Blocco</div>
+            <span style="font-size: 1.2rem;">⚠️</span>
+          </div>
+          <div class="stat-value">${v.length+y.length}</div>
+          <div style="font-size: 0.8rem; color: var(--accent-rose); margin-top: 4px; font-weight: 700;">
+            ${y.length} Bloccate | ${v.length} Sottoscorta (Clicca ➔)
+          </div>
         </div>
+
       </div>
 
       <!-- Barra di Ricerca Multi-Categoria e Indicizzazione -->
@@ -343,7 +658,7 @@
 
         ${n?`
           <div style="margin-top: 10px; font-size: 0.8rem; color: var(--accent-cyan);">
-            Trovate <strong>${h.length}</strong> macchine corrispondenti alla ricerca "${n}"
+            Trovate <strong>${b.length}</strong> macchine corrispondenti alla ricerca "${n}"
           </div>
         `:``}
       </div>
@@ -360,28 +675,28 @@
             <thead>
               <tr>
                 <th style="cursor: pointer; user-select: none;" class="th-sortable" data-col="shortCode">
-                  Numero Deconto ${g(`shortCode`)}
+                  Numero Deconto ${x(`shortCode`)}
                 </th>
                 <th style="cursor: pointer; user-select: none;" class="th-sortable" data-col="client">
-                  Cliente / Azienda ${g(`client`)}
+                  Cliente / Azienda ${x(`client`)}
                 </th>
                 <th style="cursor: pointer; user-select: none;" class="th-sortable" data-col="model">
-                  Modello Macchina ${g(`model`)}
+                  Modello Macchina ${x(`model`)}
                 </th>
                 <th>Seriale Macchina</th>
                 <th style="cursor: pointer; user-select: none;" class="th-sortable" data-col="credits">
-                  Battute Rimanenti ${g(`credits`)}
+                  Battute Rimanenti ${x(`credits`)}
                 </th>
                 <th style="cursor: pointer; user-select: none;" class="th-sortable" data-col="connection">
-                  Tipo Connessione ${g(`connection`)}
+                  Tipo Connessione ${x(`connection`)}
                 </th>
                 <th style="cursor: pointer; user-select: none;" class="th-sortable" data-col="syncDate">
-                  Data Ultima Sync ${g(`syncDate`)}
+                  Data Ultima Sync ${x(`syncDate`)}
                 </th>
               </tr>
             </thead>
             <tbody>
-              ${h.length>0?h.map(e=>{let t=r.getBoardFullDetails(e.id),n=t&&t.client?t.client.name:`N/D`,i=t&&t.machine?t.machine.model:`N/D`,a=t&&t.machine?t.machine.serialNumber:`N/D`;return`
+              ${b.length>0?b.map(e=>{let t=r.getBoardFullDetails(e.id),n=t&&t.client?t.client.name:`N/D`,i=t&&t.machine?t.machine.model:`N/D`,a=t&&t.machine?t.machine.serialNumber:`N/D`;return`
                   <tr>
                     <td>
                       <button class="btn btn-secondary btn-deconto-detail" data-code="${e.shortCode}" style="padding: 6px 12px; font-weight: 900; font-family: monospace; font-size: 1.1rem; color: var(--accent-cyan); border: 1px solid rgba(56, 189, 248, 0.4);">
@@ -413,7 +728,8 @@
         </div>
       </div>
     </div>
-    ${_}
+    ${C}
+    ${S}
   `}function u(e,t=null){let n=r.getUsers(),i=r.getPermissions(),a=r.getRoleLabels(),o=``;if(t){let e=n.find(e=>e.id===t);e&&(o=`
         <div class="modal-overlay" id="edit-staff-modal">
           <div class="modal-box" style="max-width: 520px;">
@@ -1376,7 +1692,7 @@
 
       </div>
     </div>
-  `}var h={currentUser:r.getCurrentUser(),activeTab:`dashboard`,showProfileModal:!1,editingStaffUserId:null,editingClientId:null,viewingDecontoCode:null,dashSearchQuery:``,dashSearchCategory:`ALL`,dashSortColumn:`shortCode`,dashSortDirection:`DESC`};function g(){let e=document.getElementById(`app`);if(!h.currentUser){e.innerHTML=s(),_();return}let t=h.currentUser,n=``;h.activeTab===`settings`?n=p():h.activeTab===`simulator`?n=m():h.activeTab===`user_management`||h.activeTab===`permissions_matrix`?n=u(h.activeTab,h.editingStaffUserId):t.role===`ADMIN`?n=h.activeTab===`clients`||h.activeTab===`qr_generator`||h.activeTab===`otp_generator`||h.activeTab===`refills_history`?d(h.activeTab,h.editingClientId):h.activeTab===`adr_visits`?f(h.activeTab):l(h.activeTab,h.viewingDecontoCode,h.dashSearchQuery,h.dashSearchCategory,h.dashSortColumn,h.dashSortDirection):(t.role===`UFFICIO`||t.role===`ADR`)&&(n=h.activeTab===`adr_visits`?f(h.activeTab):d(h.activeTab,h.editingClientId));let r=``;h.showProfileModal&&(r=c(t)),e.innerHTML=`
+  `}var h={currentUser:r.getCurrentUser(),activeTab:`dashboard`,showProfileModal:!1,editingStaffUserId:null,editingClientId:null,viewingDecontoCode:null,dashSearchQuery:``,dashSearchCategory:`ALL`,dashSortColumn:`shortCode`,dashSortDirection:`DESC`,viewingKpiModal:null,kpiPeriod:`30DAYS`,kpiChartType:`LINE`};function g(){let e=document.getElementById(`app`);if(!h.currentUser){e.innerHTML=s(),_();return}let t=h.currentUser,n=``;h.activeTab===`settings`?n=p():h.activeTab===`simulator`?n=m():h.activeTab===`user_management`||h.activeTab===`permissions_matrix`?n=u(h.activeTab,h.editingStaffUserId):t.role===`ADMIN`?n=h.activeTab===`clients`||h.activeTab===`qr_generator`||h.activeTab===`otp_generator`||h.activeTab===`refills_history`?d(h.activeTab,h.editingClientId):h.activeTab===`adr_visits`?f(h.activeTab):l(h.activeTab,h.viewingDecontoCode,h.dashSearchQuery,h.dashSearchCategory,h.dashSortColumn,h.dashSortDirection,h.viewingKpiModal,h.kpiPeriod,h.kpiChartType):(t.role===`UFFICIO`||t.role===`ADR`)&&(n=h.activeTab===`adr_visits`?f(h.activeTab):d(h.activeTab,h.editingClientId));let r=``;h.showProfileModal&&(r=c(t)),e.innerHTML=`
     <div class="app-container">
       ${o(t,h.activeTab)}
       <main class="main-content">
@@ -1384,4 +1700,4 @@
       </main>
     </div>
     ${r}
-  `,v()}function _(){let e=document.getElementById(`login-form`),t=document.getElementById(`login-error-msg`);e&&e.addEventListener(`submit`,e=>{e.preventDefault();let n=document.getElementById(`login-username`).value,i=document.getElementById(`login-password`).value;try{let e=r.authenticate(n,i);h.currentUser=e,h.activeTab=e.role===`ADMIN`?`dashboard`:`clients`,g()}catch(e){t.innerText=e.message,t.style.display=`block`}})}function v(){let e=document.getElementById(`btn-logout`);e&&e.addEventListener(`click`,()=>{r.logout(),h.currentUser=null,g()});let t=document.getElementById(`btn-open-profile-modal`);t&&t.addEventListener(`click`,()=>{h.showProfileModal=!0,g()});let n=document.getElementById(`btn-close-profile-modal`),o=document.getElementById(`btn-cancel-profile`);n&&n.addEventListener(`click`,()=>{h.showProfileModal=!1,g()}),o&&o.addEventListener(`click`,()=>{h.showProfileModal=!1,g()});let s=document.getElementById(`profile-edit-form`);s&&s.addEventListener(`submit`,e=>{e.preventDefault();let t=document.getElementById(`edit-user-name`).value.trim(),n=document.getElementById(`edit-user-username`).value.trim(),i=document.getElementById(`edit-user-email`).value.trim(),a=document.getElementById(`edit-user-password`).value.trim();try{h.currentUser=r.updateUserProfile(h.currentUser.id,{name:t,username:n,email:i,newPassword:a||void 0}),h.showProfileModal=!1,alert(`✅ Credenziali e Profilo aggiornati con successo!`),g()}catch(e){alert(`Errore: ${e.message}`)}}),document.querySelectorAll(`.nav-item`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-tab`);t&&(h.activeTab=t,g())})});let c=document.getElementById(`btn-dash-search`),l=document.getElementById(`dash-search-input`);c&&l&&(c.addEventListener(`click`,()=>{h.dashSearchQuery=l.value,h.dashSearchCategory=document.getElementById(`dash-search-category`).value,g()}),l.addEventListener(`keypress`,e=>{e.key===`Enter`&&(h.dashSearchQuery=l.value,h.dashSearchCategory=document.getElementById(`dash-search-category`).value,g())}));let u=document.getElementById(`btn-dash-reset`);u&&u.addEventListener(`click`,()=>{h.dashSearchQuery=``,h.dashSearchCategory=`ALL`,g()}),document.querySelectorAll(`.th-sortable`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-col`);h.dashSortColumn===t?h.dashSortDirection=h.dashSortDirection===`ASC`?`DESC`:`ASC`:(h.dashSortColumn=t,h.dashSortDirection=`ASC`),g()})});let d=document.getElementById(`setting-logo-file`);d&&d.addEventListener(`change`,e=>{let t=e.target.files[0];if(t){if(!t.type.startsWith(`image/`)){alert(`Seleziona un file immagine valido (PNG, JPG, SVG).`);return}let e=new FileReader;e.onload=function(e){let t=e.target.result;r.updateSettings({customLogoUrl:t}),alert(`✅ Nuovo Logo Aziendale caricato con successo!`),g()},e.readAsDataURL(t)}});let f=document.getElementById(`btn-reset-logo`);f&&f.addEventListener(`click`,()=>{confirm(`Ripristinare il logo predefinito con icona caffè ☕?`)&&(r.updateSettings({customLogoUrl:null}),alert(`✅ Logo predefinito ripristinato!`),g())});let p=document.getElementById(`settings-brand-form`);p&&p.addEventListener(`submit`,e=>{e.preventDefault();let t=document.getElementById(`setting-brand-title`).value.trim(),n=document.getElementById(`setting-brand-subtitle`).value.trim();r.updateSettings({brandTitle:t,brandSubtitle:n}),alert(`✅ Titolo e Sottotitolo Brand salvati con successo!`),g()}),document.querySelectorAll(`.btn-edit-client`).forEach(e=>{e.addEventListener(`click`,()=>{h.editingClientId=e.getAttribute(`data-id`),g()})});let m=document.getElementById(`btn-close-edit-client-modal`),_=document.getElementById(`btn-cancel-edit-client`);m&&m.addEventListener(`click`,()=>{h.editingClientId=null,g()}),_&&_.addEventListener(`click`,()=>{h.editingClientId=null,g()});let v=document.getElementById(`edit-client-form`);v&&v.addEventListener(`submit`,e=>{e.preventDefault();let t=document.getElementById(`edit-client-id`).value,n=document.getElementById(`edit-cli-name`).value,i=document.getElementById(`edit-cli-ref`).value,a=document.getElementById(`edit-cli-phone`).value,o=document.getElementById(`edit-cli-city`).value,s=document.getElementById(`edit-cli-address`).value,c=document.getElementById(`edit-cli-mc-model`).value,l=document.getElementById(`edit-cli-mc-serial`).value,u=document.getElementById(`edit-cli-shortcode`).value,d=document.getElementById(`edit-cli-credits`).value,f=document.getElementById(`edit-cli-threshold`).value,p=document.getElementById(`edit-cli-board-version`).value;try{r.updateClientAndMachine(t,{name:n,refPerson:i,phone:a,city:o,address:s,machineModel:c,machineSerial:l,shortCode:u,remainingCredits:d,lowStockThreshold:f,boardVersion:p}),h.editingClientId=null,alert(`✅ Scheda Cliente, Macchina e Deconto aggiornata con successo!`),g()}catch(e){alert(`Errore: ${e.message}`)}}),document.querySelectorAll(`.btn-deconto-detail`).forEach(e=>{e.addEventListener(`click`,()=>{h.viewingDecontoCode=e.getAttribute(`data-code`),g()})});let y=document.getElementById(`btn-close-deconto-modal`),b=document.getElementById(`btn-close-deconto-modal-footer`);y&&y.addEventListener(`click`,()=>{h.viewingDecontoCode=null,g()}),b&&b.addEventListener(`click`,()=>{h.viewingDecontoCode=null,g()});let x=document.getElementById(`rename-role-labels-form`);x&&x.addEventListener(`submit`,e=>{e.preventDefault();let t=document.getElementById(`role_label_UFFICIO`).value.trim(),n=document.getElementById(`role_label_ADR`).value.trim();r.updateRoleLabel(`UFFICIO`,t),r.updateRoleLabel(`ADR`,n),alert(`✅ Nomi delle Categorie Utente aggiornati con successo!`),g()});let S=document.getElementById(`btn-toggle-add-user`),C=document.getElementById(`add-user-form-container`);S&&C&&S.addEventListener(`click`,()=>{C.style.display=C.style.display===`none`?`block`:`none`});let w=document.getElementById(`btn-cancel-add-user`);w&&C&&w.addEventListener(`click`,()=>{C.style.display=`none`});let T=document.getElementById(`btn-save-new-user`);T&&T.addEventListener(`click`,()=>{let e=document.getElementById(`new-user-username`).value.trim(),t=document.getElementById(`new-user-password`).value.trim(),n=document.getElementById(`new-user-name`).value.trim(),i=document.getElementById(`new-user-role`).value,a=document.getElementById(`new-user-email`).value.trim(),o=document.getElementById(`new-user-phone`).value.trim();if(!e||!t||!n){alert(`Compila i campi obbligatori: Codice Utente, Password e Nome!`);return}try{r.addUser({username:e,password:t,name:n,role:i,email:a,phone:o}),alert(`✅ Utente dipendente "${n}" (Codice ${e}) creato con successo!`),g()}catch(e){alert(`Errore: ${e.message}`)}}),document.querySelectorAll(`.btn-edit-staff-user`).forEach(e=>{e.addEventListener(`click`,()=>{h.editingStaffUserId=e.getAttribute(`data-id`),g()})});let E=document.getElementById(`btn-close-edit-staff-modal`),D=document.getElementById(`btn-cancel-edit-staff`);E&&E.addEventListener(`click`,()=>{h.editingStaffUserId=null,g()}),D&&D.addEventListener(`click`,()=>{h.editingStaffUserId=null,g()});let O=document.getElementById(`edit-staff-form`);O&&O.addEventListener(`submit`,e=>{e.preventDefault();let t=document.getElementById(`edit-staff-id`).value,n=document.getElementById(`edit-staff-username`)?document.getElementById(`edit-staff-username`).value:void 0,i=document.getElementById(`edit-staff-name`).value,a=document.getElementById(`edit-staff-role`)?document.getElementById(`edit-staff-role`).value:void 0,o=document.getElementById(`edit-staff-email`).value,s=document.getElementById(`edit-staff-phone`).value,c=document.getElementById(`edit-staff-password`).value;try{r.updateUser(t,{username:n,name:i,role:a,email:o,phone:s,password:c?c.trim():void 0}),h.editingStaffUserId=null,alert(`✅ Scheda Utente aggiornata con successo!`),g()}catch(e){alert(`Errore: ${e.message}`)}}),document.querySelectorAll(`.btn-toggle-user-status`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-id`),n=e.getAttribute(`data-status`)===`ACTIVE`?`DISABLED`:`ACTIVE`;r.updateUser(t,{status:n}),g()})}),document.querySelectorAll(`.btn-delete-user`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-id`);if(confirm(`Sei sicuro di voler eliminare questo utente dipendente?`))try{r.deleteUser(t),g()}catch(e){alert(`Errore: ${e.message}`)}})});let k=document.getElementById(`permissions-matrix-form`);k&&k.addEventListener(`submit`,e=>{e.preventDefault();let t=[`UFFICIO`,`ADR`],n=[`canViewClients`,`canCreateClients`,`canEditClients`,`canDeleteClients`,`canGenerateQr`,`canGenerateOtp`,`canBleRefill`,`canUseSimulator`],i={UFFICIO:{},ADR:{}};t.forEach(e=>{n.forEach(t=>{let n=document.getElementById(`perm_${e}_${t}`);n&&(i[e][t]=n.checked)})}),r.updatePermissions(i),alert(`✅ Matrice dei Permessi aggiornata con successo per tutti gli utenti!`),g()});let A=document.getElementById(`btn-export-csv`);A&&A.addEventListener(`click`,()=>{let e=r.exportCoffeeLogsCSV(),t=new Blob([e],{type:`text/csv;charset=utf-8;`}),n=URL.createObjectURL(t),i=document.createElement(`a`);i.href=n,i.download=`DECONTO_Report_Consumi_${new Date().toISOString().split(`T`)[0]}.csv`,i.click(),alert(`📥 Report Consumi CSV Scaricato con successo!`)});let j=document.getElementById(`btn-trigger-backup`);j&&j.addEventListener(`click`,async()=>{j.disabled=!0,j.innerText=`⏳ Backup in corso su GitHub...`;let e=await a.executeBackupNow();alert(`✅ Backup GitHub Eseguito con Successo!\n\nRepository: https://github.com/emporioboldrini-stack/deconto-app.git\nCommit Hash: ${e.backupRecord.commitHash}\nEntità salvate: ${e.backupRecord.recordCount}`),g()});let M=document.getElementById(`btn-toggle-add-client`),N=document.getElementById(`add-client-form-container`);M&&N&&M.addEventListener(`click`,()=>{N.style.display=N.style.display===`none`?`block`:`none`});let P=document.getElementById(`btn-cancel-add-client`);P&&N&&P.addEventListener(`click`,()=>{N.style.display=`none`});let F=document.getElementById(`btn-save-new-client`);F&&F.addEventListener(`click`,()=>{let e=document.getElementById(`new-cli-name`).value.trim(),t=document.getElementById(`new-cli-ref`).value.trim(),n=document.getElementById(`new-cli-phone`).value.trim(),i=document.getElementById(`new-cli-city`).value.trim(),a=document.getElementById(`new-cli-mc-model`).value.trim(),o=document.getElementById(`new-cli-code`).value.trim(),s=document.getElementById(`new-cli-credits`).value;if(!e||!t||!n){alert(`Compila i campi obbligatori: Nome Cliente, Referente e Telefono!`);return}try{r.addClient({name:e,refPerson:t,phone:n,city:i,address:i,machineModel:a||`Didiesse Frog Revolution`,shortCode:o||`${Math.floor(1e3+Math.random()*9e3)}`,initialCredits:s}),alert(`✅ Cliente "${e}" registrato con successo ed associato alla scheda Deconto!`),g()}catch(e){alert(`Errore: ${e.message}`)}}),document.querySelectorAll(`.btn-del-client`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-id`);if(confirm(`Sei sicuro di voler rimuovere questo cliente dal sistema?`))try{r.deleteClient(t),g()}catch(e){alert(`Errore: ${e.message}`)}})});let I=document.getElementById(`btn-generate-otp`);I&&I.addEventListener(`click`,()=>{let e=document.getElementById(`otp-board-select`).value,t=parseInt(document.getElementById(`otp-credits-select`).value,10),n=`OTP-${Math.floor(1e3+Math.random()*9e3)}-${Math.random().toString(36).substring(2,7).toUpperCase()}`,r=`https://deconto-vending-app.web.app/?short=${e}&otp=${n}&c=${t}`;document.getElementById(`otp-code-val`).innerText=n,document.getElementById(`otp-link-val`).innerText=r,alert(`✅ Token OTP Generato per Deconto #${e} (+${t} Caffè)!`)});let L=document.getElementById(`btn-send-whatsapp`);L&&L.addEventListener(`click`,()=>{let e=`Gentile cliente, ecco il link per ricaricare la tua macchina da caffè Deconto: ${document.getElementById(`otp-link-val`).innerText}`;window.open(`https://wa.me/?text=${encodeURIComponent(e)}`,`_blank`)});let R=document.getElementById(`btn-copy-otp-link`);R&&R.addEventListener(`click`,()=>{let e=document.getElementById(`otp-link-val`).innerText;navigator.clipboard.writeText(e),alert(`📋 Link Ricarica Copiato negli appunti!`)});let z=document.getElementById(`btn-print-qr`);z&&z.addEventListener(`click`,()=>{window.print()});let B=document.getElementById(`qr-header-input`);B&&B.addEventListener(`input`,e=>{document.getElementById(`lbl-header-title`).innerText=`☕ ${e.target.value.toUpperCase()} ☕`});let V=document.getElementById(`qr-board-select`);V&&V.addEventListener(`change`,e=>{let t=r.getBoardFullDetails(e.target.value);t&&(document.getElementById(`lbl-short-code-display`).innerText=t.board.shortCode,document.getElementById(`lbl-mc-sn`).innerText=t.machine?t.machine.serialNumber:`N/D`,document.getElementById(`lbl-hw-sn`).innerText=t.board.hwSerial)});let H=document.getElementById(`btn-adr-ble-connect`);H&&H.addEventListener(`click`,async()=>{let e=document.getElementById(`adr-code-input`).value.trim(),t=parseInt(document.getElementById(`adr-credits-select`).value,10),n=document.getElementById(`adr-status-box`);if(!e){alert(`Inserisci il codice a 4 cifre!`);return}n.style.display=`block`,n.innerHTML=`📡 Scansione Bluetooth BLE per <strong>DECONTO_${e}</strong> in corso...`;try{await i.sendRefillOtpToken(e,t,`ADR_BLE_MANUAL`),r.performRefill({boardShortCode:e,credits:t,method:`BLE_PWA`,operatorId:h.currentUser?h.currentUser.id:`usr_003`}),n.innerHTML=`<span style="color: var(--accent-green);">✅ Ricarica Completata! Accreditate <strong>+${t} cialde</strong> sulla macchina #${e}. Relè Ripristinato.</span>`,setTimeout(()=>g(),2e3)}catch(e){n.innerHTML=`<span style="color: var(--accent-rose);">❌ Errore connessione: ${e.message}</span>`}}),document.querySelectorAll(`.btn-adr-quick-fill`).forEach(e=>{e.addEventListener(`click`,async()=>{let t=e.getAttribute(`data-code`);await i.sendRefillOtpToken(t,200,`ADR_QUICK_BLE`),r.performRefill({boardShortCode:t,credits:200,method:`BLE_PWA`,operatorId:h.currentUser?h.currentUser.id:`usr_003`}),alert(`✅ Ricaricate +200 cialde via Bluetooth sulla macchina #${t}!`),g()})});let U=document.getElementById(`sim-board-select`);U&&U.addEventListener(`change`,e=>{let t=e.target.value,n=r.getBoardFullDetails(t);n&&(document.getElementById(`sim-badge-code`).innerText=`DECONTO ${t}`,document.getElementById(`sim-credits-display`).innerText=n.board.remainingCredits)});let W=document.getElementById(`btn-sim-brew`);W&&W.addEventListener(`click`,()=>{let e=document.getElementById(`sim-board-select`),t=e?e.value:`3467`;document.getElementById(`signal-sense-volts`).innerText=`230V AC (Impulso)`,document.getElementById(`signal-sense-badge`).className=`badge badge-warning`,document.getElementById(`signal-sense-badge`).innerText=`EROGAZIONE IN CORSO`;let n=r.registerCoffeeExtraction(t,22,1);setTimeout(()=>{if(document.getElementById(`signal-sense-volts`).innerText=`0V AC`,document.getElementById(`signal-sense-badge`).className=`badge badge-info`,document.getElementById(`signal-sense-badge`).innerText=`INATTIVO`,n&&n.success){let e=document.getElementById(`sim-console-log`);e.innerHTML+=`[EXTRACTION]: Caffè erogato! Credito rimanente: ${n.remainingCredits}.<br>`,e.scrollTop=e.scrollHeight,n.isLowStock&&(e.innerHTML+=`<span style="color: var(--accent-amber);">[BUZZER 60s]: CREDITO &lt; 20! SEGNALE ACUSTICO ATTIVATO (BIP... BIP...).</span><br>`)}else if(n&&!n.success){let e=document.getElementById(`sim-console-log`);e.innerHTML+=`<span style="color: var(--accent-rose);">[HARDWARE LOCK]: CREDITO 0! RELÈ APERTO. POMPA DISATTIVATA.</span><br>`}g()},800)});let G=document.getElementById(`btn-sim-reset`);G&&G.addEventListener(`click`,()=>{let e=document.getElementById(`sim-board-select`),t=e?e.value:`3467`;r.performRefill({boardShortCode:t,credits:200,method:`TEST_BENCH`,operatorId:h.currentUser?h.currentUser.id:`usr_001`}),alert(`✅ Ricaricate +200 cialde di prova sulla macchina #${t}!`),g()})}document.addEventListener(`DOMContentLoaded`,g);
+  `,v()}function _(){let e=document.getElementById(`login-form`),t=document.getElementById(`login-error-msg`);e&&e.addEventListener(`submit`,e=>{e.preventDefault();let n=document.getElementById(`login-username`).value,i=document.getElementById(`login-password`).value;try{let e=r.authenticate(n,i);h.currentUser=e,h.activeTab=e.role===`ADMIN`?`dashboard`:`clients`,g()}catch(e){t.innerText=e.message,t.style.display=`block`}})}function v(){let e=document.getElementById(`btn-logout`);e&&e.addEventListener(`click`,()=>{r.logout(),h.currentUser=null,g()});let t=document.getElementById(`btn-open-profile-modal`);t&&t.addEventListener(`click`,()=>{h.showProfileModal=!0,g()});let n=document.getElementById(`btn-close-profile-modal`),o=document.getElementById(`btn-cancel-profile`);n&&n.addEventListener(`click`,()=>{h.showProfileModal=!1,g()}),o&&o.addEventListener(`click`,()=>{h.showProfileModal=!1,g()});let s=document.getElementById(`profile-edit-form`);s&&s.addEventListener(`submit`,e=>{e.preventDefault();let t=document.getElementById(`edit-user-name`).value.trim(),n=document.getElementById(`edit-user-username`).value.trim(),i=document.getElementById(`edit-user-email`).value.trim(),a=document.getElementById(`edit-user-password`).value.trim();try{h.currentUser=r.updateUserProfile(h.currentUser.id,{name:t,username:n,email:i,newPassword:a||void 0}),h.showProfileModal=!1,alert(`✅ Credenziali e Profilo aggiornati con successo!`),g()}catch(e){alert(`Errore: ${e.message}`)}}),document.querySelectorAll(`.nav-item`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-tab`);t&&(h.activeTab=t,g())})}),document.querySelectorAll(`.kpi-card-clickable`).forEach(e=>{e.addEventListener(`click`,()=>{h.viewingKpiModal=e.getAttribute(`data-kpi`),g()})}),document.querySelectorAll(`.btn-close-kpi-modal`).forEach(e=>{e.addEventListener(`click`,()=>{h.viewingKpiModal=null,g()})}),document.querySelectorAll(`.btn-kpi-period`).forEach(e=>{e.addEventListener(`click`,()=>{h.kpiPeriod=e.getAttribute(`data-period`),g()})}),document.querySelectorAll(`.btn-kpi-charttype`).forEach(e=>{e.addEventListener(`click`,()=>{h.kpiChartType=e.getAttribute(`data-charttype`),g()})});let c=document.getElementById(`btn-dash-search`),l=document.getElementById(`dash-search-input`);c&&l&&(c.addEventListener(`click`,()=>{h.dashSearchQuery=l.value,h.dashSearchCategory=document.getElementById(`dash-search-category`).value,g()}),l.addEventListener(`keypress`,e=>{e.key===`Enter`&&(h.dashSearchQuery=l.value,h.dashSearchCategory=document.getElementById(`dash-search-category`).value,g())}));let u=document.getElementById(`btn-dash-reset`);u&&u.addEventListener(`click`,()=>{h.dashSearchQuery=``,h.dashSearchCategory=`ALL`,g()}),document.querySelectorAll(`.th-sortable`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-col`);h.dashSortColumn===t?h.dashSortDirection=h.dashSortDirection===`ASC`?`DESC`:`ASC`:(h.dashSortColumn=t,h.dashSortDirection=`ASC`),g()})});let d=document.getElementById(`setting-logo-file`);d&&d.addEventListener(`change`,e=>{let t=e.target.files[0];if(t){if(!t.type.startsWith(`image/`)){alert(`Seleziona un file immagine valido (PNG, JPG, SVG).`);return}let e=new FileReader;e.onload=function(e){let t=e.target.result;r.updateSettings({customLogoUrl:t}),alert(`✅ Nuovo Logo Aziendale caricato con successo!`),g()},e.readAsDataURL(t)}});let f=document.getElementById(`btn-reset-logo`);f&&f.addEventListener(`click`,()=>{confirm(`Ripristinare il logo predefinito con icona caffè ☕?`)&&(r.updateSettings({customLogoUrl:null}),alert(`✅ Logo predefinito ripristinato!`),g())});let p=document.getElementById(`settings-brand-form`);p&&p.addEventListener(`submit`,e=>{e.preventDefault();let t=document.getElementById(`setting-brand-title`).value.trim(),n=document.getElementById(`setting-brand-subtitle`).value.trim();r.updateSettings({brandTitle:t,brandSubtitle:n}),alert(`✅ Titolo e Sottotitolo Brand salvati con successo!`),g()}),document.querySelectorAll(`.btn-edit-client`).forEach(e=>{e.addEventListener(`click`,()=>{h.editingClientId=e.getAttribute(`data-id`),g()})});let m=document.getElementById(`btn-close-edit-client-modal`),_=document.getElementById(`btn-cancel-edit-client`);m&&m.addEventListener(`click`,()=>{h.editingClientId=null,g()}),_&&_.addEventListener(`click`,()=>{h.editingClientId=null,g()});let v=document.getElementById(`edit-client-form`);v&&v.addEventListener(`submit`,e=>{e.preventDefault();let t=document.getElementById(`edit-client-id`).value,n=document.getElementById(`edit-cli-name`).value,i=document.getElementById(`edit-cli-ref`).value,a=document.getElementById(`edit-cli-phone`).value,o=document.getElementById(`edit-cli-city`).value,s=document.getElementById(`edit-cli-address`).value,c=document.getElementById(`edit-cli-mc-model`).value,l=document.getElementById(`edit-cli-mc-serial`).value,u=document.getElementById(`edit-cli-shortcode`).value,d=document.getElementById(`edit-cli-credits`).value,f=document.getElementById(`edit-cli-threshold`).value,p=document.getElementById(`edit-cli-board-version`).value;try{r.updateClientAndMachine(t,{name:n,refPerson:i,phone:a,city:o,address:s,machineModel:c,machineSerial:l,shortCode:u,remainingCredits:d,lowStockThreshold:f,boardVersion:p}),h.editingClientId=null,alert(`✅ Scheda Cliente, Macchina e Deconto aggiornata con successo!`),g()}catch(e){alert(`Errore: ${e.message}`)}}),document.querySelectorAll(`.btn-deconto-detail`).forEach(e=>{e.addEventListener(`click`,()=>{h.viewingDecontoCode=e.getAttribute(`data-code`),g()})});let y=document.getElementById(`btn-close-deconto-modal`),b=document.getElementById(`btn-close-deconto-modal-footer`);y&&y.addEventListener(`click`,()=>{h.viewingDecontoCode=null,g()}),b&&b.addEventListener(`click`,()=>{h.viewingDecontoCode=null,g()});let x=document.getElementById(`rename-role-labels-form`);x&&x.addEventListener(`submit`,e=>{e.preventDefault();let t=document.getElementById(`role_label_UFFICIO`).value.trim(),n=document.getElementById(`role_label_ADR`).value.trim();r.updateRoleLabel(`UFFICIO`,t),r.updateRoleLabel(`ADR`,n),alert(`✅ Nomi delle Categorie Utente aggiornati con successo!`),g()});let S=document.getElementById(`btn-toggle-add-user`),C=document.getElementById(`add-user-form-container`);S&&C&&S.addEventListener(`click`,()=>{C.style.display=C.style.display===`none`?`block`:`none`});let w=document.getElementById(`btn-cancel-add-user`);w&&C&&w.addEventListener(`click`,()=>{C.style.display=`none`});let T=document.getElementById(`btn-save-new-user`);T&&T.addEventListener(`click`,()=>{let e=document.getElementById(`new-user-username`).value.trim(),t=document.getElementById(`new-user-password`).value.trim(),n=document.getElementById(`new-user-name`).value.trim(),i=document.getElementById(`new-user-role`).value,a=document.getElementById(`new-user-email`).value.trim(),o=document.getElementById(`new-user-phone`).value.trim();if(!e||!t||!n){alert(`Compila i campi obbligatori: Codice Utente, Password e Nome!`);return}try{r.addUser({username:e,password:t,name:n,role:i,email:a,phone:o}),alert(`✅ Utente dipendente "${n}" (Codice ${e}) creato con successo!`),g()}catch(e){alert(`Errore: ${e.message}`)}}),document.querySelectorAll(`.btn-edit-staff-user`).forEach(e=>{e.addEventListener(`click`,()=>{h.editingStaffUserId=e.getAttribute(`data-id`),g()})});let E=document.getElementById(`btn-close-edit-staff-modal`),D=document.getElementById(`btn-cancel-edit-staff`);E&&E.addEventListener(`click`,()=>{h.editingStaffUserId=null,g()}),D&&D.addEventListener(`click`,()=>{h.editingStaffUserId=null,g()});let O=document.getElementById(`edit-staff-form`);O&&O.addEventListener(`submit`,e=>{e.preventDefault();let t=document.getElementById(`edit-staff-id`).value,n=document.getElementById(`edit-staff-username`)?document.getElementById(`edit-staff-username`).value:void 0,i=document.getElementById(`edit-staff-name`).value,a=document.getElementById(`edit-staff-role`)?document.getElementById(`edit-staff-role`).value:void 0,o=document.getElementById(`edit-staff-email`).value,s=document.getElementById(`edit-staff-phone`).value,c=document.getElementById(`edit-staff-password`).value;try{r.updateUser(t,{username:n,name:i,role:a,email:o,phone:s,password:c?c.trim():void 0}),h.editingStaffUserId=null,alert(`✅ Scheda Utente aggiornata con successo!`),g()}catch(e){alert(`Errore: ${e.message}`)}}),document.querySelectorAll(`.btn-toggle-user-status`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-id`),n=e.getAttribute(`data-status`)===`ACTIVE`?`DISABLED`:`ACTIVE`;r.updateUser(t,{status:n}),g()})}),document.querySelectorAll(`.btn-delete-user`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-id`);if(confirm(`Sei sicuro di voler eliminare questo utente dipendente?`))try{r.deleteUser(t),g()}catch(e){alert(`Errore: ${e.message}`)}})});let k=document.getElementById(`permissions-matrix-form`);k&&k.addEventListener(`submit`,e=>{e.preventDefault();let t=[`UFFICIO`,`ADR`],n=[`canViewClients`,`canCreateClients`,`canEditClients`,`canDeleteClients`,`canGenerateQr`,`canGenerateOtp`,`canBleRefill`,`canUseSimulator`],i={UFFICIO:{},ADR:{}};t.forEach(e=>{n.forEach(t=>{let n=document.getElementById(`perm_${e}_${t}`);n&&(i[e][t]=n.checked)})}),r.updatePermissions(i),alert(`✅ Matrice dei Permessi aggiornata con successo per tutti gli utenti!`),g()});let A=document.getElementById(`btn-export-csv`);A&&A.addEventListener(`click`,()=>{let e=r.exportCoffeeLogsCSV(),t=new Blob([e],{type:`text/csv;charset=utf-8;`}),n=URL.createObjectURL(t),i=document.createElement(`a`);i.href=n,i.download=`DECONTO_Report_Consumi_${new Date().toISOString().split(`T`)[0]}.csv`,i.click(),alert(`📥 Report Consumi CSV Scaricato con successo!`)});let j=document.getElementById(`btn-trigger-backup`);j&&j.addEventListener(`click`,async()=>{j.disabled=!0,j.innerText=`⏳ Backup in corso su GitHub...`;let e=await a.executeBackupNow();alert(`✅ Backup GitHub Eseguito con Successo!\n\nRepository: https://github.com/emporioboldrini-stack/deconto-app.git\nCommit Hash: ${e.backupRecord.commitHash}\nEntità salvate: ${e.backupRecord.recordCount}`),g()});let M=document.getElementById(`btn-toggle-add-client`),N=document.getElementById(`add-client-form-container`);M&&N&&M.addEventListener(`click`,()=>{N.style.display=N.style.display===`none`?`block`:`none`});let P=document.getElementById(`btn-cancel-add-client`);P&&N&&P.addEventListener(`click`,()=>{N.style.display=`none`});let F=document.getElementById(`btn-save-new-client`);F&&F.addEventListener(`click`,()=>{let e=document.getElementById(`new-cli-name`).value.trim(),t=document.getElementById(`new-cli-ref`).value.trim(),n=document.getElementById(`new-cli-phone`).value.trim(),i=document.getElementById(`new-cli-city`).value.trim(),a=document.getElementById(`new-cli-mc-model`).value.trim(),o=document.getElementById(`new-cli-code`).value.trim(),s=document.getElementById(`new-cli-credits`).value;if(!e||!t||!n){alert(`Compila i campi obbligatori: Nome Cliente, Referente e Telefono!`);return}try{r.addClient({name:e,refPerson:t,phone:n,city:i,address:i,machineModel:a||`Didiesse Frog Revolution`,shortCode:o||`${Math.floor(1e3+Math.random()*9e3)}`,initialCredits:s}),alert(`✅ Cliente "${e}" registrato con successo ed associato alla scheda Deconto!`),g()}catch(e){alert(`Errore: ${e.message}`)}}),document.querySelectorAll(`.btn-del-client`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-id`);if(confirm(`Sei sicuro di voler rimuovere questo cliente dal sistema?`))try{r.deleteClient(t),g()}catch(e){alert(`Errore: ${e.message}`)}})});let I=document.getElementById(`btn-generate-otp`);I&&I.addEventListener(`click`,()=>{let e=document.getElementById(`otp-board-select`).value,t=parseInt(document.getElementById(`otp-credits-select`).value,10),n=`OTP-${Math.floor(1e3+Math.random()*9e3)}-${Math.random().toString(36).substring(2,7).toUpperCase()}`,r=`https://deconto-vending-app.web.app/?short=${e}&otp=${n}&c=${t}`;document.getElementById(`otp-code-val`).innerText=n,document.getElementById(`otp-link-val`).innerText=r,alert(`✅ Token OTP Generato per Deconto #${e} (+${t} Caffè)!`)});let L=document.getElementById(`btn-send-whatsapp`);L&&L.addEventListener(`click`,()=>{let e=`Gentile cliente, ecco il link per ricaricare la tua macchina da caffè Deconto: ${document.getElementById(`otp-link-val`).innerText}`;window.open(`https://wa.me/?text=${encodeURIComponent(e)}`,`_blank`)});let R=document.getElementById(`btn-copy-otp-link`);R&&R.addEventListener(`click`,()=>{let e=document.getElementById(`otp-link-val`).innerText;navigator.clipboard.writeText(e),alert(`📋 Link Ricarica Copiato negli appunti!`)});let z=document.getElementById(`btn-print-qr`);z&&z.addEventListener(`click`,()=>{window.print()});let B=document.getElementById(`qr-header-input`);B&&B.addEventListener(`input`,e=>{document.getElementById(`lbl-header-title`).innerText=`☕ ${e.target.value.toUpperCase()} ☕`});let V=document.getElementById(`qr-board-select`);V&&V.addEventListener(`change`,e=>{let t=r.getBoardFullDetails(e.target.value);t&&(document.getElementById(`lbl-short-code-display`).innerText=t.board.shortCode,document.getElementById(`lbl-mc-sn`).innerText=t.machine?t.machine.serialNumber:`N/D`,document.getElementById(`lbl-hw-sn`).innerText=t.board.hwSerial)});let H=document.getElementById(`btn-adr-ble-connect`);H&&H.addEventListener(`click`,async()=>{let e=document.getElementById(`adr-code-input`).value.trim(),t=parseInt(document.getElementById(`adr-credits-select`).value,10),n=document.getElementById(`adr-status-box`);if(!e){alert(`Inserisci il codice a 4 cifre!`);return}n.style.display=`block`,n.innerHTML=`📡 Scansione Bluetooth BLE per <strong>DECONTO_${e}</strong> in corso...`;try{await i.sendRefillOtpToken(e,t,`ADR_BLE_MANUAL`),r.performRefill({boardShortCode:e,credits:t,method:`BLE_PWA`,operatorId:h.currentUser?h.currentUser.id:`usr_003`}),n.innerHTML=`<span style="color: var(--accent-green);">✅ Ricarica Completata! Accreditate <strong>+${t} cialde</strong> sulla macchina #${e}. Relè Ripristinato.</span>`,setTimeout(()=>g(),2e3)}catch(e){n.innerHTML=`<span style="color: var(--accent-rose);">❌ Errore connessione: ${e.message}</span>`}}),document.querySelectorAll(`.btn-adr-quick-fill`).forEach(e=>{e.addEventListener(`click`,async()=>{let t=e.getAttribute(`data-code`);await i.sendRefillOtpToken(t,200,`ADR_QUICK_BLE`),r.performRefill({boardShortCode:t,credits:200,method:`BLE_PWA`,operatorId:h.currentUser?h.currentUser.id:`usr_003`}),alert(`✅ Ricaricate +200 cialde via Bluetooth sulla macchina #${t}!`),g()})});let U=document.getElementById(`sim-board-select`);U&&U.addEventListener(`change`,e=>{let t=e.target.value,n=r.getBoardFullDetails(t);n&&(document.getElementById(`sim-badge-code`).innerText=`DECONTO ${t}`,document.getElementById(`sim-credits-display`).innerText=n.board.remainingCredits)});let W=document.getElementById(`btn-sim-brew`);W&&W.addEventListener(`click`,()=>{let e=document.getElementById(`sim-board-select`),t=e?e.value:`3467`;document.getElementById(`signal-sense-volts`).innerText=`230V AC (Impulso)`,document.getElementById(`signal-sense-badge`).className=`badge badge-warning`,document.getElementById(`signal-sense-badge`).innerText=`EROGAZIONE IN CORSO`;let n=r.registerCoffeeExtraction(t,22,1);setTimeout(()=>{if(document.getElementById(`signal-sense-volts`).innerText=`0V AC`,document.getElementById(`signal-sense-badge`).className=`badge badge-info`,document.getElementById(`signal-sense-badge`).innerText=`INATTIVO`,n&&n.success){let e=document.getElementById(`sim-console-log`);e.innerHTML+=`[EXTRACTION]: Caffè erogato! Credito rimanente: ${n.remainingCredits}.<br>`,e.scrollTop=e.scrollHeight,n.isLowStock&&(e.innerHTML+=`<span style="color: var(--accent-amber);">[BUZZER 60s]: CREDITO &lt; 20! SEGNALE ACUSTICO ATTIVATO (BIP... BIP...).</span><br>`)}else if(n&&!n.success){let e=document.getElementById(`sim-console-log`);e.innerHTML+=`<span style="color: var(--accent-rose);">[HARDWARE LOCK]: CREDITO 0! RELÈ APERTO. POMPA DISATTIVATA.</span><br>`}g()},800)});let G=document.getElementById(`btn-sim-reset`);G&&G.addEventListener(`click`,()=>{let e=document.getElementById(`sim-board-select`),t=e?e.value:`3467`;r.performRefill({boardShortCode:t,credits:200,method:`TEST_BENCH`,operatorId:h.currentUser?h.currentUser.id:`usr_001`}),alert(`✅ Ricaricate +200 cialde di prova sulla macchina #${t}!`),g()})}document.addEventListener(`DOMContentLoaded`,g);

@@ -25,7 +25,12 @@ let state = {
   dashSearchQuery: '',
   dashSearchCategory: 'ALL',
   dashSortColumn: 'shortCode',
-  dashSortDirection: 'DESC'
+  dashSortDirection: 'DESC',
+
+  // Stato Modali KPI Cards & Grafici
+  viewingKpiModal: null, // 'kpi_clients' | 'kpi_machines' | 'kpi_extractions' | 'kpi_lowstock'
+  kpiPeriod: '30DAYS',    // '30DAYS' | '90DAYS' | '1YEAR'
+  kpiChartType: 'LINE'   // 'LINE' | 'BAR'
 };
 
 function renderApp() {
@@ -59,7 +64,10 @@ function renderApp() {
         state.dashSearchQuery, 
         state.dashSearchCategory, 
         state.dashSortColumn, 
-        state.dashSortDirection
+        state.dashSortDirection,
+        state.viewingKpiModal,
+        state.kpiPeriod,
+        state.kpiChartType
       );
     }
   } else if (user.role === 'UFFICIO' || user.role === 'ADR') {
@@ -170,6 +178,36 @@ function attachMainEventListeners() {
         state.activeTab = tab;
         renderApp();
       }
+    });
+  });
+
+  // --- DASHBOARD: MODALI CARDS KPI & GRAFICI ---
+  document.querySelectorAll('.kpi-card-clickable').forEach(card => {
+    card.addEventListener('click', () => {
+      const kpiKey = card.getAttribute('data-kpi');
+      state.viewingKpiModal = kpiKey;
+      renderApp();
+    });
+  });
+
+  document.querySelectorAll('.btn-close-kpi-modal').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.viewingKpiModal = null;
+      renderApp();
+    });
+  });
+
+  document.querySelectorAll('.btn-kpi-period').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.kpiPeriod = btn.getAttribute('data-period');
+      renderApp();
+    });
+  });
+
+  document.querySelectorAll('.btn-kpi-charttype').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.kpiChartType = btn.getAttribute('data-charttype');
+      renderApp();
     });
   });
 
