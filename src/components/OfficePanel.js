@@ -8,13 +8,14 @@ export function renderOfficePanel(activeTab, editingId = null) {
 
   let modalHtml = '';
 
-  // 1. Modale Modifica Cliente Indipendente
+  // 1. Modale Modifica Cliente (Step 3: Installa / Assegna Macchina al Cliente)
   if (activeTab === 'clients' && editingId) {
     const cli = clients.find(c => c.id === editingId);
     if (cli) {
+      const assignedMcs = machines.filter(m => m.clientId === cli.id);
       modalHtml = `
         <div class="modal-overlay" id="edit-client-modal">
-          <div class="modal-box" style="max-width: 500px; width: 95%;">
+          <div class="modal-box" style="max-width: 520px; width: 95%;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px;">
               <h2 style="font-size: 1.3rem; font-weight: 800; color: #fff; margin: 0;">🏢 Modifica Cliente: ${cli.name}</h2>
               <button id="btn-close-edit-modal" style="background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer;">&times;</button>
@@ -35,7 +36,7 @@ export function renderOfficePanel(activeTab, editingId = null) {
                   <input type="text" id="edit-cli-phone" value="${cli.phone || ''}" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
                 </div>
               </div>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
                 <div>
                   <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Città:</label>
                   <input type="text" id="edit-cli-city" value="${cli.city || ''}" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
@@ -45,6 +46,23 @@ export function renderOfficePanel(activeTab, editingId = null) {
                   <input type="text" id="edit-cli-address" value="${cli.address || ''}" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
                 </div>
               </div>
+
+              <!-- Step 3: Installa / Assegna Macchina da Caffè al Cliente -->
+              <div style="margin-bottom: 20px; background: rgba(56, 189, 248, 0.1); padding: 16px; border-radius: 8px; border: 1px solid var(--accent-cyan);">
+                <label style="font-size: 0.85rem; color: var(--accent-cyan); font-weight: 800; display: block; margin-bottom: 6px;">
+                  ☕ Step 3: Installa / Assegna Macchina a Questo Cliente:
+                </label>
+                <select id="edit-cli-machine" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700;">
+                  <option value="">📦 NESSUNA NUOVA MACCHINA (Mantieni Configurazione Attuale)</option>
+                  ${machines.map(m => {
+                    const board = boards.find(b => b.machineId === m.id);
+                    const boardLabel = board ? ` [Deconto #${board.shortCode}]` : ' [Senza Deconto]';
+                    const ownerLabel = m.clientId === cli.id ? ' (Già In Uso Qui)' : (m.clientId ? ' (In Uso Altrove)' : ' (📦 In Scorta)');
+                    return `<option value="${m.id}" ${m.clientId === cli.id ? 'selected' : ''}>☕ ${m.serialNumber} - ${m.model}${boardLabel}${ownerLabel}</option>`;
+                  }).join('')}
+                </select>
+              </div>
+
               <div style="display: flex; gap: 12px; justify-content: flex-end;">
                 <button type="button" id="btn-cancel-edit-client" class="btn btn-secondary">Annulla</button>
                 <button type="submit" class="btn btn-primary">💾 Salva Scheda Cliente</button>
@@ -56,13 +74,14 @@ export function renderOfficePanel(activeTab, editingId = null) {
     }
   }
 
-  // 2. Modale Modifica Macchina Indipendente
+  // 2. Modale Modifica Macchina (Step 2: Associa Scheda Deconto & Assegna a Cliente)
   if (activeTab === 'machines' && editingId) {
     const mc = machines.find(m => m.id === editingId);
     if (mc) {
+      const currentBoard = boards.find(b => b.machineId === mc.id);
       modalHtml = `
         <div class="modal-overlay" id="edit-machine-modal">
-          <div class="modal-box" style="max-width: 500px; width: 95%;">
+          <div class="modal-box" style="max-width: 520px; width: 95%;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px;">
               <h2 style="font-size: 1.3rem; font-weight: 800; color: #fff; margin: 0;">☕ Modifica Macchina: ${mc.serialNumber}</h2>
               <button id="btn-close-edit-modal" style="background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer;">&times;</button>
@@ -83,13 +102,30 @@ export function renderOfficePanel(activeTab, editingId = null) {
                   <input type="text" id="edit-mc-model" value="${mc.model || ''}" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
                 </div>
               </div>
+
+              <!-- Step 2: Associa Scheda Deconto alla Macchina -->
+              <div style="margin-bottom: 16px; background: rgba(168, 85, 247, 0.1); padding: 14px; border-radius: 8px; border: 1px solid var(--accent-purple);">
+                <label style="font-size: 0.85rem; color: var(--accent-purple); font-weight: 800; display: block; margin-bottom: 6px;">
+                  📟 Step 2: Associa / Monta Scheda Deconto:
+                </label>
+                <select id="edit-mc-board" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700;">
+                  <option value="">📦 NESSUNA SCHEDA DECONTO (Macchina Standalone)</option>
+                  ${boards.map(b => {
+                    const assignedMc = machines.find(m => m.id === b.machineId);
+                    const labelState = b.machineId === mc.id ? ' (Già Montata Qui)' : (assignedMc ? ` (Montata su ${assignedMc.serialNumber})` : ' (📦 LIBERA A BANCO)');
+                    return `<option value="${b.id}" ${b.machineId === mc.id ? 'selected' : ''}>📟 Deconto #${b.shortCode} (${b.remainingCredits} crediti)${labelState}</option>`;
+                  }).join('')}
+                </select>
+              </div>
+
               <div style="margin-bottom: 20px;">
-                <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Assegna a Cliente:</label>
+                <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">🏢 Assegna a Cliente Finale:</label>
                 <select id="edit-mc-client" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700;">
                   <option value="">📦 IN SCORTA MAGAZZINO (Nessun Cliente)</option>
                   ${clients.map(c => `<option value="${c.id}" ${mc.clientId === c.id ? 'selected' : ''}>🏢 ${c.name} (${c.city})</option>`).join('')}
                 </select>
               </div>
+
               <div style="display: flex; gap: 12px; justify-content: flex-end;">
                 <button type="button" id="btn-cancel-edit-mc" class="btn btn-secondary">Annulla</button>
                 <button type="submit" class="btn btn-primary">💾 Salva Macchina</button>
@@ -101,7 +137,7 @@ export function renderOfficePanel(activeTab, editingId = null) {
     }
   }
 
-  // 3. Modale Modifica Scheda Deconto Indipendente
+  // 3. Modale Modifica Scheda Deconto
   if (activeTab === 'deconto_boards' && editingId) {
     const b = boards.find(x => x.id === editingId || x.shortCode === editingId);
     if (b) {
@@ -117,7 +153,7 @@ export function renderOfficePanel(activeTab, editingId = null) {
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
                 <div>
                   <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Codice 4 Cifre (ShortCode):*</label>
-                  <input type="text" id="edit-board-shortcode" value="${b.shortCode}" required style="width: 100%; padding: 10px; background: var(--bg-primary); color: var(--accent-cyan); border: 1px solid var(--border-color); border-radius: 6px; font-weight: 800; font-family: monospace;">
+                  <input type="text" id="edit-board-shortcode" value="${b.shortCode}" maxlength="4" required style="width: 100%; padding: 10px; background: var(--bg-primary); color: var(--accent-cyan); border: 1px solid var(--border-color); border-radius: 6px; font-weight: 800; font-family: monospace;">
                 </div>
                 <div>
                   <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Seriale Hardware HW:</label>
@@ -146,7 +182,7 @@ export function renderOfficePanel(activeTab, editingId = null) {
               <div style="margin-bottom: 20px;">
                 <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Monta su Macchina da Caffè:</label>
                 <select id="edit-board-machine" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700;">
-                  <option value="">📦 SCHEDA A BANCO (Nessuna Macchina)</option>
+                  <option value="">📦 SCHEDA A BANCO / MAGAZZINO (Non Montata)</option>
                   ${machines.map(m => {
                     const owner = clients.find(c => c.id === m.clientId);
                     return `<option value="${m.id}" ${b.machineId === m.id ? 'selected' : ''}>☕ ${m.serialNumber} - ${m.model} (${owner ? owner.name : 'In Scorta'})</option>`;
@@ -172,7 +208,7 @@ export function renderOfficePanel(activeTab, editingId = null) {
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
           <div>
             <h1 style="font-size: 1.8rem; font-weight: 800;">🏢 Anagrafica Clienti</h1>
-            <p style="color: var(--text-muted);">Registro indipendente delle aziende e clienti in comodato d'uso</p>
+            <p style="color: var(--text-muted);">Step 3 del Flusso: Registra o assegna macchine da caffè ai clienti in comodato d'uso</p>
           </div>
           <button id="btn-toggle-add-client" class="btn btn-primary">
             ➕ Nuovo Cliente
@@ -210,6 +246,21 @@ export function renderOfficePanel(activeTab, editingId = null) {
               <input type="text" id="new-cli-address" placeholder="Via Roma 15" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
             </div>
           </div>
+
+          <div style="margin-bottom: 20px; background: rgba(56, 189, 248, 0.1); padding: 14px; border-radius: 8px; border: 1px solid var(--accent-cyan);">
+            <label style="font-size: 0.85rem; color: var(--accent-cyan); font-weight: 800; display: block; margin-bottom: 4px;">
+              ☕ Installa Subito una Macchina da Caffè a Questo Cliente (Opzionale):
+            </label>
+            <select id="new-cli-machine" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700;">
+              <option value="">📦 CREA SOLO CLIENTE ANAGRAFICO (Nessuna Macchina per Ora)</option>
+              ${machines.map(m => {
+                const board = boards.find(b => b.machineId === m.id);
+                const boardLabel = board ? ` [Deconto #${board.shortCode}]` : ' [Senza Deconto]';
+                return `<option value="${m.id}">☕ ${m.serialNumber} - ${m.model}${boardLabel} (${m.clientId ? 'In Uso Altrove' : '📦 In Scorta'})</option>`;
+              }).join('')}
+            </select>
+          </div>
+
           <div style="display: flex; gap: 12px; justify-content: flex-end;">
             <button id="btn-cancel-add-client" class="btn btn-secondary">Annulla</button>
             <button id="btn-save-new-client" class="btn btn-primary">💾 Salva Cliente in Anagrafica</button>
@@ -224,7 +275,7 @@ export function renderOfficePanel(activeTab, editingId = null) {
                 <th>Ragione Sociale / Nome</th>
                 <th>Referente & Contatti</th>
                 <th>Città / Indirizzo</th>
-                <th>Macchine Assegnate</th>
+                <th>Macchine & Deconti Installati</th>
                 <th>Stato</th>
                 <th>Azioni Scheda</th>
               </tr>
@@ -240,8 +291,11 @@ export function renderOfficePanel(activeTab, editingId = null) {
                     <td>${c.city || 'N/D'}<br><small style="color: var(--text-muted);">${c.address || ''}</small></td>
                     <td>
                       ${assignedMcs.length > 0 
-                        ? assignedMcs.map(m => `<span class="badge badge-info" style="margin-right: 4px;">☕ ${m.serialNumber}</span>`).join('') 
-                        : '<span class="badge badge-warning">📦 Nessuna Macchina</span>'}
+                        ? assignedMcs.map(m => {
+                            const b = boards.find(board => board.machineId === m.id);
+                            return `<div style="margin-bottom: 4px;"><span class="badge badge-info">☕ ${m.serialNumber}</span> ${b ? `<span class="badge badge-success">📟 Deconto #${b.shortCode} (${b.remainingCredits} cr)</span>` : '<span style="color: var(--text-muted); font-size: 0.75rem;">(Senza Deconto)</span>'}</div>`;
+                          }).join('')
+                        : '<span class="badge badge-warning">📦 Nessuna Macchina Installata</span>'}
                     </td>
                     <td><span class="badge ${c.status === 'ACTIVE' ? 'badge-success' : 'badge-warning'}">${c.status}</span></td>
                     <td>
@@ -272,7 +326,7 @@ export function renderOfficePanel(activeTab, editingId = null) {
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
           <div>
             <h1 style="font-size: 1.8rem; font-weight: 800;">☕ Parco Macchine da Caffè</h1>
-            <p style="color: var(--text-muted);">Registro delle macchine da caffè disponibili in magazzino ed installate</p>
+            <p style="color: var(--text-muted);">Step 2 del Flusso: Associa le Schede Deconto alle Macchine ed assegna al cliente</p>
           </div>
           <button id="btn-toggle-add-machine" class="btn btn-primary">
             ➕ Nuova Macchina da Caffè
@@ -297,12 +351,28 @@ export function renderOfficePanel(activeTab, editingId = null) {
             </div>
           </div>
 
-          <div style="margin-bottom: 20px;">
-            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Assegna Subito a Cliente (Opzionale):</label>
-            <select id="new-mc-client" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
-              <option value="">📦 LASCIA IN SCORTA MAGAZZINO</option>
-              ${clients.map(c => `<option value="${c.id}">🏢 ${c.name} (${c.city})</option>`).join('')}
-            </select>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+            <div style="background: rgba(168, 85, 247, 0.1); padding: 14px; border-radius: 8px; border: 1px solid var(--accent-purple);">
+              <label style="font-size: 0.85rem; color: var(--accent-purple); font-weight: 800; display: block; margin-bottom: 4px;">
+                📟 Step 2: Associa subito una Scheda Deconto (Opzionale):
+              </label>
+              <select id="new-mc-board" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700;">
+                <option value="">📦 NESSUNA SCHEDA DECONTO (Macchina Senza Controllo)</option>
+                ${boards.map(b => {
+                  const assignedMc = machines.find(m => m.id === b.machineId);
+                  const labelState = assignedMc ? ` (Montata su ${assignedMc.serialNumber})` : ' (📦 LIBERA A BANCO)';
+                  return `<option value="${b.id}">📟 Deconto #${b.shortCode} (${b.remainingCredits} crediti)${labelState}</option>`;
+                }).join('')}
+              </select>
+            </div>
+
+            <div>
+              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">🏢 Assegna subito a Cliente (Opzionale):</label>
+              <select id="new-mc-client" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+                <option value="">📦 LASCIA IN SCORTA MAGAZZINO</option>
+                ${clients.map(c => `<option value="${c.id}">🏢 ${c.name} (${c.city})</option>`).join('')}
+              </select>
+            </div>
           </div>
 
           <div style="display: flex; gap: 12px; justify-content: flex-end;">
@@ -338,12 +408,12 @@ export function renderOfficePanel(activeTab, editingId = null) {
                         : '<span class="badge badge-warning">📦 IN SCORTA MAGAZZINO</span>'}
                     </td>
                     <td>${owner ? `<strong>🏢 ${owner.name}</strong><br><small style="color: var(--text-muted);">${owner.city}</small>` : '<span style="color: var(--text-muted);">Nessuno (Magazzino)</span>'}</td>
-                    <td>${board ? `<span class="badge badge-info">📟 Deconto #${board.shortCode}</span>` : '<span style="color: var(--text-muted);">Nessuna</span>'}</td>
+                    <td>${board ? `<span class="badge badge-info">📟 Deconto #${board.shortCode} (${board.remainingCredits} cr)</span>` : '<span class="badge badge-warning">Senza Deconto</span>'}</td>
                     <td>${m.installDate || 'N/D'}</td>
                     <td>
                       <div style="display: flex; gap: 6px;">
                         <button class="btn btn-secondary btn-edit-machine-standalone" data-id="${m.id}" style="padding: 6px 10px; font-size: 0.8rem; color: var(--accent-purple);">
-                          ✏️ Modifica
+                          ✏️ Modifica / Collega
                         </button>
                         <button class="btn btn-secondary btn-del-machine-standalone" data-id="${m.id}" style="padding: 6px 10px; font-size: 0.8rem; color: var(--accent-rose);">
                           🗑️ Elimina
@@ -368,42 +438,43 @@ export function renderOfficePanel(activeTab, editingId = null) {
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
           <div>
             <h1 style="font-size: 1.8rem; font-weight: 800;">📟 Registro Schede Deconto (ESP32-C6)</h1>
-            <p style="color: var(--text-muted);">Elenco indipendente dei moduli hardware di controllo e telemetria</p>
+            <p style="color: var(--text-muted);">Step 1 del Flusso: Crea le nuove schede Deconto a banco/magazzino ed impostane i crediti</p>
           </div>
-          <button id="btn-toggle-add-board" class="btn btn-primary">
-            ➕ Nuova Scheda Deconto
+          <button id="btn-toggle-add-board" class="btn btn-primary" style="font-size: 1rem; font-weight: 800; padding: 12px 20px;">
+            ➕ NUOVA SCHEDA DECONTO
           </button>
         </div>
 
         <!-- Form Nuova Scheda Deconto -->
-        <div id="add-board-form-container" class="stat-card" style="display: none; margin-bottom: 32px; padding: 24px; border: 2px solid var(--accent-cyan);">
+        <div id="add-board-form-container" class="stat-card" style="display: none; margin-bottom: 32px; padding: 24px; border: 2px solid var(--accent-cyan); background: linear-gradient(135deg, #0f172a, #1e293b);">
           <h3 style="margin-top: 0; color: var(--accent-cyan); margin-bottom: 16px;">➕ Registrazione Nuova Scheda Hardware Deconto:</h3>
+          
           <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px;">
             <div>
-              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Codice 4 Cifre (ShortCode):*</label>
-              <input type="text" id="new-board-code" placeholder="Es. 8812" style="width: 100%; padding: 10px; background: var(--bg-primary); color: var(--accent-cyan); border: 1px solid var(--border-color); border-radius: 6px; font-weight: 800; font-family: monospace;">
+              <label style="font-size: 0.85rem; color: #fff; font-weight: 700; display: block; margin-bottom: 6px;">Codice 4 Cifre (ShortCode):*</label>
+              <input type="text" id="new-board-code" placeholder="Es. 9902" maxlength="4" style="width: 100%; padding: 12px; background: var(--bg-primary); color: var(--accent-cyan); border: 2px solid var(--accent-cyan); border-radius: 8px; font-weight: 900; font-size: 1.2rem; font-family: monospace;">
             </div>
             <div>
-              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Seriale Hardware HW:</label>
-              <input type="text" id="new-board-hwserial" placeholder="Es. DC-HW-9911" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-family: monospace;">
+              <label style="font-size: 0.85rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 6px;">Seriale Hardware HW:</label>
+              <input type="text" id="new-board-hwserial" placeholder="Es. DC-HW-9902" style="width: 100%; padding: 12px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 8px; font-family: monospace;">
             </div>
             <div>
-              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Crediti Iniziali Caffè:</label>
-              <input type="number" id="new-board-credits" value="200" style="width: 100%; padding: 10px; background: var(--bg-primary); color: var(--accent-green); border: 1px solid var(--border-color); border-radius: 6px; font-weight: 900;">
+              <label style="font-size: 0.85rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 6px;">Crediti Iniziali Caffè:</label>
+              <input type="number" id="new-board-credits" value="200" style="width: 100%; padding: 12px; background: var(--bg-primary); color: var(--accent-green); border: 1px solid var(--border-color); border-radius: 8px; font-weight: 900; font-size: 1.1rem;">
             </div>
             <div>
-              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Versione Modulo:</label>
-              <select id="new-board-version" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700;">
+              <label style="font-size: 0.85rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 6px;">Versione Modulo:</label>
+              <select id="new-board-version" style="width: 100%; padding: 12px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 8px; font-weight: 700;">
                 <option value="BASIC">BASIC</option>
                 <option value="PRO">PRO (Wi-Fi + BLE)</option>
               </select>
             </div>
           </div>
 
-          <div style="margin-bottom: 20px;">
-            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Monta Subito su Macchina (Opzionale):</label>
-            <select id="new-board-machine" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
-              <option value="">📦 LASCIA SCHEDA A BANCO / MAGAZZINO</option>
+          <div style="margin-bottom: 24px;">
+            <label style="font-size: 0.85rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 6px;">Monta subito su Macchina da Caffè (Opzionale):</label>
+            <select id="new-board-machine" style="width: 100%; padding: 12px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 8px; font-weight: 700;">
+              <option value="">📦 LASCIA SCHEDA LIBERA A BANCO / MAGAZZINO (Disponibile per il montaggio futuro)</option>
               ${machines.map(m => {
                 const owner = clients.find(c => c.id === m.clientId);
                 return `<option value="${m.id}">☕ ${m.serialNumber} - ${m.model} (${owner ? owner.name : 'In Scorta'})</option>`;
@@ -412,8 +483,8 @@ export function renderOfficePanel(activeTab, editingId = null) {
           </div>
 
           <div style="display: flex; gap: 12px; justify-content: flex-end;">
-            <button id="btn-cancel-add-board" class="btn btn-secondary">Annulla</button>
-            <button id="btn-save-new-board" class="btn btn-primary">💾 Salva Scheda Deconto</button>
+            <button id="btn-cancel-add-board" class="btn btn-secondary" style="padding: 10px 20px;">Annulla</button>
+            <button id="btn-save-new-board" class="btn btn-primary" style="padding: 10px 24px; font-size: 1rem; font-weight: 800;">💾 CREA SCHEDA DECONTO</button>
           </div>
         </div>
 
@@ -424,7 +495,7 @@ export function renderOfficePanel(activeTab, editingId = null) {
                 <th>Codice Deconto</th>
                 <th>Seriale HW & MAC</th>
                 <th>Credito Residuo</th>
-                <th>Stato Relè</th>
+                <th>Stato Assegnazione</th>
                 <th>Macchina Collegata</th>
                 <th>Cliente Finale</th>
                 <th>Azioni Scheda</th>
@@ -437,14 +508,18 @@ export function renderOfficePanel(activeTab, editingId = null) {
                 return `
                   <tr>
                     <td>
-                      <button class="btn btn-secondary btn-deconto-detail" data-code="${b.shortCode}" style="font-family: monospace; font-weight: 900; font-size: 1.1rem; color: var(--accent-cyan); padding: 4px 10px;">
+                      <button class="btn btn-secondary btn-deconto-detail" data-code="${b.shortCode}" style="font-family: monospace; font-weight: 900; font-size: 1.15rem; color: var(--accent-cyan); padding: 6px 12px;">
                         #${b.shortCode}
                       </button>
                     </td>
                     <td><strong>${b.hwSerial || 'N/D'}</strong><br><small style="color: var(--text-muted); font-family: monospace;">${b.macAddress || ''}</small></td>
-                    <td><strong style="font-size: 1.2rem; color: ${b.remainingCredits > 20 ? 'var(--accent-green)' : 'var(--accent-rose)'};">${b.remainingCredits}</strong> cialde</td>
-                    <td><span class="badge ${b.relayStatus === 'CLOSED_OK' ? 'badge-success' : 'badge-danger'}">${b.relayStatus === 'CLOSED_OK' ? '🔓 CHIUSO (OK)' : '🔒 APERTO (BLOCCO)'}</span></td>
-                    <td>${mc ? `<span class="badge badge-info">☕ ${mc.serialNumber}</span>` : '<span style="color: var(--text-muted);">A Banco</span>'}</td>
+                    <td><strong style="font-size: 1.25rem; color: ${b.remainingCredits > 20 ? 'var(--accent-green)' : 'var(--accent-rose)'};">${b.remainingCredits}</strong> cialde</td>
+                    <td>
+                      ${mc 
+                        ? '<span class="badge badge-success">🟢 MONTATA SU MACCHINA</span>' 
+                        : '<span class="badge badge-warning">📦 LIBERA A BANCO</span>'}
+                    </td>
+                    <td>${mc ? `<span class="badge badge-info">☕ ${mc.serialNumber}</span>` : '<span style="color: var(--text-muted);">Nessuna</span>'}</td>
                     <td>${owner ? `<strong>🏢 ${owner.name}</strong>` : '<span style="color: var(--text-muted);">N/D</span>'}</td>
                     <td>
                       <div style="display: flex; gap: 6px;">
@@ -467,7 +542,7 @@ export function renderOfficePanel(activeTab, editingId = null) {
     `;
   }
 
-  // Fallback Generatore OTP / QR / Storico
+  // Generatore OTP WhatsApp
   if (activeTab === 'otp_generator') {
     return `
       <div>

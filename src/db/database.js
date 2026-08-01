@@ -1,9 +1,12 @@
 import { emailService } from '../services/emailService.js';
 
 /**
- * DECONTO IoT System - Master Database Engine v11
- * Supporta 3 Anagrafiche Indipendenti (Clienti, Parco Macchine, Schede Deconto)
- * ed il Modulo Assemblatore per l'associazione/riassegnazione dinamica 1-Click.
+ * DECONTO IoT System - Master Database Engine v12
+ * 
+ * Flusso a 3 Step Completo & Bidirezionale:
+ * 1. Creazione Scheda Deconto (Libera a banco o montata su Macchina).
+ * 2. Associazione Deconto <-> Macchina nella Scheda Parco Macchine.
+ * 3. Installazione Macchina <-> Cliente nella Scheda Anagrafica Clienti.
  */
 
 const MASTER_STORAGE_KEY = 'DECONTO_MASTER_STORE_PERSISTENT';
@@ -369,115 +372,32 @@ class DecontoDatabase {
   getEmailLogs() { return this.data.emailLogs || []; }
   getBackupLogs() { return this.data.backupLogs; }
 
-  // --- 🏢 ANAGRAFICA CLIENTE (CRUD INDIPENDENTE) ---
-  addClient(data) {
-    if (!this.hasPermission('canCreateClients')) throw new Error('Permesso negato.');
-    const newClient = {
-      id: 'cli_' + Date.now(),
-      name: data.name.trim(),
-      refPerson: data.refPerson ? data.refPerson.trim() : 'Referente',
-      phone: data.phone ? data.phone.trim() : '+39 ',
-      email: data.email ? data.email.trim() : '',
-      address: data.address ? data.address.trim() : '',
-      city: data.city ? data.city.trim() : '',
-      status: 'ACTIVE'
-    };
-    this.data.clients.unshift(newClient);
-    this.saveData();
-    return newClient;
+  hasPermission(permissionName) {
+    if (!this.currentUser) return false;
+    if (this.currentUser.role === 'ADMIN') return true;
+    const rolePerms = (this.data.permissions || initialData.permissions)[this.currentUser.role];
+    return rolePerms ? !!rolePerms[permissionName] : false;
   }
 
-  updateClient(clientId, data) {
-    if (!this.hasPermission('canEditClients')) throw new Error('Permesso negato.');
-    const client = this.data.clients.find(c => c.id === clientId);
-    if (!client) throw new Error('Cliente non trovato.');
+  // --- STEP 1: 📟 ANAGRAFICA SCHEDE DECONTO ---
+  addBoard(data) {
+    const shortCode = String(data.shortCode || '').trim();
+    if (!shortCode) throw new Error('Inserisci il Codice 4 Cifre del Deconto.');
 
-    if (data.name) client.name = data.name.trim();
-    if (data.refPerson !== undefined) client.refPerson = data.refPerson.trim();
-    if (data.phone !== undefined) client.phone = data.phone.trim();
-    if (data.email !== undefined) client.email = data.email.trim();
-    if (data.city !== undefined) client.city = data.city.trim();
-    if (data.address !== undefined) client.address = data.address.trim();
-    if (data.status) client.status = data.status;
-
-    this.saveData();
-    return client;
-  }
-
-  deleteClient(clientId) {
-    if (!this.hasPermission('canDeleteClients')) throw new Error('Permesso negato.');
-    // Scollega eventuali macchine assegnate a questo cliente
-    this.data.machines.forEach(m => {
-      if (m.clientId === clientId) {
-        m.clientId = null;
-        m.status = 'STOCK';
-      }
-    });
-    this.data.clients = this.data.clients.filter(c => c.id !== clientId);
-    this.saveData();
-  }
-
-  // --- ☕ ANAGRAFICA PARCO MACCHINE (CRUD INDIPENDENTE) ---
-  addMachine(data) {
-    if (!this.hasPermission('canCreateClients')) throw new Error('Permesso negato.');
-    const newMachine = {
-      id: 'mc_' + Date.now(),
-      serialNumber: data.serialNumber ? data.serialNumber.trim() : `SN-MC-2026-${Math.floor(1000 + Math.random() * 9000)}`,
-      brand: data.brand ? data.brand.trim() : 'Didiesse',
-      model: data.model ? data.model.trim() : 'Frog Revolution',
-      clientId: data.clientId || null,
-      installDate: data.clientId ? (data.installDate || new Date().toISOString().split('T')[0]) : null,
-      status: data.clientId ? 'INSTALLED' : 'STOCK'
-    };
-    this.data.machines.unshift(newMachine);
-    this.saveData();
-    return newMachine;
-  }
-
-  updateMachine(machineId, data) {
-    if (!this.hasPermission('canEditClients')) throw new Error('Permesso negato.');
-    const machine = this.data.machines.find(m => m.id === machineId);
-    if (!machine) throw new Error('Macchina non trovata.');
-
-    if (data.serialNumber) machine.serialNumber = data.serialNumber.trim();
-    if (data.brand !== undefined) machine.brand = data.brand.trim();
-    if (data.model) machine.model = data.model.trim();
-    if (data.clientId !== undefined) {
-      machine.clientId = data.clientId || null;
-      machine.status = machine.clientId ? 'INSTALLED' : 'STOCK';
-      if (machine.clientId && !machine.installDate) {
-        machine.installDate = new Date().toISOString().split('T')[0];
-      }
+    const existing = this.data.decontoBoards.find(b => b.shortCode === shortCode);
+    if (existing) {
+      throw new Error(`La Scheda Deconto con codice #${shortCode} esiste già nel sistema.`);
     }
 
-    this.saveData();
-    return machine;
-  }
-
-  deleteMachine(machineId) {
-    if (!this.hasPermission('canDeleteClients')) throw new Error('Permesso negato.');
-    // Scollega eventuali schede Deconto collegate a questa macchina
-    this.data.decontoBoards.forEach(b => {
-      if (b.machineId === machineId) {
-        b.machineId = null;
-      }
-    });
-    this.data.machines = this.data.machines.filter(m => m.id !== machineId);
-    this.saveData();
-  }
-
-  // --- 📟 ANAGRAFICA SCHEDE DECONTO (CRUD INDIPENDENTE) ---
-  addBoard(data) {
-    if (!this.hasPermission('canCreateClients')) throw new Error('Permesso negato.');
-    const shortCode = data.shortCode ? data.shortCode.trim() : `${Math.floor(1000 + Math.random() * 9000)}`;
+    const cleanCode = shortCode.padStart(4, '0').substring(0, 4);
     const newBoard = {
-      id: 'board_' + shortCode,
-      shortCode: shortCode,
+      id: 'board_' + cleanCode,
+      shortCode: cleanCode,
       hwSerial: data.hwSerial ? data.hwSerial.trim() : `DC-HW-${Math.floor(1000 + Math.random() * 9000)}`,
-      macAddress: data.macAddress ? data.macAddress.trim() : `C6:3F:8A:${Math.floor(10 + Math.random() * 89)}:${shortCode.substring(0,2)}:${shortCode.substring(2,4)}`,
+      macAddress: data.macAddress ? data.macAddress.trim() : `C6:3F:8A:${Math.floor(10 + Math.random() * 89)}:${cleanCode.substring(0,2)}:${cleanCode.substring(2,4)}`,
       machineId: data.machineId || null,
       version: data.version || 'BASIC',
-      remainingCredits: parseInt(data.remainingCredits || 200, 10),
+      remainingCredits: parseInt(data.remainingCredits !== undefined ? data.remainingCredits : 200, 10),
       lowStockThreshold: parseInt(data.lowStockThreshold || 20, 10),
       relayStatus: 'CLOSED_OK',
       firmwareVersion: 'v2.1.0-ESP32-C6',
@@ -488,20 +408,48 @@ class DecontoDatabase {
       avgDailyCoffees: 10.0,
       lastSyncDate: new Date().toISOString()
     };
+
     this.data.decontoBoards.unshift(newBoard);
+
+    // Se è stata selezionata una macchina in fase di creazione scheda, sincronizza la macchina
+    if (data.machineId) {
+      const mc = this.data.machines.find(m => m.id === data.machineId);
+      if (mc) {
+        // Rimuove la scheda precedentemente associata a questa macchina se presente
+        this.data.decontoBoards.forEach(b => {
+          if (b.id !== newBoard.id && b.machineId === mc.id) b.machineId = null;
+        });
+      }
+    }
+
     this.saveData();
     return newBoard;
   }
 
   updateBoard(boardId, data) {
-    if (!this.hasPermission('canEditClients')) throw new Error('Permesso negato.');
     const board = this.data.decontoBoards.find(b => b.id === boardId || b.shortCode === boardId);
     if (!board) throw new Error('Scheda Deconto non trovata.');
 
-    if (data.shortCode) board.shortCode = data.shortCode.trim();
-    if (data.hwSerial) board.hwSerial = data.hwSerial.trim();
+    if (data.shortCode) {
+      const clean = String(data.shortCode).trim().padStart(4, '0').substring(0, 4);
+      const duplicate = this.data.decontoBoards.find(b => b.shortCode === clean && b.id !== board.id);
+      if (duplicate) throw new Error(`Il codice #${clean} è già utilizzato da un'altra scheda.`);
+      board.shortCode = clean;
+    }
+
+    if (data.hwSerial !== undefined) board.hwSerial = data.hwSerial.trim();
     if (data.version) board.version = data.version;
-    if (data.machineId !== undefined) board.machineId = data.machineId || null;
+    if (data.machineId !== undefined) {
+      const targetMcId = data.machineId || null;
+      board.machineId = targetMcId;
+      if (targetMcId) {
+        // Scollega altre schede eventualmente montate su questa macchina
+        this.data.decontoBoards.forEach(b => {
+          if (b.id !== board.id && b.machineId === targetMcId) b.machineId = null;
+        });
+      }
+    }
+
     if (data.remainingCredits !== undefined && data.remainingCredits !== '') {
       board.remainingCredits = parseInt(data.remainingCredits, 10);
       if (board.remainingCredits > 0) board.relayStatus = 'CLOSED_OK';
@@ -515,27 +463,147 @@ class DecontoDatabase {
   }
 
   deleteBoard(boardId) {
-    if (!this.hasPermission('canDeleteClients')) throw new Error('Permesso negato.');
     this.data.decontoBoards = this.data.decontoBoards.filter(b => b.id !== boardId && b.shortCode !== boardId);
     this.saveData();
   }
 
-  // --- 🔗 MODULO ASSEMBLATORE (ASSOCCIA/RIASSEGNA 1-CLICK) ---
-  linkEntities(boardId, machineId, clientId) {
-    if (boardId) {
-      const board = this.data.decontoBoards.find(b => b.id === boardId || b.shortCode === boardId);
-      if (board) board.machineId = machineId || null;
-    }
+  // --- STEP 2: ☕ ANAGRAFICA PARCO MACCHINE ---
+  addMachine(data) {
+    const serialNumber = data.serialNumber ? data.serialNumber.trim() : `SN-MC-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+    const newMachine = {
+      id: 'mc_' + Date.now(),
+      serialNumber: serialNumber,
+      brand: data.brand ? data.brand.trim() : 'Didiesse',
+      model: data.model ? data.model.trim() : 'Frog Revolution',
+      clientId: data.clientId || null,
+      installDate: data.clientId ? (data.installDate || new Date().toISOString().split('T')[0]) : null,
+      status: data.clientId ? 'INSTALLED' : 'STOCK'
+    };
+    this.data.machines.unshift(newMachine);
 
-    if (machineId) {
-      const machine = this.data.machines.find(m => m.id === machineId);
-      if (machine) {
-        machine.clientId = clientId || null;
-        machine.status = clientId ? 'INSTALLED' : 'STOCK';
-        if (clientId && !machine.installDate) machine.installDate = new Date().toISOString().split('T')[0];
+    // Se è stata selezionata una scheda Deconto, aggiorna la scheda Deconto associata
+    if (data.boardId) {
+      const board = this.data.decontoBoards.find(b => b.id === data.boardId || b.shortCode === data.boardId);
+      if (board) {
+        // Scollega la scheda da altre macchine
+        this.data.decontoBoards.forEach(b => {
+          if (b.machineId === newMachine.id) b.machineId = null;
+        });
+        board.machineId = newMachine.id;
       }
     }
 
+    this.saveData();
+    return newMachine;
+  }
+
+  updateMachine(machineId, data) {
+    const machine = this.data.machines.find(m => m.id === machineId);
+    if (!machine) throw new Error('Macchina non trovata.');
+
+    if (data.serialNumber) machine.serialNumber = data.serialNumber.trim();
+    if (data.brand !== undefined) machine.brand = data.brand.trim();
+    if (data.model) machine.model = data.model.trim();
+
+    if (data.clientId !== undefined) {
+      machine.clientId = data.clientId || null;
+      machine.status = machine.clientId ? 'INSTALLED' : 'STOCK';
+      if (machine.clientId && !machine.installDate) {
+        machine.installDate = new Date().toISOString().split('T')[0];
+      }
+    }
+
+    // Gestione dell'associazione Scheda Deconto dalla macchina
+    if (data.boardId !== undefined) {
+      const targetBoardId = data.boardId || null;
+      // Prima scollega tutte le schede montate su questa macchina
+      this.data.decontoBoards.forEach(b => {
+        if (b.machineId === machine.id) b.machineId = null;
+      });
+      // Collega la nuova scheda se selezionata
+      if (targetBoardId) {
+        const board = this.data.decontoBoards.find(b => b.id === targetBoardId || b.shortCode === targetBoardId);
+        if (board) board.machineId = machine.id;
+      }
+    }
+
+    this.saveData();
+    return machine;
+  }
+
+  deleteMachine(machineId) {
+    this.data.decontoBoards.forEach(b => {
+      if (b.machineId === machineId) b.machineId = null;
+    });
+    this.data.machines = this.data.machines.filter(m => m.id !== machineId);
+    this.saveData();
+  }
+
+  // --- STEP 3: 🏢 ANAGRAFICA CLIENTE ---
+  addClient(data) {
+    const newClient = {
+      id: 'cli_' + Date.now(),
+      name: data.name.trim(),
+      refPerson: data.refPerson ? data.refPerson.trim() : 'Referente',
+      phone: data.phone ? data.phone.trim() : '+39 ',
+      email: data.email ? data.email.trim() : '',
+      address: data.address ? data.address.trim() : '',
+      city: data.city ? data.city.trim() : '',
+      status: 'ACTIVE'
+    };
+    this.data.clients.unshift(newClient);
+
+    // Se in creazione cliente viene installata subito una macchina
+    if (data.machineId) {
+      const mc = this.data.machines.find(m => m.id === data.machineId);
+      if (mc) {
+        mc.clientId = newClient.id;
+        mc.status = 'INSTALLED';
+        mc.installDate = new Date().toISOString().split('T')[0];
+      }
+    }
+
+    this.saveData();
+    return newClient;
+  }
+
+  updateClient(clientId, data) {
+    const client = this.data.clients.find(c => c.id === clientId);
+    if (!client) throw new Error('Cliente non trovato.');
+
+    if (data.name) client.name = data.name.trim();
+    if (data.refPerson !== undefined) client.refPerson = data.refPerson.trim();
+    if (data.phone !== undefined) client.phone = data.phone.trim();
+    if (data.email !== undefined) client.email = data.email.trim();
+    if (data.city !== undefined) client.city = data.city.trim();
+    if (data.address !== undefined) client.address = data.address.trim();
+    if (data.status) client.status = data.status;
+
+    // Assegna/Installa nuova macchina al cliente se specificata
+    if (data.assignedMachineId !== undefined) {
+      const targetMcId = data.assignedMachineId || null;
+      if (targetMcId) {
+        const mc = this.data.machines.find(m => m.id === targetMcId);
+        if (mc) {
+          mc.clientId = client.id;
+          mc.status = 'INSTALLED';
+          if (!mc.installDate) mc.installDate = new Date().toISOString().split('T')[0];
+        }
+      }
+    }
+
+    this.saveData();
+    return client;
+  }
+
+  deleteClient(clientId) {
+    this.data.machines.forEach(m => {
+      if (m.clientId === clientId) {
+        m.clientId = null;
+        m.status = 'STOCK';
+      }
+    });
+    this.data.clients = this.data.clients.filter(c => c.id !== clientId);
     this.saveData();
   }
 

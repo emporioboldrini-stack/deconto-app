@@ -14,22 +14,20 @@ import { renderSettingsPanel } from './components/SettingsPanel.js';
 import { renderHardwareSimulator } from './components/HardwareSimulator.js';
 
 let state = {
-  currentUser: db.getCurrentUser(), // Null se disconnesso
+  currentUser: db.getCurrentUser(),
   activeTab: 'dashboard',
   showProfileModal: false,
   editingStaffUserId: null,
-  editingId: null, // ID dell'entità in modifica (Cliente / Macchina / Scheda)
+  editingId: null,
   viewingDecontoCode: null,
   viewingEmailId: null,
   selectedSimBoardCode: '9901',
 
-  // Stato Ricerca & Ordinamento Dashboard
   dashSearchQuery: '',
   dashSearchCategory: 'ALL',
   dashSortColumn: 'shortCode',
   dashSortDirection: 'DESC',
 
-  // Stato Modali KPI Cards & Grafici
   viewingKpiModal: null,
   kpiPeriod: '30DAYS',
   kpiChartType: 'LINE'
@@ -157,7 +155,7 @@ function attachMainEventListeners() {
     });
   });
 
-  // --- 🏢 ANAGRAFICA CLIENTE EVENTI ---
+  // --- STEP 3: 🏢 ANAGRAFICA CLIENTE EVENTI ---
   const btnToggleAddCli = document.getElementById('btn-toggle-add-client');
   const addCliContainer = document.getElementById('add-client-form-container');
   if (btnToggleAddCli && addCliContainer) {
@@ -179,12 +177,13 @@ function attachMainEventListeners() {
       const email = document.getElementById('new-cli-email').value.trim();
       const city = document.getElementById('new-cli-city').value.trim();
       const address = document.getElementById('new-cli-address').value.trim();
+      const machineId = document.getElementById('new-cli-machine') ? document.getElementById('new-cli-machine').value : null;
 
       if (!name) { alert('Compila la Ragione Sociale del Cliente!'); return; }
 
       try {
-        db.addClient({ name, refPerson, phone, email, city, address });
-        alert(`✅ Cliente "${name}" salvato in Anagrafica!`);
+        db.addClient({ name, refPerson, phone, email, city, address, machineId });
+        alert(`✅ Cliente "${name}" salvato ed installato con successo!`);
         renderApp();
       } catch (err) { alert(`Errore: ${err.message}`); }
     });
@@ -219,17 +218,18 @@ function attachMainEventListeners() {
       const phone = document.getElementById('edit-cli-phone').value;
       const city = document.getElementById('edit-cli-city').value;
       const address = document.getElementById('edit-cli-address').value;
+      const assignedMachineId = document.getElementById('edit-cli-machine') ? document.getElementById('edit-cli-machine').value : undefined;
 
       try {
-        db.updateClient(id, { name, refPerson, phone, city, address });
+        db.updateClient(id, { name, refPerson, phone, city, address, assignedMachineId });
         state.editingId = null;
-        alert('✅ Scheda Cliente salvata!');
+        alert('✅ Scheda Cliente e Macchina installata aggiornata!');
         renderApp();
       } catch(err) { alert(err.message); }
     });
   }
 
-  // --- ☕ ANAGRAFICA MACCHINE EVENTI ---
+  // --- STEP 2: ☕ ANAGRAFICA MACCHINE EVENTI ---
   const btnToggleAddMc = document.getElementById('btn-toggle-add-machine');
   const addMcContainer = document.getElementById('add-machine-form-container');
   if (btnToggleAddMc && addMcContainer) {
@@ -248,13 +248,14 @@ function attachMainEventListeners() {
       const serialNumber = document.getElementById('new-mc-serial').value.trim();
       const brand = document.getElementById('new-mc-brand').value.trim();
       const model = document.getElementById('new-mc-model').value.trim();
+      const boardId = document.getElementById('new-mc-board') ? document.getElementById('new-mc-board').value : null;
       const clientId = document.getElementById('new-mc-client').value;
 
       if (!serialNumber || !model) { alert('Compila Seriale e Modello della macchina!'); return; }
 
       try {
-        db.addMachine({ serialNumber, brand, model, clientId });
-        alert(`✅ Macchina "${serialNumber}" registrata nel parco macchine!`);
+        db.addMachine({ serialNumber, brand, model, boardId, clientId });
+        alert(`✅ Macchina "${serialNumber}" registrata ed associata nel parco macchine!`);
         renderApp();
       } catch (err) { alert(`Errore: ${err.message}`); }
     });
@@ -287,18 +288,19 @@ function attachMainEventListeners() {
       const serialNumber = document.getElementById('edit-mc-serial').value;
       const brand = document.getElementById('edit-mc-brand').value;
       const model = document.getElementById('edit-mc-model').value;
+      const boardId = document.getElementById('edit-mc-board') ? document.getElementById('edit-mc-board').value : undefined;
       const clientId = document.getElementById('edit-mc-client').value;
 
       try {
-        db.updateMachine(id, { serialNumber, brand, model, clientId });
+        db.updateMachine(id, { serialNumber, brand, model, boardId, clientId });
         state.editingId = null;
-        alert('✅ Scheda Macchina da Caffè salvata!');
+        alert('✅ Macchina da Caffè e Scheda Deconto collegate con successo!');
         renderApp();
       } catch(err) { alert(err.message); }
     });
   }
 
-  // --- 📟 ANAGRAFICA SCHEDE DECONTO EVENTI ---
+  // --- STEP 1: 📟 ANAGRAFICA SCHEDE DECONTO EVENTI ---
   const btnToggleAddBoard = document.getElementById('btn-toggle-add-board');
   const addBoardContainer = document.getElementById('add-board-form-container');
   if (btnToggleAddBoard && addBoardContainer) {
@@ -320,11 +322,11 @@ function attachMainEventListeners() {
       const version = document.getElementById('new-board-version').value;
       const machineId = document.getElementById('new-board-machine').value;
 
-      if (!shortCode) { alert('Inserisci il codice a 4 cifre per la Scheda Deconto!'); return; }
+      if (!shortCode) { alert('Inserisci il codice a 4 cifre per la Scheda Deconto (es. 9902)!'); return; }
 
       try {
         db.addBoard({ shortCode, hwSerial, remainingCredits, version, machineId });
-        alert(`✅ Scheda Deconto #${shortCode} registrata con successo!`);
+        alert(`✅ NUOVA SCHEDA DECONTO #${shortCode} CREATA CON SUCCESSO!`);
         renderApp();
       } catch (err) { alert(`Errore: ${err.message}`); }
     });
@@ -378,7 +380,7 @@ function attachMainEventListeners() {
     });
   });
 
-  // --- DETTAGLIO TELEMETRIA SCHEDA DECONTO ---
+  // Telemetria Deconto
   document.querySelectorAll('.btn-deconto-detail').forEach(btn => {
     btn.addEventListener('click', () => {
       const code = btn.getAttribute('data-code');
@@ -392,7 +394,7 @@ function attachMainEventListeners() {
   if (btnCloseDecontoModal) btnCloseDecontoModal.addEventListener('click', () => { state.viewingDecontoCode = null; renderApp(); });
   if (btnCloseDecontoModalFooter) btnCloseDecontoModalFooter.addEventListener('click', () => { state.viewingDecontoCode = null; renderApp(); });
 
-  // --- SIMULATORE HARDWARE ---
+  // Simulatore Hardware
   const simBoardSelect = document.getElementById('sim-board-select');
   if (simBoardSelect) {
     simBoardSelect.addEventListener('change', (e) => {
