@@ -7,7 +7,7 @@ export function renderSettingsPanel() {
     <div>
       <div style="margin-bottom: 24px;">
         <h1 style="font-size: 1.8rem; font-weight: 800;">⚙️ Impostazioni Piattaforma & Personalizzazione Brand</h1>
-        <p style="color: var(--text-muted);">Personalizza il logo aziendale in alto a sinistra, l'intestazione ed i testi di sistema</p>
+        <p style="color: var(--text-muted);">Personalizza il logo aziendale, l'intestazione ed il servizio notifica email</p>
       </div>
 
       <div class="card-grid" style="grid-template-columns: 1fr 1fr;">
@@ -66,6 +66,35 @@ export function renderSettingsPanel() {
           </form>
         </div>
 
+      </div>
+
+      <!-- Card 3: Configurazione Servizio Email Reali (Opzionale EmailJS) -->
+      <div class="stat-card" style="margin-top: 24px; padding: 24px;">
+        <h3 style="margin-top: 0; color: var(--accent-green); margin-bottom: 12px;">✉️ Configurazione Invio Reale Email Automatiche (SMTP Web API / EmailJS):</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">
+          Di default la piattaforma genera i modelli email nel <strong>Registro Notifiche Spedite</strong> e consente l'invio via client di posta (Outlook/Gmail). Per abilitare l'invio completamente automatico in background senza aprire l'app di posta, inserisci qui le chiavi EmailJS.
+        </p>
+
+        <form id="settings-emailjs-form" style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 16px; align-items: end;">
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Service ID (EmailJS):</label>
+            <input type="text" id="setting-emailjs-service" value="${settings.emailjsServiceId || ''}" placeholder="Es. service_xyz123" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+          </div>
+
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Template ID (EmailJS):</label>
+            <input type="text" id="setting-emailjs-template" value="${settings.emailjsTemplateId || ''}" placeholder="Es. template_abc456" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+          </div>
+
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Public Key (EmailJS):</label>
+            <input type="text" id="setting-emailjs-key" value="${settings.emailjsPublicKey || ''}" placeholder="Es. user_pubkey789" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+          </div>
+
+          <button type="submit" class="btn btn-success" style="padding: 10px 20px;">
+            💾 Salva Chiavi EmailJS
+          </button>
+        </form>
       </div>
     </div>
   `;

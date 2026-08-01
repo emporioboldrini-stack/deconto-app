@@ -66,7 +66,7 @@ export function renderUserManagementPanel(activeTab, editingUserId = null, viewi
               </div>
 
               <div style="font-size: 0.75rem; color: var(--accent-cyan); background: rgba(56, 189, 248, 0.1); padding: 10px; border-radius: 6px; margin-bottom: 20px;">
-                ✉️ Nota: Modificando il ruolo, l'icona avatar si aggiornerà automaticamente e verrà inviata un'email di notifica al dipendente!
+                ✉️ Nota: Modificando il ruolo, l'icona avatar si aggiornerà automaticamente e verrà generata l'email di notifica!
               </div>
 
               <div style="display: flex; gap: 12px; justify-content: flex-end;">
@@ -89,19 +89,32 @@ export function renderUserManagementPanel(activeTab, editingUserId = null, viewi
           <div class="modal-box" style="max-width: 680px; width: 95%;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 10px;">
               <div>
-                <h3 style="margin: 0; color: var(--accent-cyan);">✉️ Email Spedita: ${emailRecord.subject}</h3>
+                <h3 style="margin: 0; color: var(--accent-cyan);">✉️ Registro Notifica Email</h3>
                 <div style="font-size: 0.8rem; color: var(--text-muted);">
-                  Destinatario: <strong>${emailRecord.recipientName} (${emailRecord.recipientEmail})</strong> | Data: ${new Date(emailRecord.timestamp).toLocaleString('it-IT')}
+                  Destinatario: <strong>${emailRecord.recipientName} (${emailRecord.recipientEmail})</strong>
                 </div>
               </div>
               <button id="btn-close-email-preview" style="background: none; border: none; color: var(--text-muted); font-size: 1.6rem; cursor: pointer;">&times;</button>
             </div>
 
-            <div style="background: #0f172a; padding: 16px; border-radius: 10px; max-height: 440px; overflow-y: auto; border: 1px solid var(--border-subtle);">
+            <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; margin-bottom: 16px; border: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">Oggetto: <strong>${emailRecord.subject}</strong></div>
+                <div style="font-size: 0.75rem; color: var(--accent-green); margin-top: 2px;">Stato: Ready in Outbox Log (${new Date(emailRecord.timestamp).toLocaleString('it-IT')})</div>
+              </div>
+              ${emailRecord.mailtoUrl ? `
+                <a href="${emailRecord.mailtoUrl}" class="btn btn-primary" style="padding: 8px 14px; font-size: 0.8rem; text-decoration: none;">
+                  ✉️ Apri in Outlook/Mail
+                </a>
+              ` : ''}
+            </div>
+
+            <div style="background: #0f172a; padding: 16px; border-radius: 10px; max-height: 380px; overflow-y: auto; border: 1px solid var(--border-subtle);">
               ${emailRecord.htmlBody}
             </div>
 
-            <div style="display: flex; justify-content: flex-end; margin-top: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
+              <small style="color: var(--text-muted);">Puoi anche inviare le email reali col il tuo client di posta predefinito.</small>
               <button id="btn-close-email-preview-footer" class="btn btn-secondary">Chiudi Anteprima Email</button>
             </div>
           </div>
@@ -262,7 +275,7 @@ export function renderUserManagementPanel(activeTab, editingUserId = null, viewi
 
           <div>
             <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Nome e Cognome Dipendente:*</label>
-            <input type="text" id="new-user-name" placeholder="Es. Mario Rossi" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700;">
+            <input type="text" id="new-user-name" placeholder="Es. Boldrini Valerio" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700;">
           </div>
         </div>
 
@@ -278,7 +291,7 @@ export function renderUserManagementPanel(activeTab, editingUserId = null, viewi
 
           <div>
             <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Email Dipendente:</label>
-            <input type="email" id="new-user-email" placeholder="mario.rossi@deconto.it" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+            <input type="email" id="new-user-email" placeholder="boldrini.valerio@deconto.it" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
           </div>
 
           <div>
@@ -288,7 +301,7 @@ export function renderUserManagementPanel(activeTab, editingUserId = null, viewi
         </div>
 
         <div style="font-size: 0.75rem; color: var(--accent-cyan); background: rgba(56, 189, 248, 0.1); padding: 10px; border-radius: 6px; margin-bottom: 20px;">
-          ✉️ Nota: Al momento del salvataggio verrà generata ed inviata un'email automatica di Benvenuto con le credenziali!
+          ✉️ Nota: Al salvataggio l'utente verrà memorizzato PERMANENTEMENTE nel Master Store e verrà generata l'email di benvenuto!
         </div>
 
         <div style="display: flex; gap: 12px; justify-content: flex-end;">

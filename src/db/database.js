@@ -1,19 +1,29 @@
 import { emailService } from '../services/emailService.js';
 
 /**
- * DECONTO IoT System - Core Database, Authentication & Dynamic Permission Engine (v9)
- * Gestisce l'autenticazione, la gestione personale/utenti, la matrice dei permessi dinamica,
- * il cambio automatico dell'icona avatar ed il servizio integrato di notifica EMAIL.
+ * DECONTO IoT System - Core Database Engine (Master Store)
+ * Garantisce la persistenza assoluta dei dati (utenti, crediti, macchine e log)
+ * SENZA MAI RESETTARE IL DATABASE tra logout, login e riavvii.
  */
 
-const STORAGE_KEY = 'DECONTO_DB_V9';
-const SESSION_KEY = 'DECONTO_AUTH_SESSION_V9';
+const MASTER_STORAGE_KEY = 'DECONTO_APP_MASTER_DATABASE_V1';
+const MASTER_SESSION_KEY = 'DECONTO_APP_MASTER_SESSION_V1';
+
+// Chiavi storiche da recuperare in caso di migrazione
+const LEGACY_STORAGE_KEYS = [
+  'DECONTO_DB_V9', 'DECONTO_DB_V8', 'DECONTO_DB_V7', 
+  'DECONTO_DB_V6', 'DECONTO_DB_V5', 'DECONTO_DB_V4', 
+  'DECONTO_DB_V3', 'DECONTO_DB_V2', 'DECONTO_DB_V1'
+];
 
 const initialData = {
   settings: {
-    customLogoUrl: null, // null = Icona emoji ☕ predefinita
+    customLogoUrl: null,
     brandTitle: 'DECONTO',
-    brandSubtitle: 'IoT Vending System'
+    brandSubtitle: 'IoT Vending System',
+    emailjsServiceId: '',
+    emailjsTemplateId: '',
+    emailjsPublicKey: ''
   },
 
   roleLabels: {
@@ -158,14 +168,14 @@ const initialData = {
       macAddress: 'C6:3F:8A:44:99:01',
       machineId: 'mc_4',
       version: 'BASIC',
-      remainingCredits: 0,
+      remainingCredits: 200,
       lowStockThreshold: 20,
-      relayStatus: 'OPEN_LOCKED',
+      relayStatus: 'CLOSED_OK',
       firmwareVersion: 'v2.1.0-ESP32-C6',
       isOnlineWifi: true,
       rssi: -58,
-      machineExtractions: 1240,
-      lifetimeExtractions: 3500,
+      machineExtractions: 1241,
+      lifetimeExtractions: 3501,
       avgDailyCoffees: 9.1,
       lastSyncDate: new Date().toISOString()
     }
@@ -184,24 +194,51 @@ class DecontoDatabase {
 
   loadData() {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (!parsed.settings) parsed.settings = initialData.settings;
-        if (!parsed.roleLabels) parsed.roleLabels = initialData.roleLabels;
-        if (!parsed.permissions) parsed.permissions = initialData.permissions;
-        if (!parsed.emailLogs) parsed.emailLogs = [];
-        if (!parsed.users || !parsed.users.some(u => u.username === '001')) parsed.users = initialData.users;
+      // 1. Controlla lo Storage Master Principale
+      let storedRaw = localStorage.getItem(MASTER_STORAGE_KEY);
+      let parsedData = null;
 
-        parsed.users.forEach(u => {
+      if (storedRaw) {
+        parsedData = JSON.parse(storedRaw);
+      } else {
+        // 2. MOTORE DI MIGRAZIONE: Se lo Storage Master non esiste ancora, cerca e recupera i dati dalle vecchie chiavi!
+        for (const legacyKey of LEGACY_STORAGE_KEYS) {
+          const legacyRaw = localStorage.getItem(legacyKey);
+          if (legacyRaw) {
+            try {
+              parsedData = JSON.parse(legacyRaw);
+              break;
+            } catch (err) {}
+          }
+        }
+      }
+
+      if (parsedData) {
+        if (!parsedData.settings) parsedData.settings = initialData.settings;
+        if (!parsedData.roleLabels) parsedData.roleLabels = initialData.roleLabels;
+        if (!parsedData.permissions) parsedData.permissions = initialData.permissions;
+        if (!parsedData.emailLogs) parsedData.emailLogs = [];
+        if (!parsedData.users || !parsedData.users.some(u => u.username === '001')) {
+          parsedData.users = parsedData.users || [];
+          if (!parsedData.users.some(u => u.username === '001')) {
+            parsedData.users.unshift(initialData.users[0]);
+          }
+        }
+
+        // Assicura che l'icona avatar rispecchi sempre il ruolo
+        parsedData.users.forEach(u => {
           if (u.role === 'UFFICIO') u.avatar = '👩‍💻';
           else if (u.role === 'ADR') u.avatar = '🚚';
           else if (u.role === 'ADMIN') u.avatar = '👨‍💼';
         });
 
-        return parsed;
+        // Salva immediatamente nel Master Storage permanente
+        this.saveData(parsedData);
+        return parsedData;
       }
     } catch (e) {}
+
+    // Inizializzazione pulita
     this.saveData(initialData);
     return initialData;
   }
@@ -209,7 +246,7 @@ class DecontoDatabase {
   saveData(data) {
     this.data = data || this.data;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
+      localStorage.setItem(MASTER_STORAGE_KEY, JSON.stringify(this.data));
     } catch (e) {}
   }
 
@@ -237,7 +274,7 @@ class DecontoDatabase {
 
   loadSession() {
     try {
-      const stored = localStorage.getItem(SESSION_KEY);
+      const stored = localStorage.getItem(MASTER_SESSION_KEY);
       if (stored) return JSON.parse(stored);
     } catch (e) {}
     return null;
@@ -247,9 +284,9 @@ class DecontoDatabase {
     this.currentUser = user;
     try {
       if (user) {
-        localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+        localStorage.setItem(MASTER_SESSION_KEY, JSON.stringify(user));
       } else {
-        localStorage.removeItem(SESSION_KEY);
+        localStorage.removeItem(MASTER_SESSION_KEY);
       }
     } catch (e) {}
   }
@@ -293,7 +330,7 @@ class DecontoDatabase {
   }
 
   addUser(userData) {
-    const existing = this.data.users.find(u => u.username === userData.username.trim());
+    const existing = this.data.users.find(u => u.username.toLowerCase() === userData.username.trim().toLowerCase());
     if (existing) {
       throw new Error(`Il nome utente "${userData.username}" è già in uso.`);
     }
@@ -315,7 +352,7 @@ class DecontoDatabase {
     };
 
     this.data.users.push(newUser);
-    this.saveData();
+    this.saveData(); // SALVATAGGIO PERMANENTE NEL MASTER STORE
 
     // INVIA EMAIL AUTOMATICA DI BENVENUTO
     try {
@@ -345,7 +382,7 @@ class DecontoDatabase {
       roleChanged = true;
     }
 
-    this.saveData();
+    this.saveData(); // SALVATAGGIO PERMANENTE NEL MASTER STORE
 
     if (this.currentUser && this.currentUser.id === userId) {
       this.saveSession({
@@ -536,7 +573,7 @@ class DecontoDatabase {
     };
 
     this.data.refillLogs.unshift(newRefillLog);
-    this.saveData();
+    this.saveData(); // SALVATAGGIO PERMANENTE NEL MASTER STORE
     return { board, newRefillLog };
   }
 
@@ -568,7 +605,7 @@ class DecontoDatabase {
     };
 
     this.data.coffeeLogs.unshift(log);
-    this.saveData();
+    this.saveData(); // SALVATAGGIO PERMANENTE NEL MASTER STORE
 
     return {
       success: true,

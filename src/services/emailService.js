@@ -3,14 +3,18 @@ import { db } from '../db/database.js';
 class EmailService {
 
   /**
-   * Invia email di benvenuto professionale ed amichevole a un nuovo utente registrato
+   * Invia o prepara l'email di benvenuto per un nuovo utente dipendente
    */
   async sendWelcomeEmail(user) {
     const roleLabels = db.getRoleLabels();
     const roleTitle = roleLabels[user.role] || user.role;
     const settings = db.getSettings();
 
+    const recipientEmail = user.email || `${user.username}@deconto.it`;
     const subject = `👋 Benvenuto nel Team ${settings.brandTitle || 'DECONTO'} - Credenziali di Accesso`;
+    
+    const plainTextBody = `Ciao ${user.name},\n\nBenvenuto a bordo nel team per il progetto ${settings.brandTitle || 'DECONTO'}!\n\nRuolo Assegnato: ${roleTitle}\nCodice Accesso: ${user.username}\nPassword: ${user.password || '123456'}\nPiattaforma: https://deconto-app.web.app\n\nBuon lavoro!\nIl Team DECONTO System`;
+
     const htmlBody = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0f172a; color: #f8fafc; padding: 24px; border-radius: 16px; border: 1px solid #334155;">
         <div style="text-align: center; margin-bottom: 24px; border-bottom: 1px solid #334155; padding-bottom: 16px;">
@@ -32,14 +36,13 @@ class EmailService {
 
         <h3 style="color: #ffffff; font-size: 1.05rem;">🔑 Le tue Credenziali di Accesso:</h3>
         <ul style="line-height: 1.8; color: #cbd5e1; background: #1e293b; padding: 16px 24px; border-radius: 8px; list-style: none;">
-          <li>• <strong>Piattaforma Web:</strong> <a href="https://deconto-vending-app.web.app" style="color: #38bdf8; text-decoration: none;">https://deconto-vending-app.web.app</a></li>
+          <li>• <strong>Piattaforma Web:</strong> <a href="https://deconto-app.web.app" style="color: #38bdf8; text-decoration: none;">https://deconto-app.web.app</a></li>
           <li>• <strong>Codice Accesso (Nome Utente):</strong> <code style="color: #f59e0b; font-size: 1.1rem; font-weight: 800;">${user.username}</code></li>
           <li>• <strong>Password Temporanea:</strong> <code style="color: #f59e0b; font-size: 1.1rem; font-weight: 800;">${user.password || '123456'}</code></li>
         </ul>
 
         <p style="line-height: 1.6; color: #cbd5e1;">
-          Ti raccomandiamo di effettuare il tuo primo accesso ed eventuale personalizzazione della password nella sezione profilo. 
-          Se dovessi avere qualsiasi dubbio o necessitare di supporto, il nostro team è a tua completa disposizione.
+          Ti raccomandiamo di effettuare il tuo primo accesso ed eventuale personalizzazione della password nella sezione profilo.
         </p>
 
         <div style="margin-top: 32px; border-top: 1px solid #334155; padding-top: 16px; text-align: center; color: #64748b; font-size: 0.8rem;">
@@ -49,26 +52,33 @@ class EmailService {
       </div>
     `;
 
+    const mailtoUrl = `mailto:${encodeURIComponent(recipientEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(plainTextBody)}`;
+
     const logRecord = {
       id: 'mail_' + Date.now(),
       type: 'WELCOME_NEW_USER',
-      recipientEmail: user.email || `${user.username}@deconto.it`,
+      recipientEmail,
       recipientName: user.name,
       subject,
+      plainTextBody,
       htmlBody,
+      mailtoUrl,
       timestamp: new Date().toISOString(),
-      status: 'DELIVERED'
+      status: 'SENT_TO_OUTBOX'
     };
 
     if (!db.data.emailLogs) db.data.emailLogs = [];
     db.data.emailLogs.unshift(logRecord);
     db.saveData();
 
+    // Tentativo invio reale via EmailJS se configurato
+    this.trySendRealEmailViaEmailJS(logRecord);
+
     return logRecord;
   }
 
   /**
-   * Invia email di congratulazioni e notifica aggiornamento ruolo / promozione
+   * Invia o prepara l'email di aggiornamento ruolo per un dipendente
    */
   async sendRoleUpdateEmail(user, oldRole, newRole) {
     const roleLabels = db.getRoleLabels();
@@ -76,7 +86,11 @@ class EmailService {
     const newRoleTitle = roleLabels[newRole] || newRole;
     const settings = db.getSettings();
 
+    const recipientEmail = user.email || `${user.username}@deconto.it`;
     const subject = `🎉 Aggiornamento Ruolo Operativo & Nuovi Permessi - ${settings.brandTitle || 'DECONTO'}`;
+    
+    const plainTextBody = `Ciao ${user.name},\n\nIl tuo ruolo ed i tuoi permessi su ${settings.brandTitle || 'DECONTO'} sono stati aggiornati!\n\nRuolo Precedente: ${oldRoleTitle}\nNuovo Ruolo: ${newRoleTitle}\n\nAccedi alla piattaforma per le nuove funzionalità: https://deconto-app.web.app\n\nBuon lavoro!\nLa Direzione DECONTO System`;
+
     const htmlBody = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0f172a; color: #f8fafc; padding: 24px; border-radius: 16px; border: 1px solid #334155;">
         <div style="text-align: center; margin-bottom: 24px; border-bottom: 1px solid #334155; padding-bottom: 16px;">
@@ -102,7 +116,7 @@ class EmailService {
         </p>
 
         <div style="text-align: center; margin: 24px 0;">
-          <a href="https://deconto-vending-app.web.app" style="background: linear-gradient(135deg, #a855f7, #38bdf8); color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 800; display: inline-block;">
+          <a href="https://deconto-app.web.app" style="background: linear-gradient(135deg, #a855f7, #38bdf8); color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 800; display: inline-block;">
             🔗 Accedi Subito alla Piattaforma Aggiornata
           </a>
         </div>
@@ -114,22 +128,60 @@ class EmailService {
       </div>
     `;
 
+    const mailtoUrl = `mailto:${encodeURIComponent(recipientEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(plainTextBody)}`;
+
     const logRecord = {
       id: 'mail_' + Date.now(),
       type: 'ROLE_UPDATED',
-      recipientEmail: user.email || `${user.username}@deconto.it`,
+      recipientEmail,
       recipientName: user.name,
       subject,
+      plainTextBody,
       htmlBody,
+      mailtoUrl,
       timestamp: new Date().toISOString(),
-      status: 'DELIVERED'
+      status: 'SENT_TO_OUTBOX'
     };
 
     if (!db.data.emailLogs) db.data.emailLogs = [];
     db.data.emailLogs.unshift(logRecord);
     db.saveData();
 
+    // Tentativo invio reale via EmailJS
+    this.trySendRealEmailViaEmailJS(logRecord);
+
     return logRecord;
+  }
+
+  /**
+   * Tenta l'invio reale tramite EmailJS Web API
+   */
+  async trySendRealEmailViaEmailJS(logRecord) {
+    const settings = db.getSettings();
+    if (settings.emailjsServiceId && settings.emailjsTemplateId && settings.emailjsPublicKey) {
+      try {
+        const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            service_id: settings.emailjsServiceId,
+            template_id: settings.emailjsTemplateId,
+            user_id: settings.emailjsPublicKey,
+            template_params: {
+              to_email: logRecord.recipientEmail,
+              to_name: logRecord.recipientName,
+              subject: logRecord.subject,
+              message: logRecord.plainTextBody
+            }
+          })
+        });
+
+        if (response.ok) {
+          logRecord.status = 'DELIVERED_VIA_EMAILJS';
+          db.saveData();
+        }
+      } catch (e) {}
+    }
   }
 }
 

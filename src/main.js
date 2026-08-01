@@ -273,7 +273,7 @@ function attachMainEventListeners() {
     });
   });
 
-  // --- IMPOSTAZIONI: CARICAMENTO LOGO DA PC & SOTTOTITOLO BRAND ---
+  // --- IMPOSTAZIONI: CARICAMENTO LOGO DA PC, SOTTOTITOLO & CHIAVI EMAILJS ---
   const logoFileInput = document.getElementById('setting-logo-file');
   if (logoFileInput) {
     logoFileInput.addEventListener('change', (e) => {
@@ -316,6 +316,25 @@ function attachMainEventListeners() {
 
       db.updateSettings({ brandTitle, brandSubtitle });
       alert('✅ Titolo e Sottotitolo Brand salvati con successo!');
+      renderApp();
+    });
+  }
+
+  const settingsEmailJsForm = document.getElementById('settings-emailjs-form');
+  if (settingsEmailJsForm) {
+    settingsEmailJsForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const service = document.getElementById('setting-emailjs-service').value.trim();
+      const template = document.getElementById('setting-emailjs-template').value.trim();
+      const key = document.getElementById('setting-emailjs-key').value.trim();
+
+      db.updateSettings({
+        emailjsServiceId: service,
+        emailjsTemplateId: template,
+        emailjsPublicKey: key
+      });
+
+      alert('✅ Configurazioni EmailJS salvate con successo!');
       renderApp();
     });
   }
@@ -438,7 +457,7 @@ function attachMainEventListeners() {
 
       try {
         const newUser = db.addUser({ username, password, name, role, email, phone });
-        alert(`✅ Utente dipendente "${name}" (Codice ${username}) creato con successo!\n\n✉️ Email di Benvenuto generata e spedita a ${newUser.email}!`);
+        alert(`✅ Utente dipendente "${name}" (Codice ${username}) salvato PERMANENTEMENTE nel database!\n\n✉️ Notifica Email creata per ${newUser.email}`);
         renderApp();
       } catch (err) {
         alert(`Errore: ${err.message}`);
@@ -483,7 +502,7 @@ function attachMainEventListeners() {
         });
 
         state.editingStaffUserId = null;
-        alert(`✅ Scheda Utente aggiornata con successo!\n\n✉️ Notifica Email di aggiornamento ruolo spedita a ${updatedUser.email}!`);
+        alert(`✅ Scheda Utente "${updatedUser.name}" salvata PERMANENTEMENTE nel database!\n\n✉️ Notifica Email di cambio ruolo inviata!`);
         renderApp();
       } catch (err) {
         alert(`Errore: ${err.message}`);
@@ -642,7 +661,7 @@ function attachMainEventListeners() {
       const credits = parseInt(document.getElementById('otp-credits-select').value, 10);
 
       const otpCode = `OTP-${Math.floor(1000 + Math.random() * 9000)}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
-      const link = `https://deconto-vending-app.web.app/?short=${boardShortCode}&otp=${otpCode}&c=${credits}`;
+      const link = `https://deconto-app.web.app/?short=${boardShortCode}&otp=${otpCode}&c=${credits}`;
 
       document.getElementById('otp-code-val').innerText = otpCode;
       document.getElementById('otp-link-val').innerText = link;
