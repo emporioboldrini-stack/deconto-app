@@ -1,106 +1,115 @@
 import { db } from '../db/database.js';
 
 export function renderSidebar(currentUser, activeTab) {
-  const user = currentUser || { name: 'Utente Ospite', role: 'ADMIN', username: '001', avatar: '👨‍💼' };
-  const permissions = db.getPermissions();
   const settings = db.getSettings();
+  const roleLabels = db.getRoleLabels();
 
-  let navItems = [];
-
-  if (user.role === 'ADMIN') {
-    navItems = [
-      { id: 'dashboard', label: '📊 Dashboard BI', icon: '📈' },
-      { id: 'user_management', label: '👥 Gestione Personale', icon: '👤' },
-      { id: 'permissions_matrix', label: '⚙️ Matrice Permessi', icon: '🔐' },
-      { id: 'clients', label: '🏢 Clienti & Parco', icon: '🏢' },
-      { id: 'qr_generator', label: '🏷️ Generatore Etichette QR', icon: '🖨️' },
-      { id: 'otp_generator', label: '🔑 Genera Ricariche OTP', icon: '💬' },
-      { id: 'refills_history', label: '📋 Storico Ricariche', icon: '🧾' },
-      { id: 'adr_visits', label: '🗺️ Giro Consegne ADR', icon: '🚚' },
-      { id: 'maintenance', label: '🛠️ Manutenzione Predittiva', icon: '⚠️' },
-      { id: 'backups', label: '💾 Backup GitHub', icon: '🐙' },
-      { id: 'simulator', label: '☕ Simulatore Macchina HW', icon: '⚡' },
-      { id: 'settings', label: '⚙️ Impostazioni', icon: '🛠️' }
-    ];
-  } else {
-    const rolePerms = permissions[user.role] || {};
-
-    if (rolePerms.canViewClients) {
-      navItems.push({ id: 'clients', label: '🏢 Anagrafica Clienti', icon: '🏢' });
-    }
-    if (rolePerms.canGenerateQr) {
-      navItems.push({ id: 'qr_generator', label: '🏷️ Generatore Etichette QR', icon: '🖨️' });
-    }
-    if (rolePerms.canGenerateOtp) {
-      navItems.push({ id: 'otp_generator', label: '🔑 Genera Ricarica OTP', icon: '💬' });
-    }
-    if (rolePerms.canBleRefill || user.role === 'ADR') {
-      navItems.push({ id: 'adr_visits', label: '🗺️ Giro Consegne & BLE', icon: '🚚' });
-    }
-    if (rolePerms.canViewRefillHistory) {
-      navItems.push({ id: 'refills_history', label: '📋 Storico Ricariche', icon: '🧾' });
-    }
-    if (rolePerms.canUseSimulator) {
-      navItems.push({ id: 'simulator', label: '☕ Simulatore Macchina HW', icon: '⚡' });
-    }
-    navItems.push({ id: 'settings', label: '⚙️ Impostazioni', icon: '🛠️' });
-  }
+  const isUfficio = currentUser.role === 'UFFICIO' || currentUser.role === 'ADMIN';
+  const isAdr = currentUser.role === 'ADR' || currentUser.role === 'ADMIN';
+  const isAdmin = currentUser.role === 'ADMIN';
 
   return `
     <aside class="sidebar">
-      <!-- Header con Logo Personalizzato da PC e Sottotitolo Modificabile -->
-      <div class="brand-logo">
-        <div class="brand-icon" style="overflow: hidden; padding: 0;">
+      <div class="sidebar-header" style="display: flex; align-items: center; gap: 12px; padding: 20px 16px; border-bottom: 1px solid var(--border-subtle);">
+        <div id="brand-logo-container" style="width: 42px; height: 42px; border-radius: 10px; background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple)); display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: var(--shadow-glow);">
           ${settings.customLogoUrl 
-            ? `<img src="${settings.customLogoUrl}" style="width: 100%; height: 100%; object-fit: cover; border-radius: inherit;" alt="Logo">` 
-            : `<span style="font-size: 1.5rem;">☕</span>`}
+            ? `<img src="${settings.customLogoUrl}" style="width: 100%; height: 100%; object-fit: cover;" alt="Logo Brand">` 
+            : `<span style="font-size: 1.6rem;">☕</span>`}
         </div>
         <div>
-          <div class="brand-title">${settings.brandTitle || 'DECONTO'}</div>
-          <div style="font-size: 0.75rem; color: var(--accent-cyan); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">
-            ${settings.brandSubtitle || 'IoT Vending System'}
-          </div>
+          <div style="font-weight: 800; font-size: 1.1rem; color: #fff; letter-spacing: 0.5px;">${settings.brandTitle || 'DECONTO'}</div>
+          <div style="font-size: 0.72rem; color: var(--accent-cyan); font-weight: 700;">${settings.brandSubtitle || 'IoT Vending System'}</div>
         </div>
       </div>
 
-      <!-- Card Utente Connesso -->
-      <div style="margin-bottom: 24px; padding: 14px; background: rgba(255,255,255,0.03); border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
-        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-          <div style="font-size: 1.4rem;">${user.avatar || '👤'}</div>
-          <div style="overflow: hidden;">
-            <div style="font-size: 0.85rem; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-              ${user.name}
+      <nav class="sidebar-nav">
+
+        ${isAdmin ? `
+          <div class="nav-section-title">PANNELLO DIREZIONE</div>
+          <a class="nav-item ${activeTab === 'dashboard' ? 'active' : ''}" data-tab="dashboard">
+            <span class="nav-icon">📊</span>
+            <span>Dashboard IoT & KPI</span>
+          </a>
+        ` : ''}
+
+        <div class="nav-section-title">ANAGRAFICHE DI SISTEMA</div>
+
+        ${isUfficio ? `
+          <a class="nav-item ${activeTab === 'clients' ? 'active' : ''}" data-tab="clients">
+            <span class="nav-icon">🏢</span>
+            <span>Anagrafica Clienti</span>
+          </a>
+          <a class="nav-item ${activeTab === 'machines' ? 'active' : ''}" data-tab="machines">
+            <span class="nav-icon">☕</span>
+            <span>Parco Macchine</span>
+          </a>
+          <a class="nav-item ${activeTab === 'deconto_boards' ? 'active' : ''}" data-tab="deconto_boards">
+            <span class="nav-icon">📟</span>
+            <span>Schede Deconto</span>
+          </a>
+        ` : ''}
+
+        ${isUfficio ? `
+          <div class="nav-section-title">STRUMENTI OPERATIVI</div>
+          <a class="nav-item ${activeTab === 'otp_generator' ? 'active' : ''}" data-tab="otp_generator">
+            <span class="nav-icon">🔑</span>
+            <span>Generatore OTP WhatsApp</span>
+          </a>
+          <a class="nav-item ${activeTab === 'qr_generator' ? 'active' : ''}" data-tab="qr_generator">
+            <span class="nav-icon">🖨️</span>
+            <span>Stampa Etichette QR</span>
+          </a>
+          <a class="nav-item ${activeTab === 'refills_history' ? 'active' : ''}" data-tab="refills_history">
+            <span class="nav-icon">📜</span>
+            <span>Storico Ricariche</span>
+          </a>
+        ` : ''}
+
+        ${isAdr ? `
+          <div class="nav-section-title">LOGISTICA & CONSEGNE</div>
+          <a class="nav-item ${activeTab === 'adr_visits' ? 'active' : ''}" data-tab="adr_visits">
+            <span class="nav-icon">🚚</span>
+            <span>Visite ADR & BLE</span>
+          </a>
+        ` : ''}
+
+        <div class="nav-section-title">COLLAUDO & IMPOSTAZIONI</div>
+        <a class="nav-item ${activeTab === 'simulator' ? 'active' : ''}" data-tab="simulator">
+          <span class="nav-icon">⚡</span>
+          <span>Simulatore Hardware</span>
+        </a>
+
+        ${isAdmin ? `
+          <a class="nav-item ${activeTab === 'user_management' ? 'active' : ''}" data-tab="user_management">
+            <span class="nav-icon">👥</span>
+            <span>Gestione Personale</span>
+          </a>
+          <a class="nav-item ${activeTab === 'permissions_matrix' ? 'active' : ''}" data-tab="permissions_matrix">
+            <span class="nav-icon">⚙️</span>
+            <span>Matrice Permessi</span>
+          </a>
+          <a class="nav-item ${activeTab === 'settings' ? 'active' : ''}" data-tab="settings">
+            <span class="nav-icon">🛠️</span>
+            <span>Impostazioni Brand</span>
+          </a>
+        ` : ''}
+
+      </nav>
+
+      <div class="sidebar-footer" style="padding: 16px; border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 10px; cursor: pointer;" id="btn-open-profile-modal">
+          <div style="font-size: 1.5rem;">${currentUser.avatar || '👤'}</div>
+          <div style="line-height: 1.2;">
+            <div style="font-weight: 700; font-size: 0.85rem; color: #fff;">${currentUser.name}</div>
+            <div style="font-size: 0.7rem; color: var(--accent-cyan); font-weight: 600;">
+              ${currentUser.role === 'ADMIN' ? 'AMMINISTRATORE' : (roleLabels[currentUser.role] || currentUser.role)}
             </div>
-            <div style="font-size: 0.75rem; color: var(--accent-cyan); font-weight: 600;">
-              Codice: ${user.username} (${user.role})
-            </div>
           </div>
         </div>
 
-        <div style="display: flex; gap: 6px; margin-top: 10px;">
-          <button id="btn-open-profile-modal" class="btn btn-secondary" style="flex: 1; padding: 6px 8px; font-size: 0.75rem;">
-            ✏️ Credenziali
-          </button>
-          <button id="btn-logout" class="btn btn-secondary" style="padding: 6px 10px; font-size: 0.75rem; color: var(--accent-rose);">
-            🚪 Esci
-          </button>
-        </div>
-      </div>
-
-      <div class="nav-group">
-        <div style="font-size: 0.75rem; color: var(--text-dim); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; padding-left: 8px;">
-          Menu Principale
-        </div>
-        ${navItems.map(item => `
-          <div class="nav-item ${item.id === activeTab ? 'active' : ''}" data-tab="${item.id}">
-            <span>${item.icon}</span>
-            <span>${item.label}</span>
-          </div>
-        `).join('')}
-      </div>
-
-      <div style="margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border-subtle); font-size: 0.75rem; color: var(--text-dim); text-align: center;">
-        Chip HW: <strong>ESP32-C6</strong><br>Firmware v2.1.0 (Wi-Fi 6 + BLE)
+        <button id="btn-logout" title="Disconnetti" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--accent-rose);">
+          🚪
+        </button>
       </div>
     </aside>
   `;

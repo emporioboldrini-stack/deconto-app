@@ -1,13 +1,9 @@
 import { emailService } from '../services/emailService.js';
 
 /**
- * DECONTO IoT System - Master Database Engine v10 (Dual Persistence: LocalStorage + IndexedDB)
- * 
- * GARANZIA DI PERSISTENZA:
- * 1. Utilizza una chiave fissa ed immutabile DECONTO_MASTER_STORE_PERSISTENT.
- * 2. Pulisce ed elimina le vecchie chiavi legacy dopo la prima migrazione per evitare sovrascritture.
- * 3. Implementa un backup nativo su IndexedDB per proteggere i dati anche se il localStorage del browser viene svuotato.
- * 4. Gestisce la quota di memoria comprimendo i log e garantendo la conservazione di utenti, clienti e crediti.
+ * DECONTO IoT System - Master Database Engine v11
+ * Supporta 3 Anagrafiche Indipendenti (Clienti, Parco Macchine, Schede Deconto)
+ * ed il Modulo Assemblatore per l'associazione/riassegnazione dinamica 1-Click.
  */
 
 const MASTER_STORAGE_KEY = 'DECONTO_MASTER_STORE_PERSISTENT';
@@ -102,13 +98,15 @@ const initialData = {
     { id: 'cli_1', name: 'Bar Milano Central', refPerson: 'Mario Rossi', phone: '+39 02 5551234', address: 'Via Roma 12, Milano', city: 'Milano', status: 'ACTIVE' },
     { id: 'cli_2', name: 'Ristorante La Perla', refPerson: 'Elena Neri', phone: '+39 06 7778899', address: 'Corso Italia 45, Roma', city: 'Roma', status: 'ACTIVE' },
     { id: 'cli_3', name: 'Studio Legale Brambilla', refPerson: 'Avv. Brambilla', phone: '+39 02 4443322', address: 'Via Montenapoleone 8, Milano', city: 'Milano', status: 'WARNING' },
-    { id: 'cli_4', name: 'Officina Meccanica Conti', refPerson: 'Luigi Conti', phone: '+39 011 998877', address: 'Via Garibaldi 102, Torino', city: 'Torino', status: 'ACTIVE' }
+    { id: 'cli_4', name: 'Officina Meccanica Conti', refPerson: 'Luigi Conti', phone: '+39 011 998877', address: 'Via Garibaldi 102, Torino', city: 'Torino', status: 'ACTIVE' },
+    { id: 'cli_5', name: 'Hotel Bellavista', refPerson: 'Stefano Bellini', phone: '+39 051 889900', address: 'Piazza Maggiore 3, Bologna', city: 'Bologna', status: 'ACTIVE' }
   ],
   machines: [
-    { id: 'mc_1', serialNumber: 'SN-MC-2026-9912', model: 'DeLonghi Pod Professional 1G', clientId: 'cli_1', installDate: '2025-11-10' },
-    { id: 'mc_2', serialNumber: 'SN-MC-2026-8843', model: 'Faber Slot Plast Single', clientId: 'cli_2', installDate: '2026-01-15' },
-    { id: 'mc_3', serialNumber: 'SN-MC-2026-7711', model: 'Didiesse Frog Revolution', clientId: 'cli_3', installDate: '2026-02-20' },
-    { id: 'mc_4', serialNumber: 'SN-MC-2026-4409', model: 'Spinel Pinocchio Professional', clientId: 'cli_4', installDate: '2026-03-05' }
+    { id: 'mc_1', serialNumber: 'SN-MC-2026-9912', brand: 'DeLonghi', model: 'DeLonghi Pod Professional 1G', clientId: 'cli_1', installDate: '2025-11-10', status: 'INSTALLED' },
+    { id: 'mc_2', serialNumber: 'SN-MC-2026-8843', brand: 'Faber', model: 'Faber Slot Plast Single', clientId: 'cli_2', installDate: '2026-01-15', status: 'INSTALLED' },
+    { id: 'mc_3', serialNumber: 'SN-MC-2026-7711', brand: 'Didiesse', model: 'Didiesse Frog Revolution', clientId: 'cli_3', installDate: '2026-02-20', status: 'INSTALLED' },
+    { id: 'mc_4', serialNumber: 'SN-MC-2026-4409', brand: 'Spinel', model: 'Spinel Pinocchio Professional', clientId: 'cli_4', installDate: '2026-03-05', status: 'INSTALLED' },
+    { id: 'mc_5', serialNumber: 'SN-MC-2026-5500', brand: 'Grimac', model: 'Grimac Terry Opus 1', clientId: null, installDate: null, status: 'STOCK' }
   ],
   decontoBoards: [
     {
@@ -172,7 +170,7 @@ const initialData = {
       macAddress: 'C6:3F:8A:44:99:01',
       machineId: 'mc_4',
       version: 'BASIC',
-      remainingCredits: 200,
+      remainingCredits: 198,
       lowStockThreshold: 20,
       relayStatus: 'CLOSED_OK',
       firmwareVersion: 'v2.1.0-ESP32-C6',
@@ -181,6 +179,24 @@ const initialData = {
       machineExtractions: 1241,
       lifetimeExtractions: 3501,
       avgDailyCoffees: 9.1,
+      lastSyncDate: new Date().toISOString()
+    },
+    {
+      id: 'board_7700',
+      shortCode: '7700',
+      hwSerial: 'DC-HW-5500',
+      macAddress: 'C6:3F:8A:55:77:00',
+      machineId: null,
+      version: 'PRO',
+      remainingCredits: 500,
+      lowStockThreshold: 20,
+      relayStatus: 'CLOSED_OK',
+      firmwareVersion: 'v2.1.0-ESP32-C6',
+      isOnlineWifi: false,
+      rssi: -70,
+      machineExtractions: 0,
+      lifetimeExtractions: 0,
+      avgDailyCoffees: 0,
       lastSyncDate: new Date().toISOString()
     }
   ],
@@ -197,9 +213,6 @@ class DecontoDatabase {
     this.initIndexedDB();
   }
 
-  /**
-   * Inizializza il backup secondario IndexedDB del browser
-   */
   initIndexedDB() {
     try {
       const request = indexedDB.open('DecontoDB_Vault', 1);
@@ -227,14 +240,12 @@ class DecontoDatabase {
 
   loadData() {
     try {
-      // 1. Legge dal Master Store Primario
       let storedRaw = localStorage.getItem(MASTER_STORAGE_KEY);
       let parsedData = null;
 
       if (storedRaw) {
         parsedData = JSON.parse(storedRaw);
       } else {
-        // 2. MIGRAZIONE LEGACY (scansiona le vecchie chiavi se il master non esiste)
         for (const legacyKey of LEGACY_KEYS) {
           const legacyRaw = localStorage.getItem(legacyKey);
           if (legacyRaw) {
@@ -247,12 +258,7 @@ class DecontoDatabase {
       }
 
       if (parsedData) {
-        // Struttura difensiva per assicurare che nessun campo sia undefined
         if (!parsedData.settings) parsedData.settings = initialData.settings;
-        if (parsedData.settings.gasScriptUrl === undefined) parsedData.settings.gasScriptUrl = '';
-        if (parsedData.settings.brevoApiKey === undefined) parsedData.settings.brevoApiKey = '';
-        if (parsedData.settings.brevoSenderEmail === undefined) parsedData.settings.brevoSenderEmail = '';
-
         if (!parsedData.roleLabels) parsedData.roleLabels = initialData.roleLabels;
         if (!parsedData.permissions) parsedData.permissions = initialData.permissions;
         if (!parsedData.emailLogs) parsedData.emailLogs = [];
@@ -275,7 +281,6 @@ class DecontoDatabase {
           else if (u.role === 'ADMIN') u.avatar = '👨‍💼';
         });
 
-        // Pulisce le vecchie chiavi legacy dal browser per evitare conflitti futuri
         LEGACY_KEYS.forEach(k => {
           try { localStorage.removeItem(k); } catch(e) {}
         });
@@ -285,7 +290,6 @@ class DecontoDatabase {
       }
     } catch (e) {}
 
-    // Inizializzazione dati di fabbrica se primo avvio assoluto
     this.saveData(initialData);
     return initialData;
   }
@@ -297,7 +301,6 @@ class DecontoDatabase {
       localStorage.setItem(MASTER_STORAGE_KEY, payload);
       this.syncToIndexedDB();
     } catch (e) {
-      // In caso di errore quota (es. immagini troppo grandi), rimuove temporaneamente i log vecchi per salvare crediti ed utenti
       try {
         if (this.data.coffeeLogs && this.data.coffeeLogs.length > 50) {
           this.data.coffeeLogs = this.data.coffeeLogs.slice(0, 50);
@@ -307,27 +310,11 @@ class DecontoDatabase {
     }
   }
 
-  getSettings() {
-    return this.data.settings || initialData.settings;
-  }
+  getSettings() { return this.data.settings || initialData.settings; }
+  updateSettings(newSettings) { this.data.settings = { ...this.getSettings(), ...newSettings }; this.saveData(); }
 
-  updateSettings(newSettings) {
-    this.data.settings = {
-      ...this.getSettings(),
-      ...newSettings
-    };
-    this.saveData();
-  }
-
-  getRoleLabels() {
-    return this.data.roleLabels || initialData.roleLabels;
-  }
-
-  updateRoleLabel(roleKey, newLabel) {
-    if (!this.data.roleLabels) this.data.roleLabels = { ...initialData.roleLabels };
-    this.data.roleLabels[roleKey] = newLabel.trim();
-    this.saveData();
-  }
+  getRoleLabels() { return this.data.roleLabels || initialData.roleLabels; }
+  updateRoleLabel(roleKey, newLabel) { if (!this.data.roleLabels) this.data.roleLabels = { ...initialData.roleLabels }; this.data.roleLabels[roleKey] = newLabel.trim(); this.saveData(); }
 
   loadSession() {
     try {
@@ -340,11 +327,8 @@ class DecontoDatabase {
   saveSession(user) {
     this.currentUser = user;
     try {
-      if (user) {
-        localStorage.setItem(MASTER_SESSION_KEY, JSON.stringify(user));
-      } else {
-        localStorage.removeItem(MASTER_SESSION_KEY);
-      }
+      if (user) localStorage.setItem(MASTER_SESSION_KEY, JSON.stringify(user));
+      else localStorage.removeItem(MASTER_SESSION_KEY);
     } catch (e) {}
   }
 
@@ -365,127 +349,16 @@ class DecontoDatabase {
     }
 
     const user = this.data.users.find(x => String(x.username).trim() === u && String(x.password).trim() === p);
-    if (!user) {
-      throw new Error('Credenziali non valide. Inserisci il tuo Nome Utente e Password.');
-    }
-
-    if (user.status === 'DISABLED') {
-      throw new Error('Questo account è stato disattivato dall\'Amministratore.');
-    }
+    if (!user) throw new Error('Credenziali non valide.');
+    if (user.status === 'DISABLED') throw new Error('Account disattivato.');
 
     const sessionUser = { id: user.id, username: user.username, name: user.name, role: user.role, email: user.email, avatar: user.avatar };
     this.saveSession(sessionUser);
     return sessionUser;
   }
 
-  logout() {
-    this.saveSession(null);
-  }
-
-  getCurrentUser() {
-    return this.currentUser;
-  }
-
-  addUser(userData) {
-    const existing = this.data.users.find(u => u.username.toLowerCase() === userData.username.trim().toLowerCase());
-    if (existing) {
-      throw new Error(`Il nome utente "${userData.username}" è già in uso.`);
-    }
-
-    const role = userData.role || 'UFFICIO';
-    const avatar = role === 'UFFICIO' ? '👩‍💻' : (role === 'ADR' ? '🚚' : '👨‍💼');
-
-    const newUser = {
-      id: 'usr_' + Date.now(),
-      username: userData.username.trim(),
-      password: userData.password.trim(),
-      name: userData.name.trim(),
-      role: role,
-      email: userData.email ? userData.email.trim() : `${userData.username.trim()}@deconto.it`,
-      phone: userData.phone ? userData.phone.trim() : '',
-      status: 'ACTIVE',
-      avatar: avatar,
-      createdAt: new Date().toISOString().split('T')[0]
-    };
-
-    this.data.users.push(newUser);
-    this.saveData();
-
-    try {
-      emailService.sendWelcomeEmail(newUser);
-    } catch(e) {}
-
-    return newUser;
-  }
-
-  updateUser(userId, updatedData) {
-    const user = this.data.users.find(u => u.id === userId);
-    if (!user) throw new Error('Utente non trovato.');
-
-    const oldRole = user.role;
-
-    if (updatedData.name) user.name = updatedData.name.trim();
-    if (updatedData.username) user.username = updatedData.username.trim();
-    if (updatedData.email !== undefined) user.email = updatedData.email.trim();
-    if (updatedData.phone !== undefined) user.phone = updatedData.phone.trim();
-    if (updatedData.password) user.password = updatedData.password.trim();
-    if (updatedData.status) user.status = updatedData.status;
-
-    let roleChanged = false;
-    if (updatedData.role && updatedData.role !== oldRole) {
-      user.role = updatedData.role;
-      user.avatar = (user.role === 'UFFICIO') ? '👩‍💻' : (user.role === 'ADR' ? '🚚' : '👨‍💼');
-      roleChanged = true;
-    }
-
-    this.saveData();
-
-    if (this.currentUser && this.currentUser.id === userId) {
-      this.saveSession({
-        ...this.currentUser,
-        name: user.name,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        avatar: user.avatar
-      });
-    }
-
-    if (roleChanged) {
-      try {
-        emailService.sendRoleUpdateEmail(user, oldRole, user.role);
-      } catch(e) {}
-    }
-
-    return user;
-  }
-
-  deleteUser(userId) {
-    const user = this.data.users.find(u => u.id === userId);
-    if (user && user.username === '001') {
-      throw new Error('Impossibile eliminare l\'account Amministratore Principale (001).');
-    }
-
-    this.data.users = this.data.users.filter(u => u.id !== userId);
-    this.saveData();
-  }
-
-  getPermissions() {
-    return this.data.permissions || initialData.permissions;
-  }
-
-  updatePermissions(newPermissions) {
-    this.data.permissions = newPermissions;
-    this.saveData();
-  }
-
-  hasPermission(permissionName) {
-    if (!this.currentUser) return false;
-    if (this.currentUser.role === 'ADMIN') return true;
-
-    const rolePerms = this.getPermissions()[this.currentUser.role];
-    return rolePerms ? !!rolePerms[permissionName] : false;
-  }
+  logout() { this.saveSession(null); }
+  getCurrentUser() { return this.currentUser; }
 
   getUsers() { return this.data.users; }
   getClients() { return this.data.clients; }
@@ -495,6 +368,176 @@ class DecontoDatabase {
   getCoffeeLogs() { return this.data.coffeeLogs; }
   getEmailLogs() { return this.data.emailLogs || []; }
   getBackupLogs() { return this.data.backupLogs; }
+
+  // --- 🏢 ANAGRAFICA CLIENTE (CRUD INDIPENDENTE) ---
+  addClient(data) {
+    if (!this.hasPermission('canCreateClients')) throw new Error('Permesso negato.');
+    const newClient = {
+      id: 'cli_' + Date.now(),
+      name: data.name.trim(),
+      refPerson: data.refPerson ? data.refPerson.trim() : 'Referente',
+      phone: data.phone ? data.phone.trim() : '+39 ',
+      email: data.email ? data.email.trim() : '',
+      address: data.address ? data.address.trim() : '',
+      city: data.city ? data.city.trim() : '',
+      status: 'ACTIVE'
+    };
+    this.data.clients.unshift(newClient);
+    this.saveData();
+    return newClient;
+  }
+
+  updateClient(clientId, data) {
+    if (!this.hasPermission('canEditClients')) throw new Error('Permesso negato.');
+    const client = this.data.clients.find(c => c.id === clientId);
+    if (!client) throw new Error('Cliente non trovato.');
+
+    if (data.name) client.name = data.name.trim();
+    if (data.refPerson !== undefined) client.refPerson = data.refPerson.trim();
+    if (data.phone !== undefined) client.phone = data.phone.trim();
+    if (data.email !== undefined) client.email = data.email.trim();
+    if (data.city !== undefined) client.city = data.city.trim();
+    if (data.address !== undefined) client.address = data.address.trim();
+    if (data.status) client.status = data.status;
+
+    this.saveData();
+    return client;
+  }
+
+  deleteClient(clientId) {
+    if (!this.hasPermission('canDeleteClients')) throw new Error('Permesso negato.');
+    // Scollega eventuali macchine assegnate a questo cliente
+    this.data.machines.forEach(m => {
+      if (m.clientId === clientId) {
+        m.clientId = null;
+        m.status = 'STOCK';
+      }
+    });
+    this.data.clients = this.data.clients.filter(c => c.id !== clientId);
+    this.saveData();
+  }
+
+  // --- ☕ ANAGRAFICA PARCO MACCHINE (CRUD INDIPENDENTE) ---
+  addMachine(data) {
+    if (!this.hasPermission('canCreateClients')) throw new Error('Permesso negato.');
+    const newMachine = {
+      id: 'mc_' + Date.now(),
+      serialNumber: data.serialNumber ? data.serialNumber.trim() : `SN-MC-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+      brand: data.brand ? data.brand.trim() : 'Didiesse',
+      model: data.model ? data.model.trim() : 'Frog Revolution',
+      clientId: data.clientId || null,
+      installDate: data.clientId ? (data.installDate || new Date().toISOString().split('T')[0]) : null,
+      status: data.clientId ? 'INSTALLED' : 'STOCK'
+    };
+    this.data.machines.unshift(newMachine);
+    this.saveData();
+    return newMachine;
+  }
+
+  updateMachine(machineId, data) {
+    if (!this.hasPermission('canEditClients')) throw new Error('Permesso negato.');
+    const machine = this.data.machines.find(m => m.id === machineId);
+    if (!machine) throw new Error('Macchina non trovata.');
+
+    if (data.serialNumber) machine.serialNumber = data.serialNumber.trim();
+    if (data.brand !== undefined) machine.brand = data.brand.trim();
+    if (data.model) machine.model = data.model.trim();
+    if (data.clientId !== undefined) {
+      machine.clientId = data.clientId || null;
+      machine.status = machine.clientId ? 'INSTALLED' : 'STOCK';
+      if (machine.clientId && !machine.installDate) {
+        machine.installDate = new Date().toISOString().split('T')[0];
+      }
+    }
+
+    this.saveData();
+    return machine;
+  }
+
+  deleteMachine(machineId) {
+    if (!this.hasPermission('canDeleteClients')) throw new Error('Permesso negato.');
+    // Scollega eventuali schede Deconto collegate a questa macchina
+    this.data.decontoBoards.forEach(b => {
+      if (b.machineId === machineId) {
+        b.machineId = null;
+      }
+    });
+    this.data.machines = this.data.machines.filter(m => m.id !== machineId);
+    this.saveData();
+  }
+
+  // --- 📟 ANAGRAFICA SCHEDE DECONTO (CRUD INDIPENDENTE) ---
+  addBoard(data) {
+    if (!this.hasPermission('canCreateClients')) throw new Error('Permesso negato.');
+    const shortCode = data.shortCode ? data.shortCode.trim() : `${Math.floor(1000 + Math.random() * 9000)}`;
+    const newBoard = {
+      id: 'board_' + shortCode,
+      shortCode: shortCode,
+      hwSerial: data.hwSerial ? data.hwSerial.trim() : `DC-HW-${Math.floor(1000 + Math.random() * 9000)}`,
+      macAddress: data.macAddress ? data.macAddress.trim() : `C6:3F:8A:${Math.floor(10 + Math.random() * 89)}:${shortCode.substring(0,2)}:${shortCode.substring(2,4)}`,
+      machineId: data.machineId || null,
+      version: data.version || 'BASIC',
+      remainingCredits: parseInt(data.remainingCredits || 200, 10),
+      lowStockThreshold: parseInt(data.lowStockThreshold || 20, 10),
+      relayStatus: 'CLOSED_OK',
+      firmwareVersion: 'v2.1.0-ESP32-C6',
+      isOnlineWifi: false,
+      rssi: -65,
+      machineExtractions: 0,
+      lifetimeExtractions: 0,
+      avgDailyCoffees: 10.0,
+      lastSyncDate: new Date().toISOString()
+    };
+    this.data.decontoBoards.unshift(newBoard);
+    this.saveData();
+    return newBoard;
+  }
+
+  updateBoard(boardId, data) {
+    if (!this.hasPermission('canEditClients')) throw new Error('Permesso negato.');
+    const board = this.data.decontoBoards.find(b => b.id === boardId || b.shortCode === boardId);
+    if (!board) throw new Error('Scheda Deconto non trovata.');
+
+    if (data.shortCode) board.shortCode = data.shortCode.trim();
+    if (data.hwSerial) board.hwSerial = data.hwSerial.trim();
+    if (data.version) board.version = data.version;
+    if (data.machineId !== undefined) board.machineId = data.machineId || null;
+    if (data.remainingCredits !== undefined && data.remainingCredits !== '') {
+      board.remainingCredits = parseInt(data.remainingCredits, 10);
+      if (board.remainingCredits > 0) board.relayStatus = 'CLOSED_OK';
+    }
+    if (data.lowStockThreshold !== undefined && data.lowStockThreshold !== '') {
+      board.lowStockThreshold = parseInt(data.lowStockThreshold, 10);
+    }
+
+    this.saveData();
+    return board;
+  }
+
+  deleteBoard(boardId) {
+    if (!this.hasPermission('canDeleteClients')) throw new Error('Permesso negato.');
+    this.data.decontoBoards = this.data.decontoBoards.filter(b => b.id !== boardId && b.shortCode !== boardId);
+    this.saveData();
+  }
+
+  // --- 🔗 MODULO ASSEMBLATORE (ASSOCCIA/RIASSEGNA 1-CLICK) ---
+  linkEntities(boardId, machineId, clientId) {
+    if (boardId) {
+      const board = this.data.decontoBoards.find(b => b.id === boardId || b.shortCode === boardId);
+      if (board) board.machineId = machineId || null;
+    }
+
+    if (machineId) {
+      const machine = this.data.machines.find(m => m.id === machineId);
+      if (machine) {
+        machine.clientId = clientId || null;
+        machine.status = clientId ? 'INSTALLED' : 'STOCK';
+        if (clientId && !machine.installDate) machine.installDate = new Date().toISOString().split('T')[0];
+      }
+    }
+
+    this.saveData();
+  }
 
   getBoardFullDetails(shortCodeOrId) {
     const board = this.data.decontoBoards.find(b => b.shortCode === shortCodeOrId || b.id === shortCodeOrId);
@@ -506,105 +549,6 @@ class DecontoDatabase {
     const coffees = this.data.coffeeLogs.filter(c => c.boardId === board.id);
 
     return { board, machine, client, refills, coffees };
-  }
-
-  addClient(newClientData) {
-    if (!this.hasPermission('canCreateClients')) {
-      throw new Error('Non disponi dei permessi per creare nuovi clienti.');
-    }
-
-    const newClient = {
-      id: 'cli_' + Date.now(),
-      name: newClientData.name,
-      refPerson: newClientData.refPerson || 'Referente',
-      phone: newClientData.phone || '+39 ',
-      address: newClientData.address || '',
-      city: newClientData.city || '',
-      status: 'ACTIVE'
-    };
-    this.data.clients.unshift(newClient);
-
-    if (newClientData.machineModel) {
-      const newMachine = {
-        id: 'mc_' + Date.now(),
-        serialNumber: newClientData.machineSerial || `SN-MC-2026-${Math.floor(1000 + Math.random() * 9000)}`,
-        model: newClientData.machineModel,
-        clientId: newClient.id,
-        installDate: new Date().toISOString().split('T')[0]
-      };
-      this.data.machines.unshift(newMachine);
-
-      const shortCode = newClientData.shortCode || `${Math.floor(1000 + Math.random() * 9000)}`;
-      const newBoard = {
-        id: 'board_' + shortCode,
-        shortCode: shortCode,
-        hwSerial: `DC-HW-${Math.floor(1000 + Math.random() * 9000)}`,
-        macAddress: `C6:3F:8A:${Math.floor(10 + Math.random() * 89)}:${shortCode.substring(0,2)}:${shortCode.substring(2,4)}`,
-        machineId: newMachine.id,
-        version: newClientData.boardVersion || 'BASIC',
-        remainingCredits: parseInt(newClientData.initialCredits || 200, 10),
-        lowStockThreshold: 20,
-        relayStatus: 'CLOSED_OK',
-        firmwareVersion: 'v2.1.0-ESP32-C6',
-        isOnlineWifi: false,
-        rssi: -65,
-        machineExtractions: 0,
-        lifetimeExtractions: 0,
-        avgDailyCoffees: 10.0,
-        lastSyncDate: new Date().toISOString()
-      };
-      this.data.decontoBoards.unshift(newBoard);
-    }
-
-    this.saveData();
-    return newClient;
-  }
-
-  updateClientAndMachine(clientId, updateData) {
-    if (!this.hasPermission('canEditClients')) {
-      throw new Error('Non disponi dei permessi per modificare le schede clienti.');
-    }
-
-    const client = this.data.clients.find(c => c.id === clientId);
-    if (!client) throw new Error('Cliente non trovato.');
-
-    if (updateData.name) client.name = updateData.name.trim();
-    if (updateData.refPerson) client.refPerson = updateData.refPerson.trim();
-    if (updateData.phone) client.phone = updateData.phone.trim();
-    if (updateData.city !== undefined) client.city = updateData.city.trim();
-    if (updateData.address !== undefined) client.address = updateData.address.trim();
-
-    const machine = this.data.machines.find(m => m.clientId === clientId);
-    if (machine) {
-      if (updateData.machineModel) machine.model = updateData.machineModel.trim();
-      if (updateData.machineSerial) machine.serialNumber = updateData.machineSerial.trim();
-    }
-
-    if (machine) {
-      const board = this.data.decontoBoards.find(b => b.machineId === machine.id);
-      if (board) {
-        if (updateData.shortCode) board.shortCode = updateData.shortCode.trim();
-        if (updateData.remainingCredits !== undefined && updateData.remainingCredits !== '') {
-          board.remainingCredits = parseInt(updateData.remainingCredits, 10);
-          if (board.remainingCredits > 0) board.relayStatus = 'CLOSED_OK';
-        }
-        if (updateData.lowStockThreshold !== undefined && updateData.lowStockThreshold !== '') {
-          board.lowStockThreshold = parseInt(updateData.lowStockThreshold, 10);
-        }
-        if (updateData.boardVersion) board.version = updateData.boardVersion;
-      }
-    }
-
-    this.saveData();
-    return client;
-  }
-
-  deleteClient(clientId) {
-    if (!this.hasPermission('canDeleteClients')) {
-      throw new Error('Non disponi dei permessi per eliminare clienti.');
-    }
-    this.data.clients = this.data.clients.filter(c => c.id !== clientId);
-    this.saveData();
   }
 
   performRefill({ boardShortCode, credits, method, operatorId, tokenOtp }) {
@@ -681,24 +625,6 @@ class DecontoDatabase {
       csv += `${log.id},${code},"${clientName}",${mcSerial},"${mcModel}",${log.timestamp},${log.durationSeconds},${log.groupId}\n`;
     });
     return csv;
-  }
-
-  exportDatabaseJSON() {
-    return JSON.stringify(this.data, null, 2);
-  }
-
-  importDatabaseJSON(jsonString) {
-    try {
-      const parsed = JSON.parse(jsonString);
-      if (!parsed.decontoBoards || !parsed.users) {
-        throw new Error('File JSON del database non valido.');
-      }
-      this.data = parsed;
-      this.saveData();
-      return true;
-    } catch (err) {
-      throw new Error(`Impossibile ripristinare il database: ${err.message}`);
-    }
   }
 
   triggerGitHubBackup() {
