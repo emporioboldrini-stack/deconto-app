@@ -4,12 +4,12 @@ import { emailService } from '../services/emailService.js';
  * DECONTO IoT System - Core Database Engine (Master Store)
  * Garantisce la persistenza assoluta dei dati (utenti, crediti, macchine e log)
  * SENZA MAI RESETTARE IL DATABASE tra logout, login e riavvii.
+ * Integrato con Servizio Email Reale Gratuito via Google Apps Script (GAS).
  */
 
 const MASTER_STORAGE_KEY = 'DECONTO_APP_MASTER_DATABASE_V1';
 const MASTER_SESSION_KEY = 'DECONTO_APP_MASTER_SESSION_V1';
 
-// Chiavi storiche da recuperare in caso di migrazione
 const LEGACY_STORAGE_KEYS = [
   'DECONTO_DB_V9', 'DECONTO_DB_V8', 'DECONTO_DB_V7', 
   'DECONTO_DB_V6', 'DECONTO_DB_V5', 'DECONTO_DB_V4', 
@@ -21,9 +21,7 @@ const initialData = {
     customLogoUrl: null,
     brandTitle: 'DECONTO',
     brandSubtitle: 'IoT Vending System',
-    emailjsServiceId: '',
-    emailjsTemplateId: '',
-    emailjsPublicKey: ''
+    gasScriptUrl: '' // URL Endpoint Web App Google Apps Script
   },
 
   roleLabels: {
@@ -194,14 +192,12 @@ class DecontoDatabase {
 
   loadData() {
     try {
-      // 1. Controlla lo Storage Master Principale
       let storedRaw = localStorage.getItem(MASTER_STORAGE_KEY);
       let parsedData = null;
 
       if (storedRaw) {
         parsedData = JSON.parse(storedRaw);
       } else {
-        // 2. MOTORE DI MIGRAZIONE: Se lo Storage Master non esiste ancora, cerca e recupera i dati dalle vecchie chiavi!
         for (const legacyKey of LEGACY_STORAGE_KEYS) {
           const legacyRaw = localStorage.getItem(legacyKey);
           if (legacyRaw) {
@@ -215,6 +211,7 @@ class DecontoDatabase {
 
       if (parsedData) {
         if (!parsedData.settings) parsedData.settings = initialData.settings;
+        if (parsedData.settings.gasScriptUrl === undefined) parsedData.settings.gasScriptUrl = '';
         if (!parsedData.roleLabels) parsedData.roleLabels = initialData.roleLabels;
         if (!parsedData.permissions) parsedData.permissions = initialData.permissions;
         if (!parsedData.emailLogs) parsedData.emailLogs = [];
@@ -225,20 +222,17 @@ class DecontoDatabase {
           }
         }
 
-        // Assicura che l'icona avatar rispecchi sempre il ruolo
         parsedData.users.forEach(u => {
           if (u.role === 'UFFICIO') u.avatar = '👩‍💻';
           else if (u.role === 'ADR') u.avatar = '🚚';
           else if (u.role === 'ADMIN') u.avatar = '👨‍💼';
         });
 
-        // Salva immediatamente nel Master Storage permanente
         this.saveData(parsedData);
         return parsedData;
       }
     } catch (e) {}
 
-    // Inizializzazione pulita
     this.saveData(initialData);
     return initialData;
   }
@@ -352,9 +346,9 @@ class DecontoDatabase {
     };
 
     this.data.users.push(newUser);
-    this.saveData(); // SALVATAGGIO PERMANENTE NEL MASTER STORE
+    this.saveData();
 
-    // INVIA EMAIL AUTOMATICA DI BENVENUTO
+    // INVIA EMAIL AUTOMATICA DI BENVENUTO VIA GAS
     try {
       emailService.sendWelcomeEmail(newUser);
     } catch(e) {}
@@ -382,7 +376,7 @@ class DecontoDatabase {
       roleChanged = true;
     }
 
-    this.saveData(); // SALVATAGGIO PERMANENTE NEL MASTER STORE
+    this.saveData();
 
     if (this.currentUser && this.currentUser.id === userId) {
       this.saveSession({
@@ -395,7 +389,7 @@ class DecontoDatabase {
       });
     }
 
-    // INVIA EMAIL AUTOMATICA DI NOTIFICA CAMBIO RUOLO / PROMOZIONE
+    // INVIA EMAIL AUTOMATICA DI NOTIFICA CAMBIO RUOLO / PROMOZIONE VIA GAS
     if (roleChanged) {
       try {
         emailService.sendRoleUpdateEmail(user, oldRole, user.role);
@@ -573,7 +567,7 @@ class DecontoDatabase {
     };
 
     this.data.refillLogs.unshift(newRefillLog);
-    this.saveData(); // SALVATAGGIO PERMANENTE NEL MASTER STORE
+    this.saveData();
     return { board, newRefillLog };
   }
 
@@ -605,7 +599,7 @@ class DecontoDatabase {
     };
 
     this.data.coffeeLogs.unshift(log);
-    this.saveData(); // SALVATAGGIO PERMANENTE NEL MASTER STORE
+    this.saveData();
 
     return {
       success: true,

@@ -3,11 +3,26 @@ import { db } from '../db/database.js';
 export function renderSettingsPanel() {
   const settings = db.getSettings();
 
+  const gasScriptSnippet = `function doPost(e) {
+  try {
+    var data = JSON.parse(e.postData.contents);
+    MailApp.sendEmail({
+      to: data.to,
+      subject: data.subject,
+      htmlBody: data.htmlBody,
+      body: data.body || "Messaggio Notifica DECONTO IoT System"
+    });
+    return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() })).setMimeType(ContentService.MimeType.JSON);
+  }
+}`;
+
   return `
     <div>
       <div style="margin-bottom: 24px;">
         <h1 style="font-size: 1.8rem; font-weight: 800;">⚙️ Impostazioni Piattaforma & Personalizzazione Brand</h1>
-        <p style="color: var(--text-muted);">Personalizza il logo aziendale, l'intestazione ed il servizio notifica email</p>
+        <p style="color: var(--text-muted);">Personalizza il logo aziendale, l'intestazione ed il servizio notifica email reale via Google Apps Script (GAS)</p>
       </div>
 
       <div class="card-grid" style="grid-template-columns: 1fr 1fr;">
@@ -68,33 +83,48 @@ export function renderSettingsPanel() {
 
       </div>
 
-      <!-- Card 3: Configurazione Servizio Email Reali (Opzionale EmailJS) -->
-      <div class="stat-card" style="margin-top: 24px; padding: 24px;">
-        <h3 style="margin-top: 0; color: var(--accent-green); margin-bottom: 12px;">✉️ Configurazione Invio Reale Email Automatiche (SMTP Web API / EmailJS):</h3>
+      <!-- Card 3: Servizio Notifiche Email Reali (Google Apps Script - GAS) -->
+      <div class="stat-card" style="margin-top: 24px; padding: 24px; border: 1px solid var(--accent-green);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <h3 style="margin: 0; color: var(--accent-green);">✉️ Servizio Notifiche Email Reali Gratuito (Google Apps Script - GAS):</h3>
+          <span class="badge badge-success">100% GRATUITO E SENZA LIMITI</span>
+        </div>
+
         <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">
-          Di default la piattaforma genera i modelli email nel <strong>Registro Notifiche Spedite</strong> e consente l'invio via client di posta (Outlook/Gmail). Per abilitare l'invio completamente automatico in background senza aprire l'app di posta, inserisci qui le chiavi EmailJS.
+          Utilizzando <strong>Google Apps Script (GAS)</strong> come nella conversazione GAS SOMS, l'app invierà email reali direttamente dal tuo account Google/Gmail a qualsiasi indirizzo senza registrare carte o servizi a pagamento.
         </p>
 
-        <form id="settings-emailjs-form" style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 16px; align-items: end;">
-          <div>
-            <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Service ID (EmailJS):</label>
-            <input type="text" id="setting-emailjs-service" value="${settings.emailjsServiceId || ''}" placeholder="Es. service_xyz123" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+        <form id="settings-gas-form" style="margin-bottom: 20px;">
+          <div style="margin-bottom: 16px;">
+            <label style="font-size: 0.85rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 6px;">
+              URL Endpoint Web App Google Apps Script (es. https://script.google.com/macros/s/AKfycb.../exec):
+            </label>
+            <div style="display: flex; gap: 12px;">
+              <input type="url" id="setting-gas-url" value="${settings.gasScriptUrl || ''}" placeholder="https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec" style="flex: 1; padding: 12px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 8px; font-weight: 700; font-family: monospace;">
+              <button type="submit" class="btn btn-success" style="padding: 12px 24px;">
+                💾 Salva URL GAS
+              </button>
+            </div>
           </div>
-
-          <div>
-            <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Template ID (EmailJS):</label>
-            <input type="text" id="setting-emailjs-template" value="${settings.emailjsTemplateId || ''}" placeholder="Es. template_abc456" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
-          </div>
-
-          <div>
-            <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Public Key (EmailJS):</label>
-            <input type="text" id="setting-emailjs-key" value="${settings.emailjsPublicKey || ''}" placeholder="Es. user_pubkey789" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
-          </div>
-
-          <button type="submit" class="btn btn-success" style="padding: 10px 20px;">
-            💾 Salva Chiavi EmailJS
-          </button>
         </form>
+
+        <!-- Istruzioni d'uso Google Apps Script -->
+        <div style="background: rgba(16, 185, 129, 0.1); border-left: 4px solid var(--accent-green); padding: 16px; border-radius: 6px;">
+          <h4 style="margin-top: 0; color: var(--accent-green); font-size: 0.95rem;">📋 Istruzioni Rapide per Creare lo Script Google Gratis:</h4>
+          <ol style="font-size: 0.85rem; color: #cbd5e1; margin-bottom: 12px; padding-left: 20px; line-height: 1.6;">
+            <li>Vai su <a href="https://script.google.com" target="_blank" style="color: var(--accent-cyan); font-weight: 700;">script.google.com</a> ed avvia un <strong>Nuovo Progetto</strong>.</li>
+            <li>Incolla il seguente codice di invio email nel file <code>Codice.gs</code>:</li>
+          </ol>
+
+          <pre style="background: #0f172a; color: #38bdf8; padding: 12px; border-radius: 6px; font-size: 0.8rem; font-family: monospace; overflow-x: auto; border: 1px solid var(--border-subtle); margin-bottom: 12px;">${gasScriptSnippet}</pre>
+
+          <div style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.6;">
+            3. Clicca su <strong>Esegui Deploy</strong> &rarr; <strong>Nuova Distribuzione</strong> &rarr; Seleziona tipo <em>"Web App"</em>.<br>
+            4. Imposta <strong>Chi ha accesso</strong> su <em>"Chiunque" (Anyone)</em> e distribuisci.<br>
+            5. Copia l'URL Web prodotto ed incollalo nel box sopra per attivare l'invio reale istantaneo!
+          </div>
+        </div>
+
       </div>
     </div>
   `;

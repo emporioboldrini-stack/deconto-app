@@ -273,7 +273,7 @@ function attachMainEventListeners() {
     });
   });
 
-  // --- IMPOSTAZIONI: CARICAMENTO LOGO DA PC, SOTTOTITOLO & CHIAVI EMAILJS ---
+  // --- IMPOSTAZIONI: CARICAMENTO LOGO DA PC, SOTTOTITOLO & ENDPOINT GOOGLE APPS SCRIPT (GAS) ---
   const logoFileInput = document.getElementById('setting-logo-file');
   if (logoFileInput) {
     logoFileInput.addEventListener('change', (e) => {
@@ -320,21 +320,14 @@ function attachMainEventListeners() {
     });
   }
 
-  const settingsEmailJsForm = document.getElementById('settings-emailjs-form');
-  if (settingsEmailJsForm) {
-    settingsEmailJsForm.addEventListener('submit', (e) => {
+  const settingsGasForm = document.getElementById('settings-gas-form');
+  if (settingsGasForm) {
+    settingsGasForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      const service = document.getElementById('setting-emailjs-service').value.trim();
-      const template = document.getElementById('setting-emailjs-template').value.trim();
-      const key = document.getElementById('setting-emailjs-key').value.trim();
+      const gasUrl = document.getElementById('setting-gas-url').value.trim();
 
-      db.updateSettings({
-        emailjsServiceId: service,
-        emailjsTemplateId: template,
-        emailjsPublicKey: key
-      });
-
-      alert('✅ Configurazioni EmailJS salvate con successo!');
+      db.updateSettings({ gasScriptUrl: gasUrl });
+      alert('✅ Endpoint Web App Google Apps Script (GAS) salvato con successo!');
       renderApp();
     });
   }
@@ -442,7 +435,7 @@ function attachMainEventListeners() {
 
   const btnSaveNewUser = document.getElementById('btn-save-new-user');
   if (btnSaveNewUser) {
-    btnSaveNewUser.addEventListener('click', () => {
+    btnSaveNewUser.addEventListener('click', async () => {
       const username = document.getElementById('new-user-username').value.trim();
       const password = document.getElementById('new-user-password').value.trim();
       const name = document.getElementById('new-user-name').value.trim();
@@ -457,7 +450,7 @@ function attachMainEventListeners() {
 
       try {
         const newUser = db.addUser({ username, password, name, role, email, phone });
-        alert(`✅ Utente dipendente "${name}" (Codice ${username}) salvato PERMANENTEMENTE nel database!\n\n✉️ Notifica Email creata per ${newUser.email}`);
+        alert(`✅ Utente dipendente "${name}" (Codice ${username}) salvato PERMANENTEMENTE nel database!\n\n✉️ Notifica Email avviata tramite Google Apps Script per ${newUser.email}`);
         renderApp();
       } catch (err) {
         alert(`Errore: ${err.message}`);
@@ -481,7 +474,7 @@ function attachMainEventListeners() {
 
   const editStaffForm = document.getElementById('edit-staff-form');
   if (editStaffForm) {
-    editStaffForm.addEventListener('submit', (e) => {
+    editStaffForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const userId = document.getElementById('edit-staff-id').value;
       const username = document.getElementById('edit-staff-username') ? document.getElementById('edit-staff-username').value : undefined;
@@ -502,7 +495,7 @@ function attachMainEventListeners() {
         });
 
         state.editingStaffUserId = null;
-        alert(`✅ Scheda Utente "${updatedUser.name}" salvata PERMANENTEMENTE nel database!\n\n✉️ Notifica Email di cambio ruolo inviata!`);
+        alert(`✅ Scheda Utente "${updatedUser.name}" salvata PERMANENTEMENTE nel database!\n\n✉️ Notifica Email di cambio ruolo avviata via Google Apps Script!`);
         renderApp();
       } catch (err) {
         alert(`Errore: ${err.message}`);

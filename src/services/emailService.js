@@ -3,7 +3,7 @@ import { db } from '../db/database.js';
 class EmailService {
 
   /**
-   * Invia o prepara l'email di benvenuto per un nuovo utente dipendente
+   * Invia email di benvenuto professionale per un nuovo utente dipendente via Google Apps Script (GAS)
    */
   async sendWelcomeEmail(user) {
     const roleLabels = db.getRoleLabels();
@@ -13,7 +13,7 @@ class EmailService {
     const recipientEmail = user.email || `${user.username}@deconto.it`;
     const subject = `👋 Benvenuto nel Team ${settings.brandTitle || 'DECONTO'} - Credenziali di Accesso`;
     
-    const plainTextBody = `Ciao ${user.name},\n\nBenvenuto a bordo nel team per il progetto ${settings.brandTitle || 'DECONTO'}!\n\nRuolo Assegnato: ${roleTitle}\nCodice Accesso: ${user.username}\nPassword: ${user.password || '123456'}\nPiattaforma: https://deconto-app.web.app\n\nBuon lavoro!\nIl Team DECONTO System`;
+    const plainTextBody = `Ciao ${user.name},\n\nBenvenuto a bordo nel team per il progetto ${settings.brandTitle || 'DECONTO'}!\n\nRuolo Assegnato: ${roleTitle}\nCodice Accesso: ${user.username}\nPassword: ${user.password || '123456'}\nPiattaforma Web: https://deconto-app.web.app\n\nBuon lavoro!\nIl Team DECONTO System`;
 
     const htmlBody = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0f172a; color: #f8fafc; padding: 24px; border-radius: 16px; border: 1px solid #334155;">
@@ -52,8 +52,6 @@ class EmailService {
       </div>
     `;
 
-    const mailtoUrl = `mailto:${encodeURIComponent(recipientEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(plainTextBody)}`;
-
     const logRecord = {
       id: 'mail_' + Date.now(),
       type: 'WELCOME_NEW_USER',
@@ -62,23 +60,22 @@ class EmailService {
       subject,
       plainTextBody,
       htmlBody,
-      mailtoUrl,
       timestamp: new Date().toISOString(),
-      status: 'SENT_TO_OUTBOX'
+      status: 'PENDING_GAS_SEND'
     };
 
     if (!db.data.emailLogs) db.data.emailLogs = [];
     db.data.emailLogs.unshift(logRecord);
     db.saveData();
 
-    // Tentativo invio reale via EmailJS se configurato
-    this.trySendRealEmailViaEmailJS(logRecord);
+    // Invio Reale Tramite Servizio Google Apps Script (GAS)
+    await this.sendRealEmailViaGAS(logRecord);
 
     return logRecord;
   }
 
   /**
-   * Invia o prepara l'email di aggiornamento ruolo per un dipendente
+   * Invia email di aggiornamento ruolo per un dipendente via Google Apps Script (GAS)
    */
   async sendRoleUpdateEmail(user, oldRole, newRole) {
     const roleLabels = db.getRoleLabels();
@@ -128,8 +125,6 @@ class EmailService {
       </div>
     `;
 
-    const mailtoUrl = `mailto:${encodeURIComponent(recipientEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(plainTextBody)}`;
-
     const logRecord = {
       id: 'mail_' + Date.now(),
       type: 'ROLE_UPDATED',
@@ -138,49 +133,52 @@ class EmailService {
       subject,
       plainTextBody,
       htmlBody,
-      mailtoUrl,
       timestamp: new Date().toISOString(),
-      status: 'SENT_TO_OUTBOX'
+      status: 'PENDING_GAS_SEND'
     };
 
     if (!db.data.emailLogs) db.data.emailLogs = [];
     db.data.emailLogs.unshift(logRecord);
     db.saveData();
 
-    // Tentativo invio reale via EmailJS
-    this.trySendRealEmailViaEmailJS(logRecord);
+    // Invio Reale Tramite Servizio Google Apps Script (GAS)
+    await this.sendRealEmailViaGAS(logRecord);
 
     return logRecord;
   }
 
   /**
-   * Tenta l'invio reale tramite EmailJS Web API
+   * Invia l'email reale effettuando una richiesta POST al Web Endpoint di Google Apps Script (GAS)
    */
-  async trySendRealEmailViaEmailJS(logRecord) {
+  async sendRealEmailViaGAS(logRecord) {
     const settings = db.getSettings();
-    if (settings.emailjsServiceId && settings.emailjsTemplateId && settings.emailjsPublicKey) {
-      try {
-        const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            service_id: settings.emailjsServiceId,
-            template_id: settings.emailjsTemplateId,
-            user_id: settings.emailjsPublicKey,
-            template_params: {
-              to_email: logRecord.recipientEmail,
-              to_name: logRecord.recipientName,
-              subject: logRecord.subject,
-              message: logRecord.plainTextBody
-            }
-          })
-        });
+    const gasUrl = settings.gasScriptUrl ? settings.gasScriptUrl.trim() : '';
 
-        if (response.ok) {
-          logRecord.status = 'DELIVERED_VIA_EMAILJS';
-          db.saveData();
-        }
-      } catch (e) {}
+    if (!gasUrl) {
+      logRecord.status = 'RECORDED_IN_OUTBOX (Incolla URL Google Apps Script in Impostazioni)';
+      db.saveData();
+      return;
+    }
+
+    try {
+      // Invio HTTP POST a Google Apps Script Web App
+      await fetch(gasUrl, {
+        method: 'POST',
+        mode: 'no-cors', // Necessario per CORS Google Apps Script Redirect
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: logRecord.recipientEmail,
+          subject: logRecord.subject,
+          body: logRecord.plainTextBody,
+          htmlBody: logRecord.htmlBody
+        })
+      });
+
+      logRecord.status = 'SENT_REAL_EMAIL_VIA_GOOGLE_APPS_SCRIPT';
+      db.saveData();
+    } catch (e) {
+      logRecord.status = 'ERROR_SENDING_GAS: ' + e.message;
+      db.saveData();
     }
   }
 }
