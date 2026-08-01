@@ -1,8 +1,11 @@
 import { db } from '../db/database.js';
 
-export function renderHardwareSimulator() {
+export function renderHardwareSimulator(selectedBoardCode = null) {
   const boards = db.getBoards();
-  const defaultBoard = boards[0];
+  const defaultBoard = selectedBoardCode 
+    ? (boards.find(b => b.shortCode === selectedBoardCode) || boards[0])
+    : boards[0];
+
   const details = db.getBoardFullDetails(defaultBoard.shortCode);
 
   return `
@@ -23,15 +26,18 @@ export function renderHardwareSimulator() {
               <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">Chip: ESP32-C6 | Modulo Resinato IP67</div>
             </div>
             
-            <select id="sim-board-select" style="padding: 8px 12px; background: var(--bg-primary); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px; font-weight: 600;">
-              ${boards.map(b => `<option value="${b.shortCode}">Macchina #${b.shortCode} (${b.remainingCredits} caffè)</option>`).join('')}
-            </select>
+            <div>
+              <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Seleziona Macchina / Deconto:</label>
+              <select id="sim-board-select" style="padding: 8px 12px; background: var(--bg-primary); color: var(--text-main); border: 1px solid var(--accent-cyan); border-radius: 6px; font-weight: 700;">
+                ${boards.map(b => `<option value="${b.shortCode}" ${b.shortCode === defaultBoard.shortCode ? 'selected' : ''}>Macchina #${b.shortCode} (${b.remainingCredits} caffè)</option>`).join('')}
+              </select>
+            </div>
           </div>
 
           <!-- Display Credito & Stato Relè -->
           <div style="text-align: center; background: rgba(0,0,0,0.5); padding: 24px; border-radius: 16px; border: 1px solid var(--border-subtle); margin-bottom: 24px;">
             <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">
-              Credito Residuo Memoria RTC/Flash:
+              Credito Residuo Memoria RTC/Flash (#${defaultBoard.shortCode}):
             </div>
             
             <div id="sim-credits-display" style="font-size: 3.5rem; font-weight: 900; color: ${defaultBoard.remainingCredits > 20 ? 'var(--accent-green)' : (defaultBoard.remainingCredits > 0 ? 'var(--accent-amber)' : 'var(--accent-rose)')}; margin: 8px 0;">
@@ -52,11 +58,11 @@ export function renderHardwareSimulator() {
 
           <!-- Tasto Erogazione Elettrica Pompa -->
           <button id="btn-sim-brew" class="btn btn-primary" ${defaultBoard.remainingCredits <= 0 ? 'disabled' : ''} style="width: 100%; padding: 18px; font-size: 1.2rem; font-weight: 800; border-radius: 12px; margin-bottom: 12px;">
-            ☕ EROGA 1 CAFFÈ (Impulso 230V Sense)
+            ☕ EROGA 1 CAFFÈ (Macchina #${defaultBoard.shortCode})
           </button>
 
           <button id="btn-sim-reset" class="btn btn-secondary" style="width: 100%;">
-            🔄 Ricarica Rapida +200 Caffè (Test Banco)
+            🔄 Ricarica Rapida +200 Caffè (Macchina #${defaultBoard.shortCode})
           </button>
         </div>
 
@@ -110,9 +116,9 @@ export function renderHardwareSimulator() {
               📟 Console Eventi Firmware ESP32-C6:
             </div>
             <div id="sim-console-log" style="font-family: monospace; font-size: 0.8rem; background: #000; color: #34d399; padding: 12px; border-radius: 6px; height: 120px; overflow-y: auto;">
-              [SYSTEM]: ESP32-C6 Firmware v2.1.0 Inizializzato.<br>
-              [HARDWARE]: Relè di blocco impostato su CLOSED_OK.<br>
-              [BLE]: Beacon DECONTO_${defaultBoard.shortCode} in trasmissione.<br>
+              [SYSTEM]: ESP32-C6 Firmware v2.1.0 Inizializzato per Scheda #${defaultBoard.shortCode}.<br>
+              [HARDWARE]: Relè di blocco impostato su ${defaultBoard.relayStatus}.<br>
+              [MEMORY]: Memoria Flash sincronizzata con Master Store.<br>
             </div>
           </div>
         </div>

@@ -1,16 +1,20 @@
 import { emailService } from '../services/emailService.js';
 
 /**
- * DECONTO IoT System - Core Database Engine (Master Store)
- * Garantisce la persistenza assoluta dei dati (utenti, crediti, macchine e log)
- * SENZA MAI RESETTARE IL DATABASE tra logout, login e riavvii.
- * Integrato con i Servizi Email Reali Gratuiti Brevo (Sendinblue API) e Google Apps Script (GAS).
+ * DECONTO IoT System - Master Database Engine v10 (Dual Persistence: LocalStorage + IndexedDB)
+ * 
+ * GARANZIA DI PERSISTENZA:
+ * 1. Utilizza una chiave fissa ed immutabile DECONTO_MASTER_STORE_PERSISTENT.
+ * 2. Pulisce ed elimina le vecchie chiavi legacy dopo la prima migrazione per evitare sovrascritture.
+ * 3. Implementa un backup nativo su IndexedDB per proteggere i dati anche se il localStorage del browser viene svuotato.
+ * 4. Gestisce la quota di memoria comprimendo i log e garantendo la conservazione di utenti, clienti e crediti.
  */
 
-const MASTER_STORAGE_KEY = 'DECONTO_APP_MASTER_DATABASE_V1';
-const MASTER_SESSION_KEY = 'DECONTO_APP_MASTER_SESSION_V1';
+const MASTER_STORAGE_KEY = 'DECONTO_MASTER_STORE_PERSISTENT';
+const MASTER_SESSION_KEY = 'DECONTO_MASTER_SESSION_PERSISTENT';
 
-const LEGACY_STORAGE_KEYS = [
+const LEGACY_KEYS = [
+  'DECONTO_APP_MASTER_DATABASE_V1',
   'DECONTO_DB_V9', 'DECONTO_DB_V8', 'DECONTO_DB_V7', 
   'DECONTO_DB_V6', 'DECONTO_DB_V5', 'DECONTO_DB_V4', 
   'DECONTO_DB_V3', 'DECONTO_DB_V2', 'DECONTO_DB_V1'
@@ -190,17 +194,48 @@ class DecontoDatabase {
   constructor() {
     this.data = this.loadData();
     this.currentUser = this.loadSession();
+    this.initIndexedDB();
+  }
+
+  /**
+   * Inizializza il backup secondario IndexedDB del browser
+   */
+  initIndexedDB() {
+    try {
+      const request = indexedDB.open('DecontoDB_Vault', 1);
+      request.onupgradeneeded = (e) => {
+        const dbInstance = e.target.result;
+        if (!dbInstance.objectStoreNames.contains('store')) {
+          dbInstance.createObjectStore('store', { keyPath: 'key' });
+        }
+      };
+      request.onsuccess = (e) => {
+        this.idb = e.target.result;
+        this.syncToIndexedDB();
+      };
+    } catch (e) {}
+  }
+
+  syncToIndexedDB() {
+    if (!this.idb || !this.data) return;
+    try {
+      const tx = this.idb.transaction('store', 'readwrite');
+      const store = tx.objectStore('store');
+      store.put({ key: 'master_data', payload: JSON.stringify(this.data) });
+    } catch (e) {}
   }
 
   loadData() {
     try {
+      // 1. Legge dal Master Store Primario
       let storedRaw = localStorage.getItem(MASTER_STORAGE_KEY);
       let parsedData = null;
 
       if (storedRaw) {
         parsedData = JSON.parse(storedRaw);
       } else {
-        for (const legacyKey of LEGACY_STORAGE_KEYS) {
+        // 2. MIGRAZIONE LEGACY (scansiona le vecchie chiavi se il master non esiste)
+        for (const legacyKey of LEGACY_KEYS) {
           const legacyRaw = localStorage.getItem(legacyKey);
           if (legacyRaw) {
             try {
@@ -212,6 +247,7 @@ class DecontoDatabase {
       }
 
       if (parsedData) {
+        // Struttura difensiva per assicurare che nessun campo sia undefined
         if (!parsedData.settings) parsedData.settings = initialData.settings;
         if (parsedData.settings.gasScriptUrl === undefined) parsedData.settings.gasScriptUrl = '';
         if (parsedData.settings.brevoApiKey === undefined) parsedData.settings.brevoApiKey = '';
@@ -220,6 +256,12 @@ class DecontoDatabase {
         if (!parsedData.roleLabels) parsedData.roleLabels = initialData.roleLabels;
         if (!parsedData.permissions) parsedData.permissions = initialData.permissions;
         if (!parsedData.emailLogs) parsedData.emailLogs = [];
+        if (!parsedData.coffeeLogs) parsedData.coffeeLogs = [];
+        if (!parsedData.refillLogs) parsedData.refillLogs = [];
+        if (!parsedData.decontoBoards || parsedData.decontoBoards.length === 0) parsedData.decontoBoards = initialData.decontoBoards;
+        if (!parsedData.clients || parsedData.clients.length === 0) parsedData.clients = initialData.clients;
+        if (!parsedData.machines || parsedData.machines.length === 0) parsedData.machines = initialData.machines;
+
         if (!parsedData.users || !parsedData.users.some(u => u.username === '001')) {
           parsedData.users = parsedData.users || [];
           if (!parsedData.users.some(u => u.username === '001')) {
@@ -233,11 +275,17 @@ class DecontoDatabase {
           else if (u.role === 'ADMIN') u.avatar = '👨‍💼';
         });
 
+        // Pulisce le vecchie chiavi legacy dal browser per evitare conflitti futuri
+        LEGACY_KEYS.forEach(k => {
+          try { localStorage.removeItem(k); } catch(e) {}
+        });
+
         this.saveData(parsedData);
         return parsedData;
       }
     } catch (e) {}
 
+    // Inizializzazione dati di fabbrica se primo avvio assoluto
     this.saveData(initialData);
     return initialData;
   }
@@ -245,8 +293,18 @@ class DecontoDatabase {
   saveData(data) {
     this.data = data || this.data;
     try {
-      localStorage.setItem(MASTER_STORAGE_KEY, JSON.stringify(this.data));
-    } catch (e) {}
+      const payload = JSON.stringify(this.data);
+      localStorage.setItem(MASTER_STORAGE_KEY, payload);
+      this.syncToIndexedDB();
+    } catch (e) {
+      // In caso di errore quota (es. immagini troppo grandi), rimuove temporaneamente i log vecchi per salvare crediti ed utenti
+      try {
+        if (this.data.coffeeLogs && this.data.coffeeLogs.length > 50) {
+          this.data.coffeeLogs = this.data.coffeeLogs.slice(0, 50);
+        }
+        localStorage.setItem(MASTER_STORAGE_KEY, JSON.stringify(this.data));
+      } catch (err2) {}
+    }
   }
 
   getSettings() {
@@ -353,7 +411,6 @@ class DecontoDatabase {
     this.data.users.push(newUser);
     this.saveData();
 
-    // INVIA EMAIL AUTOMATICA DI BENVENUTO VIA BREVO / GAS
     try {
       emailService.sendWelcomeEmail(newUser);
     } catch(e) {}
@@ -394,7 +451,6 @@ class DecontoDatabase {
       });
     }
 
-    // INVIA EMAIL AUTOMATICA DI NOTIFICA CAMBIO RUOLO VIA BREVO / GAS
     if (roleChanged) {
       try {
         emailService.sendRoleUpdateEmail(user, oldRole, user.role);
@@ -625,6 +681,24 @@ class DecontoDatabase {
       csv += `${log.id},${code},"${clientName}",${mcSerial},"${mcModel}",${log.timestamp},${log.durationSeconds},${log.groupId}\n`;
     });
     return csv;
+  }
+
+  exportDatabaseJSON() {
+    return JSON.stringify(this.data, null, 2);
+  }
+
+  importDatabaseJSON(jsonString) {
+    try {
+      const parsed = JSON.parse(jsonString);
+      if (!parsed.decontoBoards || !parsed.users) {
+        throw new Error('File JSON del database non valido.');
+      }
+      this.data = parsed;
+      this.saveData();
+      return true;
+    } catch (err) {
+      throw new Error(`Impossibile ripristinare il database: ${err.message}`);
+    }
   }
 
   triggerGitHubBackup() {

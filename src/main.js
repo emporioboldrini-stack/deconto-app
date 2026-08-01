@@ -22,6 +22,7 @@ let state = {
   editingClientId: null,
   viewingDecontoCode: null,
   viewingEmailId: null,
+  selectedSimBoardCode: '9901', // Predefinito per i test
 
   // Stato Ricerca & Ordinamento Dashboard
   dashSearchQuery: '',
@@ -51,7 +52,7 @@ function renderApp() {
   if (state.activeTab === 'settings') {
     mainContentHtml = renderSettingsPanel();
   } else if (state.activeTab === 'simulator') {
-    mainContentHtml = renderHardwareSimulator();
+    mainContentHtml = renderHardwareSimulator(state.selectedSimBoardCode);
   } else if (state.activeTab === 'user_management' || state.activeTab === 'permissions_matrix') {
     mainContentHtml = renderUserManagementPanel(state.activeTab, state.editingStaffUserId, state.viewingEmailId);
   } else if (user.role === 'ADMIN') {
@@ -273,7 +274,7 @@ function attachMainEventListeners() {
     });
   });
 
-  // --- IMPOSTAZIONI: CARICAMENTO LOGO DA PC, SOTTOTITOLO, BREVO & GOOGLE APPS SCRIPT ---
+  // --- IMPOSTAZIONI: LOGO DA PC, SOTTOTITOLO, BREVO, GAS & EXP/IMP DATABASE ---
   const logoFileInput = document.getElementById('setting-logo-file');
   if (logoFileInput) {
     logoFileInput.addEventListener('change', (e) => {
@@ -392,7 +393,7 @@ function attachMainEventListeners() {
         });
 
         state.editingClientId = null;
-        alert('✅ Scheda Cliente, Macchina e Deconto aggiornata con successo!');
+        alert('✅ Scheda Cliente, Macchina e Deconto aggiornata e salvata PERMANENTEMENTE!');
         renderApp();
       } catch (err) {
         alert(`Errore: ${err.message}`);
@@ -463,7 +464,7 @@ function attachMainEventListeners() {
 
       try {
         const newUser = db.addUser({ username, password, name, role, email, phone });
-        alert(`✅ Utente dipendente "${name}" (Codice ${username}) salvato PERMANENTEMENTE nel database!\n\n✉️ Notifica Email automatica avviata per ${newUser.email}`);
+        alert(`✅ Utente dipendente "${name}" (Codice ${username}) salvato PERMANENTEMENTE nel database!`);
         renderApp();
       } catch (err) {
         alert(`Errore: ${err.message}`);
@@ -508,7 +509,7 @@ function attachMainEventListeners() {
         });
 
         state.editingStaffUserId = null;
-        alert(`✅ Scheda Utente "${updatedUser.name}" salvata PERMANENTEMENTE nel database!\n\n✉️ Notifica Email di cambio ruolo avviata!`);
+        alert(`✅ Scheda Utente "${updatedUser.name}" salvata PERMANENTEMENTE!`);
         renderApp();
       } catch (err) {
         alert(`Errore: ${err.message}`);
@@ -759,24 +760,19 @@ function attachMainEventListeners() {
     });
   });
 
-  // Simulatore Hardware Interattivo
+  // SIMULATORE HARDWARE INTERATTIVO: CAMBIO SCHEDA & EROGAZIONE
   const simBoardSelect = document.getElementById('sim-board-select');
   if (simBoardSelect) {
     simBoardSelect.addEventListener('change', (e) => {
-      const shortCode = e.target.value;
-      const details = db.getBoardFullDetails(shortCode);
-      if (details) {
-        document.getElementById('sim-badge-code').innerText = `DECONTO ${shortCode}`;
-        document.getElementById('sim-credits-display').innerText = details.board.remainingCredits;
-      }
+      state.selectedSimBoardCode = e.target.value;
+      renderApp();
     });
   }
 
   const btnSimBrew = document.getElementById('btn-sim-brew');
   if (btnSimBrew) {
     btnSimBrew.addEventListener('click', () => {
-      const select = document.getElementById('sim-board-select');
-      const shortCode = select ? select.value : '3467';
+      const shortCode = state.selectedSimBoardCode || '9901';
 
       document.getElementById('signal-sense-volts').innerText = '230V AC (Impulso)';
       document.getElementById('signal-sense-badge').className = 'badge badge-warning';
@@ -785,33 +781,22 @@ function attachMainEventListeners() {
       const res = db.registerCoffeeExtraction(shortCode, 22, 1);
 
       setTimeout(() => {
-        document.getElementById('signal-sense-volts').innerText = '0V AC';
-        document.getElementById('signal-sense-badge').className = 'badge badge-info';
-        document.getElementById('signal-sense-badge').innerText = 'INATTIVO';
-
         if (res && res.success) {
           const consoleEl = document.getElementById('sim-console-log');
-          consoleEl.innerHTML += `[EXTRACTION]: Caffè erogato! Credito rimanente: ${res.remainingCredits}.<br>`;
-          consoleEl.scrollTop = consoleEl.scrollHeight;
-
-          if (res.isLowStock) {
-            consoleEl.innerHTML += `<span style="color: var(--accent-amber);">[BUZZER 60s]: CREDITO &lt; 20! SEGNALE ACUSTICO ATTIVATO (BIP... BIP...).</span><br>`;
+          if (consoleEl) {
+            consoleEl.innerHTML += `[EXTRACTION]: Caffè erogato su #${shortCode}! Credito rimanente: ${res.remainingCredits}.<br>`;
+            consoleEl.scrollTop = consoleEl.scrollHeight;
           }
-        } else if (res && !res.success) {
-          const consoleEl = document.getElementById('sim-console-log');
-          consoleEl.innerHTML += `<span style="color: var(--accent-rose);">[HARDWARE LOCK]: CREDITO 0! RELÈ APERTO. POMPA DISATTIVATA.</span><br>`;
         }
-
         renderApp();
-      }, 800);
+      }, 600);
     });
   }
 
   const btnSimReset = document.getElementById('btn-sim-reset');
   if (btnSimReset) {
     btnSimReset.addEventListener('click', () => {
-      const select = document.getElementById('sim-board-select');
-      const shortCode = select ? select.value : '3467';
+      const shortCode = state.selectedSimBoardCode || '9901';
       db.performRefill({ boardShortCode: shortCode, credits: 200, method: 'TEST_BENCH', operatorId: state.currentUser ? state.currentUser.id : 'usr_001' });
       alert(`✅ Ricaricate +200 cialde di prova sulla macchina #${shortCode}!`);
       renderApp();
