@@ -1,11 +1,11 @@
 /**
- * DECONTO IoT System - Core Database, Authentication & Dynamic Permission Engine (v7)
- * Gestisce l'autenticazione, la gestione personale/utenti, la matrice dei permessi dinamica,
- * la personalizzazione del logo aziendale e del sottotitolo nella voce menu Impostazioni.
+ * DECONTO IoT System - Core Database, Authentication & Dynamic Permission Engine (v8)
+ * Gestisce l'autenticazione, la gestione personale/utenti con cambio automatico icona avatar
+ * (Scrivania 👩‍💻 per UFFICIO, Furgone 🚚 per ADR, Amministratore 👨‍💼 per ADMIN).
  */
 
-const STORAGE_KEY = 'DECONTO_DB_V7';
-const SESSION_KEY = 'DECONTO_AUTH_SESSION_V7';
+const STORAGE_KEY = 'DECONTO_DB_V8';
+const SESSION_KEY = 'DECONTO_AUTH_SESSION_V8';
 
 const initialData = {
   settings: {
@@ -138,14 +138,14 @@ const initialData = {
       macAddress: 'C6:3F:8A:33:55:10',
       machineId: 'mc_3',
       version: 'BASIC',
-      remainingCredits: 12,
+      remainingCredits: 9,
       lowStockThreshold: 20,
       relayStatus: 'CLOSED_OK',
       firmwareVersion: 'v2.1.0-ESP32-C6',
       isOnlineWifi: false,
       rssi: -84,
-      machineExtractions: 988,
-      lifetimeExtractions: 2150,
+      machineExtractions: 991,
+      lifetimeExtractions: 2153,
       avgDailyCoffees: 5.2,
       lastSyncDate: new Date(Date.now() - 86400000 * 12).toISOString()
     },
@@ -193,19 +193,18 @@ const initialData = {
     }
   ],
   coffeeLogs: [
-    { id: 'log_1', boardId: 'board_3467', timestamp: new Date(Date.now() - 3600000 * 1).toISOString(), durationSeconds: 22, groupId: 1 },
-    { id: 'log_2', boardId: 'board_3467', timestamp: new Date(Date.now() - 3600000 * 3).toISOString(), durationSeconds: 21, groupId: 1 },
-    { id: 'log_3', boardId: 'board_3467', timestamp: new Date(Date.now() - 3600000 * 5).toISOString(), durationSeconds: 24, groupId: 1 },
-    { id: 'log_4', boardId: 'board_5510', timestamp: new Date(Date.now() - 3600000 * 6).toISOString(), durationSeconds: 38, groupId: 1 },
-    { id: 'log_5', boardId: 'board_1289', timestamp: new Date(Date.now() - 3600000 * 10).toISOString(), durationSeconds: 20, groupId: 1 },
-    { id: 'log_6', boardId: 'board_1289', timestamp: new Date(Date.now() - 3600000 * 11).toISOString(), durationSeconds: 23, groupId: 2 }
+    { id: 'log_1785568918595', boardId: 'board_5510', timestamp: new Date(Date.now() - 3600000 * 1).toISOString(), durationSeconds: 22, groupId: 1 },
+    { id: 'log_1785568915074', boardId: 'board_5510', timestamp: new Date(Date.now() - 3600000 * 3).toISOString(), durationSeconds: 22, groupId: 1 },
+    { id: 'log_1', boardId: 'board_3467', timestamp: new Date(Date.now() - 3600000 * 5).toISOString(), durationSeconds: 22, groupId: 1 },
+    { id: 'log_2', boardId: 'board_3467', timestamp: new Date(Date.now() - 3600000 * 7).toISOString(), durationSeconds: 21, groupId: 1 },
+    { id: 'log_5', boardId: 'board_1289', timestamp: new Date(Date.now() - 3600000 * 10).toISOString(), durationSeconds: 20, groupId: 1 }
   ],
   backupLogs: [
     {
       id: 'bak_001',
       timestamp: new Date(Date.now() - 86400000).toISOString(),
       repo: 'emporioboldrini-stack/deconto-app',
-      commitHash: '634a210',
+      commitHash: 'c41b3ff',
       status: 'SUCCESS',
       recordCount: 28
     }
@@ -227,6 +226,14 @@ class DecontoDatabase {
         if (!parsed.roleLabels) parsed.roleLabels = initialData.roleLabels;
         if (!parsed.permissions) parsed.permissions = initialData.permissions;
         if (!parsed.users || !parsed.users.some(u => u.username === '001')) parsed.users = initialData.users;
+
+        // Assicura che le icone siano sincronizzate coi ruoli
+        parsed.users.forEach(u => {
+          if (u.role === 'UFFICIO') u.avatar = '👩‍💻';
+          else if (u.role === 'ADR') u.avatar = '🚚';
+          else if (u.role === 'ADMIN') u.avatar = '👨‍💼';
+        });
+
         return parsed;
       }
     } catch (e) {}
@@ -241,7 +248,6 @@ class DecontoDatabase {
     } catch (e) {}
   }
 
-  // --- IMPOSTAZIONI GENERALI (LOGO & LOGO TEXT) ---
   getSettings() {
     return this.data.settings || initialData.settings;
   }
@@ -327,16 +333,19 @@ class DecontoDatabase {
       throw new Error(`Il nome utente "${userData.username}" è già in uso.`);
     }
 
+    const role = userData.role || 'UFFICIO';
+    const avatar = role === 'UFFICIO' ? '👩‍💻' : (role === 'ADR' ? '🚚' : '👨‍💼');
+
     const newUser = {
       id: 'usr_' + Date.now(),
       username: userData.username.trim(),
       password: userData.password.trim(),
       name: userData.name.trim(),
-      role: userData.role,
+      role: role,
       email: userData.email ? userData.email.trim() : '',
       phone: userData.phone ? userData.phone.trim() : '',
       status: 'ACTIVE',
-      avatar: userData.role === 'UFFICIO' ? '👩‍💻' : '🚚',
+      avatar: avatar,
       createdAt: new Date().toISOString().split('T')[0]
     };
 
@@ -354,8 +363,13 @@ class DecontoDatabase {
     if (updatedData.email !== undefined) user.email = updatedData.email.trim();
     if (updatedData.phone !== undefined) user.phone = updatedData.phone.trim();
     if (updatedData.password) user.password = updatedData.password.trim();
-    if (updatedData.role) user.role = updatedData.role;
     if (updatedData.status) user.status = updatedData.status;
+
+    // AGGIORNAMENTO DINAMICO RUOLO ED ICONA AVATAR
+    if (updatedData.role) {
+      user.role = updatedData.role;
+      user.avatar = (user.role === 'UFFICIO') ? '👩‍💻' : (user.role === 'ADR' ? '🚚' : '👨‍💼');
+    }
 
     this.saveData();
 
@@ -365,7 +379,8 @@ class DecontoDatabase {
         name: user.name,
         username: user.username,
         email: user.email,
-        role: user.role
+        role: user.role,
+        avatar: user.avatar
       });
     }
 
