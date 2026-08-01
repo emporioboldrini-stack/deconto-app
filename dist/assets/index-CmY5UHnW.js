@@ -441,8 +441,9 @@
       </div>
     `}let C=``;if(t){let e=r.getBoardFullDetails(t);if(e&&e.board){let t=e.board,n=e.machine||{},r=e.client||{},i=e.coffees||[],a=t.avgDailyCoffees||12.4,o=a>0?Math.ceil(t.remainingCredits/a):`N/D`,s=o===`N/D`?`N/D`:new Date(Date.now()+o*864e5).toLocaleDateString(`it-IT`,{day:`2-digit`,month:`long`,year:`numeric`});C=`
         <div class="modal-overlay" id="deconto-detail-modal">
-          <div class="modal-box" style="max-width: 840px; width: 95%;">
+          <div class="modal-box" style="max-width: 1020px; width: 95%; max-height: 90vh; overflow-y: auto;">
             
+            <!-- Modal Header -->
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 14px;">
               <div>
                 <div style="display: flex; align-items: center; gap: 12px;">
@@ -462,101 +463,114 @@
               <button id="btn-close-deconto-modal" style="background: none; border: none; color: var(--text-muted); font-size: 1.8rem; cursor: pointer; padding: 0 8px;">&times;</button>
             </div>
 
-            <!-- Griglia Metriche Battute e Telemetria -->
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px;">
-              <div class="stat-card" style="padding: 16px; border: 1px solid rgba(56, 189, 248, 0.3);">
-                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Credito Rimanente:</div>
-                <div style="font-size: 1.8rem; font-weight: 900; color: ${t.remainingCredits>20?`var(--accent-green)`:`var(--accent-rose)`}; margin: 4px 0;">
-                  ${t.remainingCredits}
-                </div>
-                <div style="font-size: 0.7rem; color: var(--text-muted);">Caffè rimanenti prima del blocco</div>
-              </div>
-
-              <div class="stat-card" style="padding: 16px;">
-                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Battute Macchina Attuale:</div>
-                <div style="font-size: 1.8rem; font-weight: 900; color: var(--accent-cyan); margin: 4px 0;">
-                  ${(t.machineExtractions||1855).toLocaleString(`it-IT`)}
-                </div>
-                <div style="font-size: 0.7rem; color: var(--text-muted);">Erogate su questa macchina</div>
-              </div>
-
-              <div class="stat-card" style="padding: 16px;">
-                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Battute Totali Vita Scheda:</div>
-                <div style="font-size: 1.8rem; font-weight: 900; color: var(--accent-amber); margin: 4px 0;">
-                  ${(t.lifetimeExtractions||4920).toLocaleString(`it-IT`)}
-                </div>
-                <div style="font-size: 0.7rem; color: var(--text-muted);">Odomotero totale NVRAM Flash</div>
-              </div>
-
-              <div class="stat-card" style="padding: 16px;">
-                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Stima Esaurimento:</div>
-                <div style="font-size: 1.1rem; font-weight: 800; color: var(--accent-purple); margin: 8px 0 4px 0;">
-                  ~ ${o} Giorni
-                </div>
-                <div style="font-size: 0.7rem; color: var(--text-muted);">${s}</div>
-              </div>
-            </div>
-
-            <!-- Informazioni Dettagliate & Diagnostica Hardware -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
-              <div style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 10px; border: 1px solid var(--border-subtle); font-size: 0.85rem; line-height: 1.6;">
-                <h4 style="margin: 0 0 10px 0; color: var(--accent-cyan);">⚙️ Telemetria Hardware Deconto</h4>
-                <div><strong>Seriale Scheda HW:</strong> <code>${t.hwSerial}</code></div>
-                <div><strong>Indirizzo MAC BLE/Wi-Fi:</strong> <code>${t.macAddress}</code></div>
-                <div><strong>Firmware ESP32-C6:</strong> <code>${t.firmwareVersion}</code></div>
-                <div><strong>Qualità Segnale Wi-Fi (RSSI):</strong> <span style="color: var(--accent-green); font-weight: 700;">${t.rssi||-62} dBm (Eccellente)</span></div>
-                <div><strong>Stato Relè Pompa (230V):</strong> ${t.relayStatus===`CLOSED_OK`?`<span style="color: var(--accent-green); font-weight: 700;">CHIUSO (Pompa Abilitata)</span>`:`<span style="color: var(--accent-rose); font-weight: 700;">APERTO (Pompa Bloccata)</span>`}</div>
-              </div>
-
-              <div style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 10px; border: 1px solid var(--border-subtle); font-size: 0.85rem; line-height: 1.6;">
-                <h4 style="margin: 0 0 10px 0; color: var(--accent-amber);">📊 Diagnostica & Manutenzione</h4>
-                <div><strong>Consumo Medio Giornaliero:</strong> <strong>${a} caffè/giorno</strong></div>
-                <div><strong>Soglia Allarme Acustico:</strong> &lt; ${t.lowStockThreshold} caffè (Buzzer 60s)</div>
-                <div><strong>Stato Calcare / Pressione:</strong> <span style="color: var(--accent-green);">Normale (Impulsi 22s)</span></div>
-                <div><strong>Ultima Sincronizzazione:</strong> ${new Date(t.lastSyncDate).toLocaleString(`it-IT`)}</div>
-                <div><strong>Indirizzo Cliente:</strong> ${r.address?r.address:`Non specificato`}</div>
-              </div>
-            </div>
-
-            <!-- Registro Cronologico Erogazioni -->
-            <div>
-              <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 12px; color: #fff;">
-                ☕ Elenco Cronologico Erogazioni Macchina (#${t.shortCode})
-              </h3>
+            <!-- LAYOUT A 2 COLONNE AFFIANCATE -->
+            <div style="display: grid; grid-template-columns: 1.25fr 1fr; gap: 24px; align-items: start;">
               
-              <div class="table-container" style="max-height: 220px; overflow-y: auto;">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>ID Log</th>
-                      <th>Data & Ora Erogazione</th>
-                      <th>Durata Impulso 230V</th>
-                      <th>Gruppo / Braccio Erogatore</th>
-                      <th>Stato Credito</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${i.length>0?i.map(e=>`
+              <!-- COLONNA DI SINISTRA: Elenco Cronologico Erogazioni Esteso & Ampio -->
+              <div style="background: rgba(0,0,0,0.25); padding: 18px; border-radius: 14px; border: 1px solid var(--border-subtle);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                  <h3 style="font-size: 1.15rem; font-weight: 800; margin: 0; color: var(--accent-cyan); display: flex; align-items: center; gap: 8px;">
+                    ☕ Registro Cronologico Erogazioni (#${t.shortCode})
+                  </h3>
+                  <span class="badge badge-info" style="font-size: 0.75rem;">${i.length} Erogazioni</span>
+                </div>
+
+                <div class="table-container" style="max-height: 480px; overflow-y: auto; border: 1px solid var(--border-subtle); border-radius: 8px;">
+                  <table style="width: 100%;">
+                    <thead style="position: sticky; top: 0; background: #111827; z-index: 2;">
                       <tr>
-                        <td><code>${e.id}</code></td>
-                        <td>${new Date(e.timestamp).toLocaleString(`it-IT`)}</td>
-                        <td><strong>${e.durationSeconds} secondi</strong></td>
-                        <td>Gruppo Braccio #${e.groupId}</td>
-                        <td><span class="badge badge-success">OK (-1 cialda)</span></td>
+                        <th>ID LOG</th>
+                        <th>DATA & ORA</th>
+                        <th>DURATA 230V</th>
+                        <th>GRUPPO BRACCIO</th>
+                        <th>STATO CREDITO</th>
                       </tr>
-                    `).join(``):`
-                      <tr>
-                        <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">
-                          Nessuna erogazione recente registrata per la macchina #${t.shortCode}.
-                        </td>
-                      </tr>
-                    `}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      ${i.length>0?i.map(e=>`
+                        <tr>
+                          <td><code style="font-size: 0.75rem;">${e.id}</code></td>
+                          <td><strong style="white-space: nowrap; font-size: 0.85rem;">${new Date(e.timestamp).toLocaleString(`it-IT`)}</strong></td>
+                          <td><strong>${e.durationSeconds} s</strong></td>
+                          <td>Gruppo #${e.groupId}</td>
+                          <td><span class="badge badge-success" style="font-size: 0.75rem;">OK (-1 CIALDA)</span></td>
+                        </tr>
+                      `).join(``):`
+                        <tr>
+                          <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 40px;">
+                            Nessuna erogazione recente registrata per la macchina #${t.shortCode}.
+                          </td>
+                        </tr>
+                      `}
+                    </tbody>
+                  </table>
+                </div>
               </div>
+
+              <!-- COLONNA DI DESTRA: KPI Cards 2x2, Telemetria Hardware & Diagnostica -->
+              <div style="display: flex; flex-direction: column; gap: 16px;">
+                
+                <!-- 4 KPI Cards in Griglia 2x2 -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                  <div class="stat-card" style="padding: 14px; border: 1px solid rgba(56, 189, 248, 0.3);">
+                    <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Credito Rimanente:</div>
+                    <div style="font-size: 1.6rem; font-weight: 900; color: ${t.remainingCredits>20?`var(--accent-green)`:`var(--accent-rose)`}; margin: 2px 0;">
+                      ${t.remainingCredits}
+                    </div>
+                    <div style="font-size: 0.65rem; color: var(--text-muted);">Caffè prima del blocco</div>
+                  </div>
+
+                  <div class="stat-card" style="padding: 14px;">
+                    <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Battute Macchina:</div>
+                    <div style="font-size: 1.6rem; font-weight: 900; color: var(--accent-cyan); margin: 2px 0;">
+                      ${(t.machineExtractions||1855).toLocaleString(`it-IT`)}
+                    </div>
+                    <div style="font-size: 0.65rem; color: var(--text-muted);">Macchina attuale</div>
+                  </div>
+
+                  <div class="stat-card" style="padding: 14px;">
+                    <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Battute Totali Vita:</div>
+                    <div style="font-size: 1.6rem; font-weight: 900; color: var(--accent-amber); margin: 2px 0;">
+                      ${(t.lifetimeExtractions||4920).toLocaleString(`it-IT`)}
+                    </div>
+                    <div style="font-size: 0.65rem; color: var(--text-muted);">Odometro NVRAM Flash</div>
+                  </div>
+
+                  <div class="stat-card" style="padding: 14px;">
+                    <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Stima Esaurimento:</div>
+                    <div style="font-size: 1.05rem; font-weight: 800; color: var(--accent-purple); margin: 6px 0 2px 0;">
+                      ~ ${o} Giorni
+                    </div>
+                    <div style="font-size: 0.65rem; color: var(--text-muted);">${s}</div>
+                  </div>
+                </div>
+
+                <!-- Box 1: Telemetria Hardware Deconto -->
+                <div style="background: rgba(0,0,0,0.3); padding: 14px; border-radius: 10px; border: 1px solid var(--border-subtle); font-size: 0.82rem; line-height: 1.6;">
+                  <h4 style="margin: 0 0 8px 0; color: var(--accent-cyan); font-size: 0.9rem;">⚙️ Telemetria Hardware Deconto</h4>
+                  <div><strong>Seriale Scheda HW:</strong> <code>${t.hwSerial}</code></div>
+                  <div><strong>Indirizzo MAC BLE/Wi-Fi:</strong> <code>${t.macAddress}</code></div>
+                  <div><strong>Firmware ESP32-C6:</strong> <code>${t.firmwareVersion}</code></div>
+                  <div><strong>Qualità Segnale Wi-Fi (RSSI):</strong> <span style="color: var(--accent-green); font-weight: 700;">${t.rssi||-62} dBm (Eccellente)</span></div>
+                  <div><strong>Stato Relè Pompa (230V):</strong> ${t.relayStatus===`CLOSED_OK`?`<span style="color: var(--accent-green); font-weight: 700;">CHIUSO (Pompa Abilitata)</span>`:`<span style="color: var(--accent-rose); font-weight: 700;">APERTO (Pompa Bloccata)</span>`}</div>
+                </div>
+
+                <!-- Box 2: Diagnostica & Manutenzione -->
+                <div style="background: rgba(0,0,0,0.3); padding: 14px; border-radius: 10px; border: 1px solid var(--border-subtle); font-size: 0.82rem; line-height: 1.6;">
+                  <h4 style="margin: 0 0 8px 0; color: var(--accent-amber); font-size: 0.9rem;">📊 Diagnostica & Manutenzione</h4>
+                  <div><strong>Consumo Medio Giornaliero:</strong> <strong>${a} caffè/giorno</strong></div>
+                  <div><strong>Soglia Allarme Acustico:</strong> &lt; ${t.lowStockThreshold} caffè (Buzzer 60s)</div>
+                  <div><strong>Stato Calcare / Pressione:</strong> <span style="color: var(--accent-green);">Normale (Impulsi 22s)</span></div>
+                  <div><strong>Ultima Sincronizzazione:</strong> ${new Date(t.lastSyncDate).toLocaleString(`it-IT`)}</div>
+                  <div><strong>Indirizzo Cliente:</strong> ${r.address?r.address:`Non specificato`}</div>
+                </div>
+
+              </div>
+
             </div>
 
-            <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+            <!-- Modal Footer -->
+            <div style="display: flex; justify-content: flex-end; margin-top: 20px; border-top: 1px solid var(--border-subtle); padding-top: 14px;">
               <button id="btn-close-deconto-modal-footer" class="btn btn-secondary">Chiudi Finestra Dettaglio</button>
             </div>
 
