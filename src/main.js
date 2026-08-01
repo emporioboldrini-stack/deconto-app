@@ -273,7 +273,7 @@ function attachMainEventListeners() {
     });
   });
 
-  // --- IMPOSTAZIONI: CARICAMENTO LOGO DA PC, SOTTOTITOLO & ENDPOINT GOOGLE APPS SCRIPT (GAS) ---
+  // --- IMPOSTAZIONI: CARICAMENTO LOGO DA PC, SOTTOTITOLO, BREVO & GOOGLE APPS SCRIPT ---
   const logoFileInput = document.getElementById('setting-logo-file');
   if (logoFileInput) {
     logoFileInput.addEventListener('change', (e) => {
@@ -316,6 +316,19 @@ function attachMainEventListeners() {
 
       db.updateSettings({ brandTitle, brandSubtitle });
       alert('✅ Titolo e Sottotitolo Brand salvati con successo!');
+      renderApp();
+    });
+  }
+
+  const settingsBrevoForm = document.getElementById('settings-brevo-form');
+  if (settingsBrevoForm) {
+    settingsBrevoForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const key = document.getElementById('setting-brevo-key').value.trim();
+      const sender = document.getElementById('setting-brevo-sender').value.trim();
+
+      db.updateSettings({ brevoApiKey: key, brevoSenderEmail: sender });
+      alert('✅ API Key ed Email Mittente Brevo salvate con successo!');
       renderApp();
     });
   }
@@ -450,7 +463,7 @@ function attachMainEventListeners() {
 
       try {
         const newUser = db.addUser({ username, password, name, role, email, phone });
-        alert(`✅ Utente dipendente "${name}" (Codice ${username}) salvato PERMANENTEMENTE nel database!\n\n✉️ Notifica Email avviata tramite Google Apps Script per ${newUser.email}`);
+        alert(`✅ Utente dipendente "${name}" (Codice ${username}) salvato PERMANENTEMENTE nel database!\n\n✉️ Notifica Email automatica avviata per ${newUser.email}`);
         renderApp();
       } catch (err) {
         alert(`Errore: ${err.message}`);
@@ -495,7 +508,7 @@ function attachMainEventListeners() {
         });
 
         state.editingStaffUserId = null;
-        alert(`✅ Scheda Utente "${updatedUser.name}" salvata PERMANENTEMENTE nel database!\n\n✉️ Notifica Email di cambio ruolo avviata via Google Apps Script!`);
+        alert(`✅ Scheda Utente "${updatedUser.name}" salvata PERMANENTEMENTE nel database!\n\n✉️ Notifica Email di cambio ruolo avviata!`);
         renderApp();
       } catch (err) {
         alert(`Errore: ${err.message}`);

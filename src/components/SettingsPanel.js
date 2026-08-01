@@ -22,7 +22,7 @@ export function renderSettingsPanel() {
     <div>
       <div style="margin-bottom: 24px;">
         <h1 style="font-size: 1.8rem; font-weight: 800;">⚙️ Impostazioni Piattaforma & Personalizzazione Brand</h1>
-        <p style="color: var(--text-muted);">Personalizza il logo aziendale, l'intestazione ed il servizio notifica email reale via Google Apps Script (GAS)</p>
+        <p style="color: var(--text-muted);">Personalizza il logo aziendale, l'intestazione ed i servizi di notifica email (Brevo / Google Apps Script)</p>
       </div>
 
       <div class="card-grid" style="grid-template-columns: 1fr 1fr;">
@@ -83,15 +83,43 @@ export function renderSettingsPanel() {
 
       </div>
 
-      <!-- Card 3: Servizio Notifiche Email Reali (Google Apps Script - GAS) -->
-      <div class="stat-card" style="margin-top: 24px; padding: 24px; border: 1px solid var(--accent-green);">
+      <!-- Card 3: Servizio Email BREVO / Sendinblue (Opzione consigliata) -->
+      <div class="stat-card" style="margin-top: 24px; padding: 24px; border: 2px solid var(--accent-cyan);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-          <h3 style="margin: 0; color: var(--accent-green);">✉️ Servizio Notifiche Email Reali Gratuito (Google Apps Script - GAS):</h3>
-          <span class="badge badge-success">100% GRATUITO E SENZA LIMITI</span>
+          <h3 style="margin: 0; color: var(--accent-cyan);">✉️ Servizio Email Reale BREVO (ex Sendinblue - brevo.com):</h3>
+          <span class="badge badge-info">300 EMAIL/GIORNO GRATIS</span>
         </div>
 
         <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">
-          Utilizzando <strong>Google Apps Script (GAS)</strong> come nella conversazione GAS SOMS, l'app invierà email reali direttamente dal tuo account Google/Gmail a qualsiasi indirizzo senza registrare carte o servizi a pagamento.
+          <strong>BREVO (brevo.com)</strong> è il servizio gratuito di invio email transazionali (ex Sendinblue). Offre 300 email gratuite al giorno e non richiede installazione di script. Inserisci la tua API Key trovata su <em>brevo.com &rarr; API Keys</em> per attivare l'invio istantaneo.
+        </p>
+
+        <form id="settings-brevo-form" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 16px; align-items: end;">
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">API Key Brevo (xkeysib-...):</label>
+            <input type="password" id="setting-brevo-key" value="${settings.brevoApiKey || ''}" placeholder="xkeysib-xxxxxxxxxxxx" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-family: monospace;">
+          </div>
+
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Email Mittente (registrata su Brevo):</label>
+            <input type="email" id="setting-brevo-sender" value="${settings.brevoSenderEmail || ''}" placeholder="info@deconto.it" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="padding: 10px 20px;">
+            💾 Salva Chiavi Brevo
+          </button>
+        </form>
+      </div>
+
+      <!-- Card 4: Servizio Notifiche Email via Google Apps Script (GAS) -->
+      <div class="stat-card" style="margin-top: 24px; padding: 24px; border: 1px solid var(--accent-green);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <h3 style="margin: 0; color: var(--accent-green);">✉️ Alternativa: Google Apps Script (GAS):</h3>
+          <span class="badge badge-success">GRATUITO CON ACCOUNT GOOGLE</span>
+        </div>
+
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">
+          In alternativa a Brevo, puoi utilizzare un piccolo script <strong>Google Apps Script</strong> come nella conversazione GAS SOMS.
         </p>
 
         <form id="settings-gas-form" style="margin-bottom: 20px;">
@@ -108,23 +136,10 @@ export function renderSettingsPanel() {
           </div>
         </form>
 
-        <!-- Istruzioni d'uso Google Apps Script -->
         <div style="background: rgba(16, 185, 129, 0.1); border-left: 4px solid var(--accent-green); padding: 16px; border-radius: 6px;">
-          <h4 style="margin-top: 0; color: var(--accent-green); font-size: 0.95rem;">📋 Istruzioni Rapide per Creare lo Script Google Gratis:</h4>
-          <ol style="font-size: 0.85rem; color: #cbd5e1; margin-bottom: 12px; padding-left: 20px; line-height: 1.6;">
-            <li>Vai su <a href="https://script.google.com" target="_blank" style="color: var(--accent-cyan); font-weight: 700;">script.google.com</a> ed avvia un <strong>Nuovo Progetto</strong>.</li>
-            <li>Incolla il seguente codice di invio email nel file <code>Codice.gs</code>:</li>
-          </ol>
-
-          <pre style="background: #0f172a; color: #38bdf8; padding: 12px; border-radius: 6px; font-size: 0.8rem; font-family: monospace; overflow-x: auto; border: 1px solid var(--border-subtle); margin-bottom: 12px;">${gasScriptSnippet}</pre>
-
-          <div style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.6;">
-            3. Clicca su <strong>Esegui Deploy</strong> &rarr; <strong>Nuova Distribuzione</strong> &rarr; Seleziona tipo <em>"Web App"</em>.<br>
-            4. Imposta <strong>Chi ha accesso</strong> su <em>"Chiunque" (Anyone)</em> e distribuisci.<br>
-            5. Copia l'URL Web prodotto ed incollalo nel box sopra per attivare l'invio reale istantaneo!
-          </div>
+          <h4 style="margin-top: 0; color: var(--accent-green); font-size: 0.95rem;">📋 Script Google pronto all'uso:</h4>
+          <pre style="background: #0f172a; color: #38bdf8; padding: 12px; border-radius: 6px; font-size: 0.8rem; font-family: monospace; overflow-x: auto; border: 1px solid var(--border-subtle); margin: 0;">${gasScriptSnippet}</pre>
         </div>
-
       </div>
     </div>
   `;

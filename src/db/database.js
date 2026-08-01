@@ -4,7 +4,7 @@ import { emailService } from '../services/emailService.js';
  * DECONTO IoT System - Core Database Engine (Master Store)
  * Garantisce la persistenza assoluta dei dati (utenti, crediti, macchine e log)
  * SENZA MAI RESETTARE IL DATABASE tra logout, login e riavvii.
- * Integrato con Servizio Email Reale Gratuito via Google Apps Script (GAS).
+ * Integrato con i Servizi Email Reali Gratuiti Brevo (Sendinblue API) e Google Apps Script (GAS).
  */
 
 const MASTER_STORAGE_KEY = 'DECONTO_APP_MASTER_DATABASE_V1';
@@ -21,7 +21,9 @@ const initialData = {
     customLogoUrl: null,
     brandTitle: 'DECONTO',
     brandSubtitle: 'IoT Vending System',
-    gasScriptUrl: '' // URL Endpoint Web App Google Apps Script
+    gasScriptUrl: '',
+    brevoApiKey: '',
+    brevoSenderEmail: ''
   },
 
   roleLabels: {
@@ -212,6 +214,9 @@ class DecontoDatabase {
       if (parsedData) {
         if (!parsedData.settings) parsedData.settings = initialData.settings;
         if (parsedData.settings.gasScriptUrl === undefined) parsedData.settings.gasScriptUrl = '';
+        if (parsedData.settings.brevoApiKey === undefined) parsedData.settings.brevoApiKey = '';
+        if (parsedData.settings.brevoSenderEmail === undefined) parsedData.settings.brevoSenderEmail = '';
+
         if (!parsedData.roleLabels) parsedData.roleLabels = initialData.roleLabels;
         if (!parsedData.permissions) parsedData.permissions = initialData.permissions;
         if (!parsedData.emailLogs) parsedData.emailLogs = [];
@@ -348,7 +353,7 @@ class DecontoDatabase {
     this.data.users.push(newUser);
     this.saveData();
 
-    // INVIA EMAIL AUTOMATICA DI BENVENUTO VIA GAS
+    // INVIA EMAIL AUTOMATICA DI BENVENUTO VIA BREVO / GAS
     try {
       emailService.sendWelcomeEmail(newUser);
     } catch(e) {}
@@ -389,7 +394,7 @@ class DecontoDatabase {
       });
     }
 
-    // INVIA EMAIL AUTOMATICA DI NOTIFICA CAMBIO RUOLO / PROMOZIONE VIA GAS
+    // INVIA EMAIL AUTOMATICA DI NOTIFICA CAMBIO RUOLO VIA BREVO / GAS
     if (roleChanged) {
       try {
         emailService.sendRoleUpdateEmail(user, oldRole, user.role);

@@ -3,7 +3,7 @@ import { db } from '../db/database.js';
 class EmailService {
 
   /**
-   * Invia email di benvenuto professionale per un nuovo utente dipendente via Google Apps Script (GAS)
+   * Invia email di benvenuto per un nuovo utente dipendente via Brevo (Sendinblue) API o GAS
    */
   async sendWelcomeEmail(user) {
     const roleLabels = db.getRoleLabels();
@@ -61,21 +61,21 @@ class EmailService {
       plainTextBody,
       htmlBody,
       timestamp: new Date().toISOString(),
-      status: 'PENDING_GAS_SEND'
+      status: 'PENDING_SEND'
     };
 
     if (!db.data.emailLogs) db.data.emailLogs = [];
     db.data.emailLogs.unshift(logRecord);
     db.saveData();
 
-    // Invio Reale Tramite Servizio Google Apps Script (GAS)
-    await this.sendRealEmailViaGAS(logRecord);
+    // Invio Reale via Brevo API o Fallback Google Apps Script
+    await this.dispatchRealEmail(logRecord);
 
     return logRecord;
   }
 
   /**
-   * Invia email di aggiornamento ruolo per un dipendente via Google Apps Script (GAS)
+   * Invia email di aggiornamento ruolo per un dipendente via Brevo (Sendinblue) API o GAS
    */
   async sendRoleUpdateEmail(user, oldRole, newRole) {
     const roleLabels = db.getRoleLabels();
@@ -134,52 +134,83 @@ class EmailService {
       plainTextBody,
       htmlBody,
       timestamp: new Date().toISOString(),
-      status: 'PENDING_GAS_SEND'
+      status: 'PENDING_SEND'
     };
 
     if (!db.data.emailLogs) db.data.emailLogs = [];
     db.data.emailLogs.unshift(logRecord);
     db.saveData();
 
-    // Invio Reale Tramite Servizio Google Apps Script (GAS)
-    await this.sendRealEmailViaGAS(logRecord);
+    // Invio Reale via Brevo API o Fallback Google Apps Script
+    await this.dispatchRealEmail(logRecord);
 
     return logRecord;
   }
 
   /**
-   * Invia l'email reale effettuando una richiesta POST al Web Endpoint di Google Apps Script (GAS)
+   * Smista l'invio reale dell'email tentando prima BREVO API e poi Google Apps Script (GAS)
    */
-  async sendRealEmailViaGAS(logRecord) {
+  async dispatchRealEmail(logRecord) {
     const settings = db.getSettings();
-    const gasUrl = settings.gasScriptUrl ? settings.gasScriptUrl.trim() : '';
 
-    if (!gasUrl) {
-      logRecord.status = 'RECORDED_IN_OUTBOX (Incolla URL Google Apps Script in Impostazioni)';
-      db.saveData();
-      return;
+    // 1. PROVA BREVO (Sendinblue) REST API
+    if (settings.brevoApiKey) {
+      try {
+        const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+          method: 'POST',
+          headers: {
+            'accept': 'application/json',
+            'api-key': settings.brevoApiKey.trim(),
+            'content-type': 'application/json'
+          },
+          body: JSON.stringify({
+            sender: {
+              name: settings.brandTitle || 'DECONTO System',
+              email: settings.brevoSenderEmail || 'info@deconto.it'
+            },
+            to: [
+              {
+                email: logRecord.recipientEmail,
+                name: logRecord.recipientName
+              }
+            ],
+            subject: logRecord.subject,
+            htmlContent: logRecord.htmlBody,
+            textContent: logRecord.plainTextBody
+          })
+        });
+
+        if (response.ok || response.status === 201) {
+          logRecord.status = 'DELIVERED_VIA_BREVO_API';
+          db.saveData();
+          return;
+        }
+      } catch (err) {}
     }
 
-    try {
-      // Invio HTTP POST a Google Apps Script Web App
-      await fetch(gasUrl, {
-        method: 'POST',
-        mode: 'no-cors', // Necessario per CORS Google Apps Script Redirect
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          to: logRecord.recipientEmail,
-          subject: logRecord.subject,
-          body: logRecord.plainTextBody,
-          htmlBody: logRecord.htmlBody
-        })
-      });
+    // 2. PROVA GOOGLE APPS SCRIPT (GAS)
+    if (settings.gasScriptUrl) {
+      try {
+        await fetch(settings.gasScriptUrl.trim(), {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: logRecord.recipientEmail,
+            subject: logRecord.subject,
+            body: logRecord.plainTextBody,
+            htmlBody: logRecord.htmlBody
+          })
+        });
 
-      logRecord.status = 'SENT_REAL_EMAIL_VIA_GOOGLE_APPS_SCRIPT';
-      db.saveData();
-    } catch (e) {
-      logRecord.status = 'ERROR_SENDING_GAS: ' + e.message;
-      db.saveData();
+        logRecord.status = 'DELIVERED_VIA_GOOGLE_APPS_SCRIPT';
+        db.saveData();
+        return;
+      } catch (err) {}
     }
+
+    logRecord.status = 'LOGGED_IN_OUTBOX (Configura la Brevo API Key o l\'URL GAS in Impostazioni)';
+    db.saveData();
   }
 }
 
