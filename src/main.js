@@ -2,6 +2,7 @@ import './styles/index.css';
 import { db } from './db/database.js';
 import { bleService } from './services/bluetooth.js';
 import { githubBackupService } from './services/githubBackup.js';
+import { emailService } from './services/emailService.js';
 import { renderSidebar } from './components/Navigation.js';
 import { renderLoginScreen } from './components/LoginScreen.js';
 import { renderUserProfileModal } from './components/UserProfileModal.js';
@@ -20,6 +21,7 @@ let state = {
   editingStaffUserId: null,
   editingClientId: null,
   viewingDecontoCode: null,
+  viewingEmailId: null,
 
   // Stato Ricerca & Ordinamento Dashboard
   dashSearchQuery: '',
@@ -51,7 +53,7 @@ function renderApp() {
   } else if (state.activeTab === 'simulator') {
     mainContentHtml = renderHardwareSimulator();
   } else if (state.activeTab === 'user_management' || state.activeTab === 'permissions_matrix') {
-    mainContentHtml = renderUserManagementPanel(state.activeTab, state.editingStaffUserId);
+    mainContentHtml = renderUserManagementPanel(state.activeTab, state.editingStaffUserId, state.viewingEmailId);
   } else if (user.role === 'ADMIN') {
     if (state.activeTab === 'clients' || state.activeTab === 'qr_generator' || state.activeTab === 'otp_generator' || state.activeTab === 'refills_history') {
       mainContentHtml = renderOfficePanel(state.activeTab, state.editingClientId);
@@ -180,6 +182,25 @@ function attachMainEventListeners() {
       }
     });
   });
+
+  // --- REGISTRO EMAIL SPEDITE A DIPENDENTI ---
+  const btnOpenEmailLogs = document.getElementById('btn-open-email-logs');
+  if (btnOpenEmailLogs) {
+    btnOpenEmailLogs.addEventListener('click', () => {
+      const logs = db.getEmailLogs();
+      if (logs.length > 0) {
+        state.viewingEmailId = logs[0].id;
+        renderApp();
+      } else {
+        alert('Nessuna email spedita di recente nel registro.');
+      }
+    });
+  }
+
+  const btnCloseEmailPreview = document.getElementById('btn-close-email-preview');
+  const btnCloseEmailPreviewFooter = document.getElementById('btn-close-email-preview-footer');
+  if (btnCloseEmailPreview) btnCloseEmailPreview.addEventListener('click', () => { state.viewingEmailId = null; renderApp(); });
+  if (btnCloseEmailPreviewFooter) btnCloseEmailPreviewFooter.addEventListener('click', () => { state.viewingEmailId = null; renderApp(); });
 
   // --- DASHBOARD: MODALI CARDS KPI & GRAFICI ---
   document.querySelectorAll('.kpi-card-clickable').forEach(card => {
@@ -416,8 +437,8 @@ function attachMainEventListeners() {
       }
 
       try {
-        db.addUser({ username, password, name, role, email, phone });
-        alert(`✅ Utente dipendente "${name}" (Codice ${username}) creato con successo!`);
+        const newUser = db.addUser({ username, password, name, role, email, phone });
+        alert(`✅ Utente dipendente "${name}" (Codice ${username}) creato con successo!\n\n✉️ Email di Benvenuto generata e spedita a ${newUser.email}!`);
         renderApp();
       } catch (err) {
         alert(`Errore: ${err.message}`);
@@ -452,7 +473,7 @@ function attachMainEventListeners() {
       const password = document.getElementById('edit-staff-password').value;
 
       try {
-        db.updateUser(userId, {
+        const updatedUser = db.updateUser(userId, {
           username,
           name,
           role,
@@ -462,7 +483,7 @@ function attachMainEventListeners() {
         });
 
         state.editingStaffUserId = null;
-        alert('✅ Scheda Utente aggiornata con successo!');
+        alert(`✅ Scheda Utente aggiornata con successo!\n\n✉️ Notifica Email di aggiornamento ruolo spedita a ${updatedUser.email}!`);
         renderApp();
       } catch (err) {
         alert(`Errore: ${err.message}`);

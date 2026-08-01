@@ -1,11 +1,13 @@
+import { emailService } from '../services/emailService.js';
+
 /**
- * DECONTO IoT System - Core Database, Authentication & Dynamic Permission Engine (v8)
- * Gestisce l'autenticazione, la gestione personale/utenti con cambio automatico icona avatar
- * (Scrivania 👩‍💻 per UFFICIO, Furgone 🚚 per ADR, Amministratore 👨‍💼 per ADMIN).
+ * DECONTO IoT System - Core Database, Authentication & Dynamic Permission Engine (v9)
+ * Gestisce l'autenticazione, la gestione personale/utenti, la matrice dei permessi dinamica,
+ * il cambio automatico dell'icona avatar ed il servizio integrato di notifica EMAIL.
  */
 
-const STORAGE_KEY = 'DECONTO_DB_V8';
-const SESSION_KEY = 'DECONTO_AUTH_SESSION_V8';
+const STORAGE_KEY = 'DECONTO_DB_V9';
+const SESSION_KEY = 'DECONTO_AUTH_SESSION_V9';
 
 const initialData = {
   settings: {
@@ -168,47 +170,10 @@ const initialData = {
       lastSyncDate: new Date().toISOString()
     }
   ],
-  refillLogs: [
-    {
-      id: 'ref_101',
-      boardId: 'board_3467',
-      shortCode: '3467',
-      creditsAdded: 200,
-      tokenOtp: 'OTP-9981-X79K2',
-      operatorType: 'ADR',
-      operatorId: 'usr_003',
-      timestamp: new Date(Date.now() - 86400000 * 15).toISOString(),
-      method: 'BLE_PWA'
-    },
-    {
-      id: 'ref_102',
-      boardId: 'board_5510',
-      shortCode: '5510',
-      creditsAdded: 150,
-      tokenOtp: 'OTP-4412-M28P0',
-      operatorType: 'CLIENT_DIY',
-      operatorId: 'cli_3',
-      timestamp: new Date(Date.now() - 86400000 * 25).toISOString(),
-      method: 'WHATSAPP_OTP_BLE'
-    }
-  ],
-  coffeeLogs: [
-    { id: 'log_1785568918595', boardId: 'board_5510', timestamp: new Date(Date.now() - 3600000 * 1).toISOString(), durationSeconds: 22, groupId: 1 },
-    { id: 'log_1785568915074', boardId: 'board_5510', timestamp: new Date(Date.now() - 3600000 * 3).toISOString(), durationSeconds: 22, groupId: 1 },
-    { id: 'log_1', boardId: 'board_3467', timestamp: new Date(Date.now() - 3600000 * 5).toISOString(), durationSeconds: 22, groupId: 1 },
-    { id: 'log_2', boardId: 'board_3467', timestamp: new Date(Date.now() - 3600000 * 7).toISOString(), durationSeconds: 21, groupId: 1 },
-    { id: 'log_5', boardId: 'board_1289', timestamp: new Date(Date.now() - 3600000 * 10).toISOString(), durationSeconds: 20, groupId: 1 }
-  ],
-  backupLogs: [
-    {
-      id: 'bak_001',
-      timestamp: new Date(Date.now() - 86400000).toISOString(),
-      repo: 'emporioboldrini-stack/deconto-app',
-      commitHash: 'c41b3ff',
-      status: 'SUCCESS',
-      recordCount: 28
-    }
-  ]
+  refillLogs: [],
+  coffeeLogs: [],
+  emailLogs: [],
+  backupLogs: []
 };
 
 class DecontoDatabase {
@@ -225,9 +190,9 @@ class DecontoDatabase {
         if (!parsed.settings) parsed.settings = initialData.settings;
         if (!parsed.roleLabels) parsed.roleLabels = initialData.roleLabels;
         if (!parsed.permissions) parsed.permissions = initialData.permissions;
+        if (!parsed.emailLogs) parsed.emailLogs = [];
         if (!parsed.users || !parsed.users.some(u => u.username === '001')) parsed.users = initialData.users;
 
-        // Assicura che le icone siano sincronizzate coi ruoli
         parsed.users.forEach(u => {
           if (u.role === 'UFFICIO') u.avatar = '👩‍💻';
           else if (u.role === 'ADR') u.avatar = '🚚';
@@ -342,7 +307,7 @@ class DecontoDatabase {
       password: userData.password.trim(),
       name: userData.name.trim(),
       role: role,
-      email: userData.email ? userData.email.trim() : '',
+      email: userData.email ? userData.email.trim() : `${userData.username.trim()}@deconto.it`,
       phone: userData.phone ? userData.phone.trim() : '',
       status: 'ACTIVE',
       avatar: avatar,
@@ -351,12 +316,20 @@ class DecontoDatabase {
 
     this.data.users.push(newUser);
     this.saveData();
+
+    // INVIA EMAIL AUTOMATICA DI BENVENUTO
+    try {
+      emailService.sendWelcomeEmail(newUser);
+    } catch(e) {}
+
     return newUser;
   }
 
   updateUser(userId, updatedData) {
     const user = this.data.users.find(u => u.id === userId);
     if (!user) throw new Error('Utente non trovato.');
+
+    const oldRole = user.role;
 
     if (updatedData.name) user.name = updatedData.name.trim();
     if (updatedData.username) user.username = updatedData.username.trim();
@@ -365,10 +338,11 @@ class DecontoDatabase {
     if (updatedData.password) user.password = updatedData.password.trim();
     if (updatedData.status) user.status = updatedData.status;
 
-    // AGGIORNAMENTO DINAMICO RUOLO ED ICONA AVATAR
-    if (updatedData.role) {
+    let roleChanged = false;
+    if (updatedData.role && updatedData.role !== oldRole) {
       user.role = updatedData.role;
       user.avatar = (user.role === 'UFFICIO') ? '👩‍💻' : (user.role === 'ADR' ? '🚚' : '👨‍💼');
+      roleChanged = true;
     }
 
     this.saveData();
@@ -382,6 +356,13 @@ class DecontoDatabase {
         role: user.role,
         avatar: user.avatar
       });
+    }
+
+    // INVIA EMAIL AUTOMATICA DI NOTIFICA CAMBIO RUOLO / PROMOZIONE
+    if (roleChanged) {
+      try {
+        emailService.sendRoleUpdateEmail(user, oldRole, user.role);
+      } catch(e) {}
     }
 
     return user;
@@ -420,6 +401,7 @@ class DecontoDatabase {
   getBoards() { return this.data.decontoBoards; }
   getRefillLogs() { return this.data.refillLogs; }
   getCoffeeLogs() { return this.data.coffeeLogs; }
+  getEmailLogs() { return this.data.emailLogs || []; }
   getBackupLogs() { return this.data.backupLogs; }
 
   getBoardFullDetails(shortCodeOrId) {
