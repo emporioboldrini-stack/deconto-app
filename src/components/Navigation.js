@@ -10,18 +10,43 @@ export function renderSidebar(currentUser, activeTab) {
 
   return `
     <aside class="sidebar">
+      
+      <!-- 1. IN ALTO: Logo e Scritta Aziendale Brand -->
       <div class="sidebar-header" style="display: flex; align-items: center; gap: 12px; padding: 20px 16px; border-bottom: 1px solid var(--border-subtle);">
-        <div id="brand-logo-container" style="width: 42px; height: 42px; border-radius: 10px; background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple)); display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: var(--shadow-glow);">
+        <div id="brand-logo-container" style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple)); display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: var(--shadow-glow);">
           ${settings.customLogoUrl 
             ? `<img src="${settings.customLogoUrl}" style="width: 100%; height: 100%; object-fit: cover;" alt="Logo Brand">` 
             : `<span style="font-size: 1.6rem;">☕</span>`}
         </div>
         <div>
-          <div style="font-weight: 800; font-size: 1.1rem; color: #fff; letter-spacing: 0.5px;">${settings.brandTitle || 'DECONTO'}</div>
+          <div style="font-weight: 800; font-size: 1.15rem; color: #fff; letter-spacing: 0.5px;">${settings.brandTitle || 'DECONTO'}</div>
           <div style="font-size: 0.72rem; color: var(--accent-cyan); font-weight: 700;">${settings.brandSubtitle || 'IoT Vending System'}</div>
         </div>
       </div>
 
+      <!-- 2. SUBITO SOTTO: Scheda Utente Loggato + Modifica + Tasto Esci (Login) -->
+      <div style="padding: 16px; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border-subtle); margin-bottom: 8px;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+          <div style="font-size: 1.8rem; background: rgba(255,255,255,0.05); padding: 6px; border-radius: 10px;">${currentUser.avatar || '👤'}</div>
+          <div style="line-height: 1.2;">
+            <div style="font-weight: 800; font-size: 0.9rem; color: #fff;">${currentUser.name}</div>
+            <div style="font-size: 0.72rem; color: var(--accent-cyan); font-weight: 700; margin-top: 2px;">
+              ${currentUser.role === 'ADMIN' ? 'AMMINISTRATORE' : (roleLabels[currentUser.role] || currentUser.role)}
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 8px;">
+          <button id="btn-open-profile-modal" class="btn btn-secondary" style="flex: 1; padding: 6px 10px; font-size: 0.75rem; font-weight: 700;">
+            ✏️ Modifica Profilo
+          </button>
+          <button id="btn-logout" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.75rem; font-weight: 800; color: var(--accent-rose); border-color: rgba(244, 63, 94, 0.4);">
+            🚪 Esci
+          </button>
+        </div>
+      </div>
+
+      <!-- 3. MENU VOCI NAVIGAZIONE -->
       <nav class="sidebar-nav">
 
         ${isAdmin ? `
@@ -95,22 +120,6 @@ export function renderSidebar(currentUser, activeTab) {
         ` : ''}
 
       </nav>
-
-      <div class="sidebar-footer" style="padding: 16px; border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
-        <div style="display: flex; align-items: center; gap: 10px; cursor: pointer;" id="btn-open-profile-modal">
-          <div style="font-size: 1.5rem;">${currentUser.avatar || '👤'}</div>
-          <div style="line-height: 1.2;">
-            <div style="font-weight: 700; font-size: 0.85rem; color: #fff;">${currentUser.name}</div>
-            <div style="font-size: 0.7rem; color: var(--accent-cyan); font-weight: 600;">
-              ${currentUser.role === 'ADMIN' ? 'AMMINISTRATORE' : (roleLabels[currentUser.role] || currentUser.role)}
-            </div>
-          </div>
-        </div>
-
-        <button id="btn-logout" title="Disconnetti" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--accent-rose);">
-          🚪
-        </button>
-      </div>
     </aside>
   `;
 }
