@@ -1,5 +1,17 @@
 {
   "projects": {
     "default": "deconto-vending-app"
+  },
+  "targets": {
+    "deconto-vending-app": {
+      "hosting": {
+        "app": [
+          "deconto-app"
+        ],
+        "vending": [
+          "deconto-vending-app"
+        ]
+      }
+    }
   }
 }
