@@ -28,9 +28,9 @@ let state = {
   dashSortColumn: 'shortCode',
   dashSortDirection: 'DESC',
 
-  viewingKpiModal: null,
-  kpiPeriod: '30DAYS',
-  kpiChartType: 'LINE'
+  viewingKpiModal: null, // 'kpi_clients' | 'kpi_machines' | 'kpi_extractions' | 'kpi_lowstock'
+  kpiPeriod: '30DAYS',    // '30DAYS' | '90DAYS' | '1YEAR'
+  kpiChartType: 'LINE'   // 'LINE' | 'BAR'
 };
 
 function renderApp() {
@@ -154,6 +154,117 @@ function attachMainEventListeners() {
       }
     });
   });
+
+  // --- 📊 DASHBOARD: POP-UP MODALI CARDS KPI (TASTI 1, 2, 3, 4) ---
+  document.querySelectorAll('.kpi-card-clickable').forEach(card => {
+    card.addEventListener('click', () => {
+      const kpiKey = card.getAttribute('data-kpi');
+      state.viewingKpiModal = kpiKey;
+      renderApp();
+    });
+  });
+
+  document.querySelectorAll('.btn-close-kpi-modal').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.viewingKpiModal = null;
+      renderApp();
+    });
+  });
+
+  document.querySelectorAll('.btn-kpi-period').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.kpiPeriod = btn.getAttribute('data-period');
+      renderApp();
+    });
+  });
+
+  document.querySelectorAll('.btn-kpi-charttype').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.kpiChartType = btn.getAttribute('data-charttype');
+      renderApp();
+    });
+  });
+
+  // --- 🔍 DASHBOARD: RICERCA MULTI-CATEGORIA & ORDINAMENTO COLONNE ---
+  const btnDashSearch = document.getElementById('btn-dash-search');
+  const dashSearchInput = document.getElementById('dash-search-input');
+  if (btnDashSearch && dashSearchInput) {
+    btnDashSearch.addEventListener('click', () => {
+      state.dashSearchQuery = dashSearchInput.value;
+      state.dashSearchCategory = document.getElementById('dash-search-category').value;
+      renderApp();
+    });
+
+    dashSearchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        state.dashSearchQuery = dashSearchInput.value;
+        state.dashSearchCategory = document.getElementById('dash-search-category').value;
+        renderApp();
+      }
+    });
+  }
+
+  const btnDashReset = document.getElementById('btn-dash-reset');
+  if (btnDashReset) {
+    btnDashReset.addEventListener('click', () => {
+      state.dashSearchQuery = '';
+      state.dashSearchCategory = 'ALL';
+      renderApp();
+    });
+  }
+
+  document.querySelectorAll('.th-sortable').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.getAttribute('data-col');
+      if (state.dashSortColumn === col) {
+        state.dashSortDirection = state.dashSortDirection === 'ASC' ? 'DESC' : 'ASC';
+      } else {
+        state.dashSortColumn = col;
+        state.dashSortDirection = 'ASC';
+      }
+      renderApp();
+    });
+  });
+
+  // --- 📟 DASHBOARD: POP-UP MODALE SCHEDA DECONTO (TASTO 5 - NUMERO DECONTO) ---
+  document.querySelectorAll('.btn-deconto-detail').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const code = btn.getAttribute('data-code');
+      state.viewingDecontoCode = code;
+      renderApp();
+    });
+  });
+
+  const btnCloseDecontoModal = document.getElementById('btn-close-deconto-modal');
+  const btnCloseDecontoModalFooter = document.getElementById('btn-close-deconto-modal-footer');
+  if (btnCloseDecontoModal) btnCloseDecontoModal.addEventListener('click', () => { state.viewingDecontoCode = null; renderApp(); });
+  if (btnCloseDecontoModalFooter) btnCloseDecontoModalFooter.addEventListener('click', () => { state.viewingDecontoCode = null; renderApp(); });
+
+  // Export CSV & Backup GitHub
+  const btnExportCsv = document.getElementById('btn-export-csv');
+  if (btnExportCsv) {
+    btnExportCsv.addEventListener('click', () => {
+      const csv = db.exportCoffeeLogsCSV();
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `DECONTO_Report_Consumi_${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      alert('📥 Report Consumi CSV Scaricato con successo!');
+    });
+  }
+
+  const btnBackup = document.getElementById('btn-trigger-backup');
+  if (btnBackup) {
+    btnBackup.addEventListener('click', async () => {
+      btnBackup.disabled = true;
+      btnBackup.innerText = '⏳ Backup in corso su GitHub...';
+      const res = await githubBackupService.executeBackupNow();
+      alert(`✅ Backup GitHub Eseguito con Successo!\n\nRepository: https://github.com/emporioboldrini-stack/deconto-app.git\nCommit Hash: ${res.backupRecord.commitHash}\nEntità salvate: ${res.backupRecord.recordCount}`);
+      renderApp();
+    });
+  }
 
   // --- STEP 3: 🏢 ANAGRAFICA CLIENTE EVENTI ---
   const btnToggleAddCli = document.getElementById('btn-toggle-add-client');
@@ -379,20 +490,6 @@ function attachMainEventListeners() {
       renderApp();
     });
   });
-
-  // Telemetria Deconto
-  document.querySelectorAll('.btn-deconto-detail').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const code = btn.getAttribute('data-code');
-      state.viewingDecontoCode = code;
-      renderApp();
-    });
-  });
-
-  const btnCloseDecontoModal = document.getElementById('btn-close-deconto-modal');
-  const btnCloseDecontoModalFooter = document.getElementById('btn-close-deconto-modal-footer');
-  if (btnCloseDecontoModal) btnCloseDecontoModal.addEventListener('click', () => { state.viewingDecontoCode = null; renderApp(); });
-  if (btnCloseDecontoModalFooter) btnCloseDecontoModalFooter.addEventListener('click', () => { state.viewingDecontoCode = null; renderApp(); });
 
   // Simulatore Hardware
   const simBoardSelect = document.getElementById('sim-board-select');
