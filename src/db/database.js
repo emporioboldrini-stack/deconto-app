@@ -329,14 +329,14 @@ class DecontoDatabase {
       if (!masterData.permissions) masterData.permissions = { ...initialData.permissions };
       else masterData.permissions = { ...initialData.permissions, ...masterData.permissions };
 
-      if (!masterData.users || !Array.isArray(masterData.users)) {
+      if (!masterData.users || !Array.isArray(masterData.users) || masterData.users.length === 0) {
         masterData.users = [...initialData.users];
       } else {
-        initialData.users.forEach(u => {
-          if (!masterData.users.some(mu => mu.username === u.username)) {
-            masterData.users.push(u);
-          }
-        });
+        // Garantisci solo che l'Amministratore '001' esista sempre come backup di emergenza
+        const adminDefault = initialData.users.find(u => u.username === '001');
+        if (adminDefault && !masterData.users.some(mu => mu.username === '001')) {
+          masterData.users.push(adminDefault);
+        }
       }
 
       if (!masterData.clients || !Array.isArray(masterData.clients)) {
