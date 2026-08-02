@@ -1,8 +1,9 @@
 import { emailService } from '../services/emailService.js';
 
-const MASTER_STORAGE_KEY = 'deconto_app_master_db_v2';
+const MASTER_STORAGE_KEY = 'deconto_app_master_db_v3';
 const SESSION_STORAGE_KEY = 'deconto_app_user_session';
 const ALL_STORAGE_KEYS = [
+  'deconto_app_master_db_v3',
   'deconto_app_master_db_v2',
   'deconto_app_master_db_v1',
   'deconto_app_master_db',
@@ -89,28 +90,25 @@ const initialData = {
   clients: [
     { id: 'cli_1', name: 'Bar Milano Central', refPerson: 'Mario Rossi', phone: '+39 02 5551234', address: 'Via Roma 12, Milano', city: 'Milano' },
     { id: 'cli_2', name: 'Ristorante La Perla', refPerson: 'Elena Neri', phone: '+39 06 7778899', address: 'Corso Italia 45, Roma', city: 'Roma' },
-    { id: 'cli_3', name: 'Studio Legale Brambilla', refPerson: 'Avv. Brambilla', phone: '+39 02 4443322', address: 'Via Montenapoleone 8, Milano', city: 'Milano' },
-    { id: 'cli_4', name: 'Officina Meccanica Conti', refPerson: 'Luigi Conti', phone: '+39 011 998877', address: 'Via Garibaldi 102, Torino', city: 'Torino' },
-    { id: 'cli_5', name: 'Hotel Bellavista', refPerson: 'Stefano Bellini', phone: '+39 051 889900', address: 'Piazza Maggiore 3, Bologna', city: 'Bologna' },
-    { id: 'cli_6', name: 'Pizzeria Vesuvio', refPerson: 'Salvatore Esposito', phone: '+39 081 223344', address: 'Via Toledo 50, Napoli', city: 'Napoli' },
-    { id: 'cli_7', name: 'Pasticceria Giotto', refPerson: 'Marco Giotto', phone: '+39 049 887766', address: 'Via Dante 14, Padova', city: 'Padova' },
-    { id: 'cli_8', name: 'Studio Dentistico Rossi', refPerson: 'Dr. Roberto Rossi', phone: '+39 030 445566', address: 'Via X Giornate 88, Brescia', city: 'Brescia' },
-    { id: 'cli_9', name: 'Caffetteria Torinese', refPerson: 'Carla Vianello', phone: '+39 011 334455', address: 'Piazza Castello 15, Torino', city: 'Torino' },
-    { id: 'cli_10', name: 'Magazzino Riserve ADR', refPerson: 'Deposito Centrale', phone: '+39 02 998800', address: 'Via Industria 2, Monza', city: 'Monza' }
+    { id: 'cli_3', name: 'Studio Dentistico Rossi', refPerson: 'Dr. Roberto Rossi', phone: '+39 030 445566', address: 'Via X Giornate 88, Brescia', city: 'Brescia' },
+    { id: 'cli_4', name: 'Hotel Bellavista', refPerson: 'Stefano Bellini', phone: '+39 051 889900', address: 'Piazza Maggiore 3, Bologna', city: 'Bologna' },
+    { id: 'cli_5', name: 'Magazzino Riserve ADR', refPerson: 'Deposito Centrale', phone: '+39 02 998800', address: 'Via Industria 2, Monza', city: 'Monza' },
+    { id: 'cli_6', name: 'Caffetteria Torinese', refPerson: 'Carla Vianello', phone: '+39 011 334455', address: 'Piazza Castello 15, Torino', city: 'Torino' },
+    { id: 'cli_7', name: 'Officina Meccanica Conti', refPerson: 'Luigi Conti', phone: '+39 011 998877', address: 'Via Garibaldi 102, Torino', city: 'Torino' },
+    { id: 'cli_8', name: 'Pasticceria Giotto', refPerson: 'Marco Giotto', phone: '+39 049 887766', address: 'Via Dante 14, Padova', city: 'Padova' }
   ],
   machines: [
     { id: 'mc_1', serialNumber: 'SN-MC-2026-9912', brand: 'DeLonghi', model: 'DeLonghi Pod Professional 1G', clientId: 'cli_1', installDate: '2025-11-10' },
     { id: 'mc_2', serialNumber: 'SN-MC-2026-8843', brand: 'Faber', model: 'Faber Slot Plast Single', clientId: 'cli_2', installDate: '2026-01-15' },
-    { id: 'mc_3', serialNumber: 'SN-MC-2026-7711', brand: 'Didiesse', model: 'Didiesse Frog Revolution', clientId: 'cli_3', installDate: '2026-02-20' },
-    { id: 'mc_4', serialNumber: 'SN-MC-2026-4409', brand: 'Spinel', model: 'Spinel Pinocchio Professional', clientId: 'cli_4', installDate: '2026-03-05' },
-    { id: 'mc_5', serialNumber: 'SN-MC-2026-5500', brand: 'Lelit', model: 'Lelit Giulietta Dual Group', clientId: 'cli_5', installDate: '2026-03-12' },
-    { id: 'mc_6', serialNumber: 'SN-MC-2026-6312', brand: 'La Piccola', model: 'La Piccola Piccola Pro 1G', clientId: 'cli_6', installDate: '2026-03-18' },
-    { id: 'mc_7', serialNumber: 'SN-MC-2026-8820', brand: 'Bialetti', model: 'Bialetti Mokona Pro Vending', clientId: 'cli_7', installDate: '2026-03-25' },
-    { id: 'mc_8', serialNumber: 'SN-MC-2026-1099', brand: 'Saeco', model: 'Saeco Aroma SE Compact', clientId: 'cli_8', installDate: '2026-04-02' },
-    { id: 'mc_9', serialNumber: 'SN-MC-2026-5432', brand: 'Gaggia', model: 'Gaggia Ruby 1G Professional', clientId: 'cli_9', installDate: '2026-04-10' },
-    { id: 'mc_10', serialNumber: 'SN-MC-2026-7700', brand: 'Grimac', model: 'Grimac Terry Opus 1', clientId: 'cli_10', installDate: '2026-04-15' }
+    { id: 'mc_3', serialNumber: 'SN-MC-2026-1099', brand: 'Saeco', model: 'Saeco Aroma SE Compact', clientId: 'cli_3', installDate: '2026-02-01' },
+    { id: 'mc_4', serialNumber: 'SN-MC-2026-4021', brand: 'Lelit', model: 'Lelit Giulietta Dual Group', clientId: 'cli_4', installDate: '2026-02-10' },
+    { id: 'mc_5', serialNumber: 'SN-MC-2026-7700', brand: 'Grimac', model: 'Grimac Terry Opus 1', clientId: 'cli_5', installDate: '2026-02-20' },
+    { id: 'mc_6', serialNumber: 'SN-MC-2026-5432', brand: 'Gaggia', model: 'Gaggia Ruby 1G Professional', clientId: 'cli_6', installDate: '2026-03-01' },
+    { id: 'mc_7', serialNumber: 'SN-MC-2026-4409', brand: 'Spinel', model: 'Spinel Pinocchio Professional', clientId: 'cli_7', installDate: '2026-03-05' },
+    { id: 'mc_8', serialNumber: 'SN-MC-2026-8820', brand: 'Bialetti', model: 'Bialetti Mokona Pro Vending', clientId: 'cli_8', installDate: '2026-03-15' }
   ],
   decontoBoards: [
+    // 🟢 VERDI (5 Schede > 20 cialde)
     {
       id: 'board_3467',
       shortCode: '3467',
@@ -146,96 +144,11 @@ const initialData = {
       lastSyncDate: new Date(Date.now() - 86400000 * 3).toISOString()
     },
     {
-      id: 'board_5510',
-      shortCode: '5510',
-      hwSerial: 'DC-HW-9910',
-      macAddress: 'C6:3F:8A:33:55:10',
-      machineId: 'mc_3',
-      version: 'BASIC',
-      remainingCredits: 7,
-      relayStatus: 'CLOSED_OK',
-      firmwareVersion: 'v2.1.0-ESP32-C6',
-      isOnlineWifi: false,
-      rssi: -84,
-      machineExtractions: 991,
-      lifetimeExtractions: 2153,
-      avgDailyCoffees: 5.2,
-      lastSyncDate: new Date(Date.now() - 86400000 * 12).toISOString()
-    },
-    {
-      id: 'board_9901',
-      shortCode: '9901',
-      hwSerial: 'DC-HW-4401',
-      macAddress: 'C6:3F:8A:44:99:01',
-      machineId: 'mc_4',
-      version: 'BASIC',
-      remainingCredits: 0,
-      relayStatus: 'OPEN_LOCKED',
-      firmwareVersion: 'v2.1.0-ESP32-C6',
-      isOnlineWifi: true,
-      rssi: -58,
-      machineExtractions: 1241,
-      lifetimeExtractions: 3501,
-      avgDailyCoffees: 9.1,
-      lastSyncDate: new Date().toISOString()
-    },
-    {
-      id: 'board_4021',
-      shortCode: '4021',
-      hwSerial: 'DC-HW-4021',
-      macAddress: 'C6:3F:8A:66:40:21',
-      machineId: 'mc_5',
-      version: 'PRO',
-      remainingCredits: 18,
-      relayStatus: 'CLOSED_OK',
-      firmwareVersion: 'v2.1.0-ESP32-C6',
-      isOnlineWifi: true,
-      rssi: -65,
-      machineExtractions: 2100,
-      lifetimeExtractions: 5400,
-      avgDailyCoffees: 15.0,
-      lastSyncDate: new Date().toISOString()
-    },
-    {
-      id: 'board_6312',
-      shortCode: '6312',
-      hwSerial: 'DC-HW-6312',
-      macAddress: 'C6:3F:8A:77:63:12',
-      machineId: 'mc_6',
-      version: 'BASIC',
-      remainingCredits: 3,
-      relayStatus: 'CLOSED_OK',
-      firmwareVersion: 'v2.1.0-ESP32-C6',
-      isOnlineWifi: false,
-      rssi: -80,
-      machineExtractions: 890,
-      lifetimeExtractions: 1980,
-      avgDailyCoffees: 8.5,
-      lastSyncDate: new Date(Date.now() - 86400000 * 5).toISOString()
-    },
-    {
-      id: 'board_8820',
-      shortCode: '8820',
-      hwSerial: 'DC-HW-8820',
-      macAddress: 'C6:3F:8A:88:88:20',
-      machineId: 'mc_7',
-      version: 'BASIC',
-      remainingCredits: 0,
-      relayStatus: 'OPEN_LOCKED',
-      firmwareVersion: 'v2.1.0-ESP32-C6',
-      isOnlineWifi: true,
-      rssi: -60,
-      machineExtractions: 1540,
-      lifetimeExtractions: 4120,
-      avgDailyCoffees: 11.2,
-      lastSyncDate: new Date().toISOString()
-    },
-    {
       id: 'board_1099',
       shortCode: '1099',
       hwSerial: 'DC-HW-1099',
       macAddress: 'C6:3F:8A:99:10:99',
-      machineId: 'mc_8',
+      machineId: 'mc_3',
       version: 'PRO',
       remainingCredits: 85,
       relayStatus: 'CLOSED_OK',
@@ -248,11 +161,47 @@ const initialData = {
       lastSyncDate: new Date().toISOString()
     },
     {
+      id: 'board_4021',
+      shortCode: '4021',
+      hwSerial: 'DC-HW-4021',
+      macAddress: 'C6:3F:8A:66:40:21',
+      machineId: 'mc_4',
+      version: 'PRO',
+      remainingCredits: 45,
+      relayStatus: 'CLOSED_OK',
+      firmwareVersion: 'v2.1.0-ESP32-C6',
+      isOnlineWifi: true,
+      rssi: -65,
+      machineExtractions: 2100,
+      lifetimeExtractions: 5400,
+      avgDailyCoffees: 15.0,
+      lastSyncDate: new Date().toISOString()
+    },
+    {
+      id: 'board_7700',
+      shortCode: '7700',
+      hwSerial: 'DC-HW-5500',
+      macAddress: 'C6:3F:8A:55:77:00',
+      machineId: 'mc_5',
+      version: 'PRO',
+      remainingCredits: 500,
+      relayStatus: 'CLOSED_OK',
+      firmwareVersion: 'v2.1.0-ESP32-C6',
+      isOnlineWifi: false,
+      rssi: -70,
+      machineExtractions: 0,
+      lifetimeExtractions: 0,
+      avgDailyCoffees: 0,
+      lastSyncDate: new Date().toISOString()
+    },
+
+    // 🟡 GIALLI (1 Scheda tra 6 e 20 cialde)
+    {
       id: 'board_5432',
       shortCode: '5432',
       hwSerial: 'DC-HW-5432',
       macAddress: 'C6:3F:8A:AA:54:32',
-      machineId: 'mc_9',
+      machineId: 'mc_6',
       version: 'BASIC',
       remainingCredits: 12,
       relayStatus: 'CLOSED_OK',
@@ -264,21 +213,40 @@ const initialData = {
       avgDailyCoffees: 7.8,
       lastSyncDate: new Date(Date.now() - 86400000 * 2).toISOString()
     },
+
+    // ⚫ NERI (2 Schede Blocco Relè a 0 cialde)
     {
-      id: 'board_7700',
-      shortCode: '7700',
-      hwSerial: 'DC-HW-5500',
-      macAddress: 'C6:3F:8A:55:77:00',
-      machineId: 'mc_10',
-      version: 'PRO',
-      remainingCredits: 500,
-      relayStatus: 'CLOSED_OK',
+      id: 'board_9901',
+      shortCode: '9901',
+      hwSerial: 'DC-HW-4401',
+      macAddress: 'C6:3F:8A:44:99:01',
+      machineId: 'mc_7',
+      version: 'BASIC',
+      remainingCredits: 0,
+      relayStatus: 'OPEN_LOCKED',
       firmwareVersion: 'v2.1.0-ESP32-C6',
-      isOnlineWifi: false,
-      rssi: -70,
-      machineExtractions: 0,
-      lifetimeExtractions: 0,
-      avgDailyCoffees: 0,
+      isOnlineWifi: true,
+      rssi: -58,
+      machineExtractions: 1241,
+      lifetimeExtractions: 3501,
+      avgDailyCoffees: 9.1,
+      lastSyncDate: new Date().toISOString()
+    },
+    {
+      id: 'board_8820',
+      shortCode: '8820',
+      hwSerial: 'DC-HW-8820',
+      macAddress: 'C6:3F:8A:88:88:20',
+      machineId: 'mc_8',
+      version: 'BASIC',
+      remainingCredits: 0,
+      relayStatus: 'OPEN_LOCKED',
+      firmwareVersion: 'v2.1.0-ESP32-C6',
+      isOnlineWifi: true,
+      rssi: -60,
+      machineExtractions: 1540,
+      lifetimeExtractions: 4120,
+      avgDailyCoffees: 11.2,
       lastSyncDate: new Date().toISOString()
     }
   ],
@@ -322,82 +290,34 @@ class DecontoDatabase {
   }
 
   loadData() {
-    let masterData = null;
+    let masterData = JSON.parse(JSON.stringify(initialData));
 
-    // 1. Scansiona tutte le chiavi possibili per non perdere MAI dati da versioni o sessioni precedenti
+    // Scansiona le chiavi salvate nel browser per recuperare solo dati personalizzati (utenti o schede create dall'operatore)
     for (const key of ALL_STORAGE_KEYS) {
       try {
         const storedRaw = localStorage.getItem(key);
         if (storedRaw) {
           const parsed = JSON.parse(storedRaw);
           if (parsed && parsed.users && Array.isArray(parsed.users)) {
-            if (!masterData) {
-              masterData = parsed;
-            } else {
-              // Unisci gli utenti da chiavi differenti
-              parsed.users.forEach(u => {
-                if (!masterData.users.some(mu => mu.id === u.id || mu.username === u.username)) {
-                  masterData.users.push(u);
+            // Unisci gli utenti creati manualmente
+            parsed.users.forEach(u => {
+              if (!masterData.users.some(mu => mu.id === u.id || mu.username === u.username)) {
+                masterData.users.push(u);
+              }
+            });
+
+            // Unisci eventuali clienti/macchine/deconti custom creati dall'utente
+            if (parsed.decontoBoards && Array.isArray(parsed.decontoBoards)) {
+              parsed.decontoBoards.forEach(b => {
+                if (!masterData.decontoBoards.some(mb => mb.id === b.id || mb.shortCode === b.shortCode)) {
+                  masterData.decontoBoards.push(b);
                 }
               });
-
-              // Unisci clienti, macchine e deconti
-              if (parsed.clients && Array.isArray(parsed.clients)) {
-                parsed.clients.forEach(c => {
-                  if (!masterData.clients.some(mc => mc.id === c.id)) masterData.clients.push(c);
-                });
-              }
-              if (parsed.machines && Array.isArray(parsed.machines)) {
-                parsed.machines.forEach(m => {
-                  if (!masterData.machines.some(mm => mm.id === m.id)) masterData.machines.push(m);
-                });
-              }
-              if (parsed.decontoBoards && Array.isArray(parsed.decontoBoards)) {
-                parsed.decontoBoards.forEach(b => {
-                  if (!masterData.decontoBoards.some(mb => mb.id === b.id || mb.shortCode === b.shortCode)) masterData.decontoBoards.push(b);
-                });
-              }
             }
           }
         }
       } catch (e) {}
     }
-
-    if (!masterData) {
-      masterData = JSON.parse(JSON.stringify(initialData));
-    }
-
-    // Assicurati che i 10 Deconti di default esistano sempre, preservando qualsiasi scheda aggiunta
-    initialData.decontoBoards.forEach(initBoard => {
-      const existing = masterData.decontoBoards.find(b => b.id === initBoard.id || b.shortCode === initBoard.shortCode);
-      if (!existing) {
-        masterData.decontoBoards.push(initBoard);
-      }
-    });
-
-    initialData.clients.forEach(initClient => {
-      if (!masterData.clients.some(c => c.id === initClient.id)) {
-        masterData.clients.push(initClient);
-      }
-    });
-
-    initialData.machines.forEach(initMc => {
-      if (!masterData.machines.some(m => m.id === initMc.id)) {
-        masterData.machines.push(initMc);
-      }
-    });
-
-    // Assicurati che gli utenti base esistano sempre mantenendo ogni dipendente aggiunto
-    initialData.users.forEach(initUser => {
-      const existing = masterData.users.find(u => u.id === initUser.id || u.username === initUser.username);
-      if (!existing) {
-        masterData.users.push(initUser);
-      } else {
-        if (existing.username === '001' && existing.password === '123') {
-          existing.password = '123456';
-        }
-      }
-    });
 
     if (!masterData.settings) masterData.settings = initialData.settings;
     if (!masterData.roleLabels) masterData.roleLabels = initialData.roleLabels;
@@ -405,7 +325,7 @@ class DecontoDatabase {
     if (!masterData.emailLogs) masterData.emailLogs = [];
     if (!masterData.coffeeLogs) masterData.coffeeLogs = [];
 
-    // Salva immediatamente su tutte le chiavi per sincronizzazione totale
+    // Salva immediatamente il master di 8 Deconti esatti su tutte le chiavi
     try {
       const payload = JSON.stringify(masterData);
       ALL_STORAGE_KEYS.forEach(k => localStorage.setItem(k, payload));
