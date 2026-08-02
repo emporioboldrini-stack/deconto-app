@@ -135,17 +135,17 @@
         <div class="nav-section-title">ANAGRAFICHE DI SISTEMA</div>
 
         ${a?`
-          <a class="nav-item ${t===`clients`?`active`:``}" data-tab="clients">
-            <span class="nav-icon">🏢</span>
-            <span>Anagrafica Clienti</span>
+          <a class="nav-item ${t===`deconto_boards`?`active`:``}" data-tab="deconto_boards">
+            <span class="nav-icon">📟</span>
+            <span>Schede Deconto</span>
           </a>
           <a class="nav-item ${t===`machines`?`active`:``}" data-tab="machines">
             <span class="nav-icon">☕</span>
             <span>Parco Macchine</span>
           </a>
-          <a class="nav-item ${t===`deconto_boards`?`active`:``}" data-tab="deconto_boards">
-            <span class="nav-icon">📟</span>
-            <span>Schede Deconto</span>
+          <a class="nav-item ${t===`clients`?`active`:``}" data-tab="clients">
+            <span class="nav-icon">🏢</span>
+            <span>Anagrafica Clienti</span>
           </a>
         `:``}
 
