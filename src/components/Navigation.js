@@ -11,7 +11,7 @@ export function renderSidebar(currentUser, activeTab) {
   return `
     <aside class="sidebar">
       
-      <!-- 1. IN ALTO: Logo e Scritta Aziendale Brand -->
+      <!-- 1. IN ALTO: Logo e Scritta Aziendale Brand con Badge Versione V1.5PC -->
       <div class="sidebar-header" style="display: flex; align-items: center; gap: 12px; padding: 20px 16px; border-bottom: 1px solid var(--border-subtle);">
         <div id="brand-logo-container" style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple)); display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: var(--shadow-glow);">
           ${settings.customLogoUrl 
@@ -19,7 +19,10 @@ export function renderSidebar(currentUser, activeTab) {
             : `<span style="font-size: 1.6rem;">☕</span>`}
         </div>
         <div>
-          <div style="font-weight: 800; font-size: 1.15rem; color: #fff; letter-spacing: 0.5px;">${settings.brandTitle || 'DECONTO'}</div>
+          <div style="font-weight: 800; font-size: 1.15rem; color: #fff; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+            ${settings.brandTitle || 'DECONTO'}
+            <span class="badge badge-info" style="font-size: 0.65rem; padding: 2px 6px; font-weight: 900;">V1.5PC</span>
+          </div>
           <div style="font-size: 0.72rem; color: var(--accent-cyan); font-weight: 700;">${settings.brandSubtitle || 'IoT Vending System'}</div>
         </div>
       </div>
