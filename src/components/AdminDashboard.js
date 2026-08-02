@@ -240,109 +240,123 @@ export function renderAdminDashboard(
 
     kpiModalHtml = `
       <div class="modal-overlay" id="kpi-modal">
-        <div class="modal-box" style="max-width: 880px; width: 95%;">
+        <div class="modal-box" style="max-width: 1060px; width: 95%;">
+          
+          <!-- Header Pop-up -->
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px;">
             <h2 style="font-size: 1.4rem; font-weight: 800; color: var(--accent-rose); margin: 0;">
-              📊 Grafico a Torta & Ripartizione Scorte / Blocchi (${totalBoardsCount} Schede Deconto)
+              📊 Ripartizione Scorte &amp; Elenco Deconti da Attenzionare (${totalBoardsCount} Schede)
             </h2>
             <button class="btn-close-kpi-modal" style="background: none; border: none; color: var(--text-muted); font-size: 1.6rem; cursor: pointer;">&times;</button>
           </div>
 
-          <!-- SEZIONE GRAFICO A TORTA & TABELLA PERCENTUALI STATO -->
-          <div style="display: grid; grid-template-columns: 200px 1fr; gap: 24px; align-items: center; background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; border: 1px solid var(--border-subtle); margin-bottom: 24px;">
+          <!-- LAYOUT AFFIANCATO IN 2 COLONNE (SINISTRA: GRAFICO + TABELLA RIFERIMENTI, DESTRA: ELENCO DECONTI) -->
+          <div style="display: grid; grid-template-columns: 1fr 1.15fr; gap: 24px; align-items: start;">
             
-            <!-- Grafico a Ciambella / Donut Chart Conic Gradient -->
-            <div style="display: flex; flex-direction: column; align-items: center;">
-              <div style="width: 150px; height: 150px; border-radius: 50%; background: conic-gradient(#090d16 0deg ${degBlack}deg, #ef4444 ${degBlack}deg ${degRed}deg, #f59e0b ${degRed}deg ${degYellow}deg, #10b981 ${degYellow}deg 360deg); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(0,0,0,0.5);">
-                <div style="width: 96px; height: 96px; border-radius: 50%; background: #1e293b; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid var(--border-subtle);">
-                  <span style="font-size: 1.6rem; font-weight: 900; color: #fff;">${totalBoardsCount}</span>
-                  <span style="font-size: 0.65rem; color: var(--text-muted); font-weight: 700;">DECONTI TOT.</span>
+            <!-- COLONNA DI SINISTRA: Grafico a Ciambella + Tabella Riferimenti % -->
+            <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 14px; border: 1px solid var(--border-subtle);">
+              <h3 style="margin-top: 0; font-size: 1.1rem; font-weight: 800; color: var(--accent-cyan); margin-bottom: 16px;">
+                📈 Analisi Percentuale Parco Deconti
+              </h3>
+
+              <!-- Grafico Donut Chart -->
+              <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+                <div style="width: 150px; height: 150px; border-radius: 50%; background: conic-gradient(#090d16 0deg ${degBlack}deg, #ef4444 ${degBlack}deg ${degRed}deg, #f59e0b ${degRed}deg ${degYellow}deg, #10b981 ${degYellow}deg 360deg); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(0,0,0,0.5);">
+                  <div style="width: 96px; height: 96px; border-radius: 50%; background: #1e293b; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid var(--border-subtle);">
+                    <span style="font-size: 1.6rem; font-weight: 900; color: #fff;">${totalBoardsCount}</span>
+                    <span style="font-size: 0.65rem; color: var(--text-muted); font-weight: 700;">DECONTI TOT.</span>
+                  </div>
                 </div>
               </div>
-              <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px; font-weight: 700;">Ripartizione Perc. %</div>
-            </div>
 
-            <!-- Tabella Riepilogo Numeri e Percentuali -->
-            <div>
-              <h4 style="margin-top: 0; color: #fff; margin-bottom: 12px;">📈 Ripartizione per Categoria di Stato:</h4>
-              <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem;">
+              <!-- Tabella Riferimento Numeri & Percentuali -->
+              <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
                 <thead>
                   <tr style="border-bottom: 1px solid var(--border-subtle); text-align: left; color: var(--text-muted);">
-                    <th style="padding: 6px 10px;">Stato Hardware</th>
-                    <th style="padding: 6px 10px; text-align: center;">Numero Schede</th>
-                    <th style="padding: 6px 10px; text-align: right;">Percentuale sul Totale</th>
+                    <th style="padding: 6px;">Stato Hardware</th>
+                    <th style="padding: 6px; text-align: center;">Qtà</th>
+                    <th style="padding: 6px; text-align: right;">% Totale</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                    <td style="padding: 8px 10px;"><span class="badge badge-success">🟢 VERDE (REGOLARE)</span></td>
-                    <td style="padding: 8px 10px; text-align: center;"><strong>${countGreen}</strong></td>
-                    <td style="padding: 8px 10px; text-align: right; color: var(--accent-green); font-weight: 800;">${pctGreen}%</td>
+                    <td style="padding: 8px 6px;"><span class="badge badge-success">🟢 VERDE (REGOLARE)</span></td>
+                    <td style="padding: 8px 6px; text-align: center;"><strong>${countGreen}</strong></td>
+                    <td style="padding: 8px 6px; text-align: right; color: var(--accent-green); font-weight: 800;">${pctGreen}%</td>
                   </tr>
                   <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                    <td style="padding: 8px 10px;"><span class="badge badge-warning">🟡 GIALLO (SOTTOSCORTA)</span></td>
-                    <td style="padding: 8px 10px; text-align: center;"><strong>${countYellow}</strong></td>
-                    <td style="padding: 8px 10px; text-align: right; color: var(--accent-amber); font-weight: 800;">${pctYellow}%</td>
+                    <td style="padding: 8px 6px;"><span class="badge badge-warning">🟡 GIALLO (SOTTOSCORTA)</span></td>
+                    <td style="padding: 8px 6px; text-align: center;"><strong>${countYellow}</strong></td>
+                    <td style="padding: 8px 6px; text-align: right; color: var(--accent-amber); font-weight: 800;">${pctYellow}%</td>
                   </tr>
                   <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                    <td style="padding: 8px 10px;"><span class="badge badge-danger">🔴 ROSSO (CRITICO)</span></td>
-                    <td style="padding: 8px 10px; text-align: center;"><strong>${countRed}</strong></td>
-                    <td style="padding: 8px 10px; text-align: right; color: var(--accent-rose); font-weight: 800;">${pctRed}%</td>
+                    <td style="padding: 8px 6px;"><span class="badge badge-danger">🔴 ROSSO (CRITICO)</span></td>
+                    <td style="padding: 8px 6px; text-align: center;"><strong>${countRed}</strong></td>
+                    <td style="padding: 8px 6px; text-align: right; color: var(--accent-rose); font-weight: 800;">${pctRed}%</td>
                   </tr>
                   <tr>
-                    <td style="padding: 8px 10px;"><span class="badge" style="background: #090d16; color: #fff; border: 1px solid #334155;">⚫ NERO (BLOCCO RELÈ)</span></td>
-                    <td style="padding: 8px 10px; text-align: center;"><strong>${countBlack}</strong></td>
-                    <td style="padding: 8px 10px; text-align: right; color: #fff; font-weight: 800;">${pctBlack}%</td>
+                    <td style="padding: 8px 6px;"><span class="badge" style="background: #090d16; color: #fff; border: 1px solid #334155;">⚫ NERO (BLOCCO 0 CIALDE)</span></td>
+                    <td style="padding: 8px 6px; text-align: center;"><strong>${countBlack}</strong></td>
+                    <td style="padding: 8px 6px; text-align: right; color: #fff; font-weight: 800;">${pctBlack}%</td>
                   </tr>
                 </tbody>
               </table>
             </div>
 
-          </div>
+            <!-- COLONNA DI DESTRA: Elenco Deconti da Attenzionare -->
+            <div style="background: rgba(0,0,0,0.25); padding: 20px; border-radius: 14px; border: 1px solid var(--border-subtle);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--accent-rose); display: flex; align-items: center; gap: 8px;">
+                  ⚠️ Schede Deconto da Attenzionare
+                </h3>
+                <span class="badge badge-warning">${lowStockBoards.length} Schede</span>
+              </div>
 
-          <!-- ELENCO DETTAGLIATO SCHEDE CHE RICHIEDONO ATTENZIONE -->
-          <h4 style="margin-top: 0; color: var(--accent-rose); margin-bottom: 12px;">⚠️ Schede Deconto in Sottoscorta, Critico o Blocco (${lowStockBoards.length}):</h4>
-          <div class="table-container" style="margin-bottom: 20px;">
-            <table>
-              <thead>
-                <tr>
-                  <th>Codice Deconto</th>
-                  <th>Cliente</th>
-                  <th>Credito Residuo</th>
-                  <th>Stato Calcolato</th>
-                  <th>Azione Consigliata</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${lowStockBoards.length > 0 ? lowStockBoards.map(b => {
-                  const details = db.getBoardFullDetails(b.id);
-                  const clientName = details && details.client ? details.client.name : 'N/D';
-                  const statusObj = db.calculateBoardStatus(b);
-                  return `
+              <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+                <table style="width: 100%;">
+                  <thead>
                     <tr>
-                      <td><strong style="font-family: monospace; color: var(--accent-cyan);">#${b.shortCode}</strong></td>
-                      <td><strong>${clientName}</strong></td>
-                      <td><strong style="color: var(--accent-rose);">${b.remainingCredits} cialde</strong></td>
-                      <td>${statusObj.badgeHtml}</td>
-                      <td>
-                        <button class="btn btn-secondary btn-deconto-detail" data-code="${b.shortCode}" style="padding: 4px 10px; font-size: 0.75rem;">
-                          🔑 Genera OTP / Ricarica
-                        </button>
-                      </td>
+                      <th>Deconto</th>
+                      <th>Cliente</th>
+                      <th>Credito</th>
+                      <th>Stato</th>
+                      <th>Azione</th>
                     </tr>
-                  `;
-                }).join('') : `
-                  <tr>
-                    <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">
-                      🟢 Nessuna scheda attualmente in stato di attenzione. Tutte le schede sono regolari!
-                    </td>
-                  </tr>
-                `}
-              </tbody>
-            </table>
+                  </thead>
+                  <tbody>
+                    ${lowStockBoards.length > 0 ? lowStockBoards.map(b => {
+                      const details = db.getBoardFullDetails(b.id);
+                      const clientName = details && details.client ? details.client.name : 'N/D';
+                      const statusObj = db.calculateBoardStatus(b);
+                      return `
+                        <tr>
+                          <td><strong style="font-family: monospace; color: var(--accent-cyan);">#${b.shortCode}</strong></td>
+                          <td><strong style="font-size: 0.85rem;">${clientName}</strong></td>
+                          <td><strong style="color: var(--accent-rose); font-size: 0.85rem;">${b.remainingCredits} cr</strong></td>
+                          <td>${statusObj.badgeHtml}</td>
+                          <td>
+                            <button class="btn btn-secondary btn-deconto-detail" data-code="${b.shortCode}" style="padding: 4px 8px; font-size: 0.72rem; white-space: nowrap;">
+                              🔑 OTP
+                            </button>
+                          </td>
+                        </tr>
+                      `;
+                    }).join('') : `
+                      <tr>
+                        <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                          🟢 Nessuna scheda in avviso o blocco. Tutto il parco è regolare!
+                        </td>
+                      </tr>
+                    `}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
           </div>
 
-          <div style="display: flex; justify-content: flex-end;">
+          <!-- Footer Pop-up -->
+          <div style="margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--border-subtle); display: flex; justify-content: flex-end;">
             <button class="btn btn-secondary btn-close-kpi-modal">Chiudi Avvisi Scorte</button>
           </div>
         </div>
