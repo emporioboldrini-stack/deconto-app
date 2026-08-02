@@ -152,66 +152,62 @@ export function renderAdminDashboard(
       </div>
     `;
   } else if (viewingKpiModal === 'kpi_extractions') {
-    // Generazione del Grafico Dinamico (Barre vs Linee) & Filtro Periodi + Date Personalizzate
+    // Ricalcolo Reale basato sul Database per il Periodo Selezionato
+    const analytics = db.getExtractionsAnalytics(kpiPeriod, kpiCustomStart, kpiCustomEnd);
+    const buckets = analytics.chartBuckets;
+    const maxCount = Math.max(...buckets.map(b => b.count), 1);
+
     let chartVisualHtml = '';
-    const periodLabel = kpiPeriod === '30DAYS' ? 'Ultimi 30 Giorni' : kpiPeriod === '90DAYS' ? 'Ultimi 90 Giorni' : kpiPeriod === '1YEAR' ? 'Anno Corrente' : `Dal ${kpiCustomStart} al ${kpiCustomEnd}`;
 
     if (kpiChartType === 'LINE') {
+      // Coordinate SVG calcolate sui 5 secchi
+      const pts = buckets.map((b, idx) => {
+        const x = 30 + idx * 160;
+        const y = 150 - Math.round((b.count / maxCount) * 110);
+        return { x, y, count: b.count, label: b.label };
+      });
+
+      const pathString = `M ${pts[0].x},${pts[0].y} Q ${pts[1].x - 40},${pts[1].y} ${pts[1].x},${pts[1].y} T ${pts[2].x},${pts[2].y} T ${pts[3].x},${pts[3].y} T ${pts[4].x},${pts[4].y}`;
+      const fillString = `${pathString} L ${pts[4].x},170 L ${pts[0].x},170 Z`;
+
       chartVisualHtml = `
         <div style="height: 220px; position: relative; padding: 20px 10px 10px 10px; border-bottom: 2px solid var(--border-subtle);">
           <svg viewBox="0 0 700 180" style="width: 100%; height: 100%; overflow: visible;">
             <defs>
               <linearGradient id="lineChartGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="var(--accent-cyan)" stop-opacity="0.4" />
+                <stop offset="0%" stop-color="var(--accent-cyan)" stop-opacity="0.45" />
                 <stop offset="100%" stop-color="var(--accent-cyan)" stop-opacity="0.0" />
               </linearGradient>
             </defs>
 
             <!-- Area sfumata sotto la linea -->
-            <path d="M 30,140 Q 140,70 250,45 T 470,95 T 670,25 L 670,170 L 30,170 Z" fill="url(#lineChartGradient)" />
+            <path d="${fillString}" fill="url(#lineChartGradient)" />
 
-            <!-- Curva a linea con tratto accentuato -->
-            <path d="M 30,140 Q 140,70 250,45 T 470,95 T 670,25" fill="none" stroke="var(--accent-cyan)" stroke-width="4" stroke-linecap="round" />
+            <!-- Curva a linea reale -->
+            <path d="${pathString}" fill="none" stroke="var(--accent-cyan)" stroke-width="4" stroke-linecap="round" />
 
-            <!-- Punti/Nodi con Valori Numerici Evidenziati -->
+            <!-- Punti/Nodi con Valori Reali del Database -->
             <g>
-              <circle cx="30" cy="140" r="7" fill="#0f172a" stroke="var(--accent-cyan)" stroke-width="3" />
-              <text x="30" y="122" text-anchor="middle" fill="#fff" font-size="12" font-weight="900">120 ☕</text>
-
-              <circle cx="190" cy="70" r="7" fill="#0f172a" stroke="var(--accent-cyan)" stroke-width="3" />
-              <text x="190" y="52" text-anchor="middle" fill="#fff" font-size="12" font-weight="900">240 ☕</text>
-
-              <circle cx="350" cy="45" r="7" fill="#0f172a" stroke="var(--accent-cyan)" stroke-width="3" />
-              <text x="350" y="27" text-anchor="middle" fill="#fff" font-size="12" font-weight="900">380 ☕</text>
-
-              <circle cx="510" cy="95" r="7" fill="#0f172a" stroke="var(--accent-cyan)" stroke-width="3" />
-              <text x="510" y="77" text-anchor="middle" fill="#fff" font-size="12" font-weight="900">210 ☕</text>
-
-              <circle cx="670" cy="25" r="7" fill="#0f172a" stroke="var(--accent-cyan)" stroke-width="3" />
-              <text x="670" y="7" text-anchor="middle" fill="#fff" font-size="12" font-weight="900">520 ☕</text>
+              ${pts.map(p => `
+                <circle cx="${p.x}" cy="${p.y}" r="7" fill="#0f172a" stroke="var(--accent-cyan)" stroke-width="3" />
+                <text x="${p.x}" y="${p.y - 14}" text-anchor="middle" fill="#fff" font-size="12" font-weight="900">${p.count} ☕</text>
+              `).join('')}
             </g>
           </svg>
         </div>
       `;
     } else {
-      // Modalità BARRE (CSS Vertical Bars)
+      // Modalità BARRE ISTOGRAMMA REALE
       chartVisualHtml = `
         <div style="height: 220px; display: flex; align-items: flex-end; gap: 20px; padding: 20px 10px 10px 10px; border-bottom: 2px solid var(--border-subtle);">
-          <div style="flex: 1; background: linear-gradient(to top, var(--accent-cyan), var(--accent-purple)); height: 35%; border-radius: 8px 8px 0 0; position: relative;">
-            <span style="position: absolute; top: -26px; left: 50%; transform: translateX(-50%); font-size: 0.8rem; font-weight: 800; color: #fff;">120 ☕</span>
-          </div>
-          <div style="flex: 1; background: linear-gradient(to top, var(--accent-cyan), var(--accent-purple)); height: 60%; border-radius: 8px 8px 0 0; position: relative;">
-            <span style="position: absolute; top: -26px; left: 50%; transform: translateX(-50%); font-size: 0.8rem; font-weight: 800; color: #fff;">240 ☕</span>
-          </div>
-          <div style="flex: 1; background: linear-gradient(to top, var(--accent-cyan), var(--accent-purple)); height: 85%; border-radius: 8px 8px 0 0; position: relative;">
-            <span style="position: absolute; top: -26px; left: 50%; transform: translateX(-50%); font-size: 0.8rem; font-weight: 800; color: #fff;">380 ☕</span>
-          </div>
-          <div style="flex: 1; background: linear-gradient(to top, var(--accent-cyan), var(--accent-purple)); height: 50%; border-radius: 8px 8px 0 0; position: relative;">
-            <span style="position: absolute; top: -26px; left: 50%; transform: translateX(-50%); font-size: 0.8rem; font-weight: 800; color: #fff;">210 ☕</span>
-          </div>
-          <div style="flex: 1; background: linear-gradient(to top, var(--accent-cyan), var(--accent-purple)); height: 95%; border-radius: 8px 8px 0 0; position: relative;">
-            <span style="position: absolute; top: -26px; left: 50%; transform: translateX(-50%); font-size: 0.8rem; font-weight: 800; color: #fff;">520 ☕</span>
-          </div>
+          ${buckets.map(b => {
+            const heightPct = Math.max(12, Math.round((b.count / maxCount) * 88));
+            return `
+              <div style="flex: 1; background: linear-gradient(to top, var(--accent-cyan), var(--accent-purple)); height: ${heightPct}%; border-radius: 8px 8px 0 0; position: relative;">
+                <span style="position: absolute; top: -26px; left: 50%; transform: translateX(-50%); font-size: 0.82rem; font-weight: 800; color: #fff;">${b.count} ☕</span>
+              </div>
+            `;
+          }).join('')}
         </div>
       `;
     }
@@ -222,9 +218,14 @@ export function renderAdminDashboard(
           
           <!-- Header Pop-up -->
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px;">
-            <h2 style="font-size: 1.4rem; font-weight: 800; color: var(--accent-green); margin: 0;">
-              📈 Grafico & Analytics Consumi Erogazioni Totali (${totalExtractions} Erogazioni)
-            </h2>
+            <div>
+              <h2 style="font-size: 1.4rem; font-weight: 800; color: var(--accent-green); margin: 0;">
+                📈 Analytics &amp; Consumi Erogazioni Reali (${analytics.totalCount} caffè)
+              </h2>
+              <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 4px;">
+                Periodo: <strong>${analytics.startDate.toLocaleDateString('it-IT')}</strong> &rarr; <strong>${analytics.endDate.toLocaleDateString('it-IT')}</strong> (${analytics.durationDays} giorni) | Media: <strong style="color: var(--accent-cyan);">${analytics.avgDaily} caffè/giorno</strong>
+              </div>
+            </div>
             <button class="btn-close-kpi-modal" style="background: none; border: none; color: var(--text-muted); font-size: 1.6rem; cursor: pointer;">&times;</button>
           </div>
 
@@ -279,25 +280,22 @@ export function renderAdminDashboard(
 
           </div>
 
-          <!-- SCHERMO DEL GRAFICO DINAMICO -->
+          <!-- SCHERMO DEL GRAFICO DINAMICO E RICALCOLATO -->
           <div style="background: #0f172a; padding: 24px; border-radius: 14px; border: 1px solid var(--border-subtle); margin-bottom: 20px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
               <div style="font-size: 0.9rem; color: #fff; font-weight: 800;">
-                Trend Erogazioni: <span style="color: var(--accent-cyan);">${periodLabel}</span>
+                Consumi Ricalcolati dal DB: <span style="color: var(--accent-cyan);">${analytics.totalCount} caffè totali</span>
               </div>
               <div class="badge badge-info" style="font-weight: 800;">
-                Modalità Visualizzazione: ${kpiChartType === 'LINE' ? '📈 LINEA CONTINUA SVG' : '📊 ISTOGRAMMA A BARRE'}
+                ${kpiChartType === 'LINE' ? '📈 LINEA CONTINUA SVG' : '📊 ISTOGRAMMA A BARRE'}
               </div>
             </div>
 
             ${chartVisualHtml}
 
-            <div style="display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--text-muted); margin-top: 12px; font-weight: 700;">
-              <span>Fase 1 (Inizio)</span>
-              <span>Fase 2</span>
-              <span>Fase 3 (Picco)</span>
-              <span>Fase 4</span>
-              <span>Fase 5 (Attuale)</span>
+            <!-- ETICHETTE TEMPORALI DINAMICHE -->
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-top: 14px; font-weight: 700;">
+              ${buckets.map(b => `<span>${b.label}</span>`).join('')}
             </div>
           </div>
 

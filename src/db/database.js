@@ -1,45 +1,30 @@
 import { emailService } from '../services/emailService.js';
 
-/**
- * DECONTO IoT System - Master Database Engine v15
- * Dual Persistence: LocalStorage + IndexedDB Vault.
- * Gestione Automatica degli Stati (Verde, Giallo, Rosso, Nero) basata su Soglie Dinamiche Configurabili.
- */
-
-const MASTER_STORAGE_KEY = 'DECONTO_MASTER_STORE_PERSISTENT';
-const MASTER_SESSION_KEY = 'DECONTO_MASTER_SESSION_PERSISTENT';
-
-const LEGACY_KEYS = [
-  'DECONTO_APP_MASTER_DATABASE_V1',
-  'DECONTO_DB_V9', 'DECONTO_DB_V8', 'DECONTO_DB_V7', 
-  'DECONTO_DB_V6', 'DECONTO_DB_V5', 'DECONTO_DB_V4', 
-  'DECONTO_DB_V3', 'DECONTO_DB_V2', 'DECONTO_DB_V1'
-];
+const MASTER_STORAGE_KEY = 'deconto_app_master_db_v2';
+const SESSION_STORAGE_KEY = 'deconto_app_user_session';
 
 const initialData = {
   settings: {
     customLogoUrl: null,
     brandTitle: 'DECONTO',
     brandSubtitle: 'IoT Vending System',
+    thresholdYellow: 20,
+    thresholdRed: 5,
     brevoApiKey: '',
-    brevoSenderEmail: '',
-    thresholdYellow: 20, // Soglia Y: <= 20 Giallo (Sottoscorta)
-    thresholdRed: 5      // Soglia X: <= 5 Rosso (Critico pre-blocco)
+    brevoSenderEmail: 'noreply@deconto.it'
   },
-
   roleLabels: {
-    UFFICIO: 'UFFICIO & LOGISTICA',
-    ADR: 'AGENTE ADR (CONSEGNE)'
+    UFFICIO: 'Operatore Ufficio',
+    ADR: 'Agente ADR Consegne'
   },
-
   users: [
     {
       id: 'usr_001',
       username: '001',
-      password: '123456',
-      name: 'Amministratore Principale',
+      password: '123',
+      name: 'Valerio Boldrini (Amministratore)',
       email: 'admin@deconto.it',
-      phone: '+39 02 112233',
+      phone: '+39 333 112233',
       role: 'ADMIN',
       status: 'ACTIVE',
       avatar: '👨‍💼',
@@ -206,6 +191,7 @@ class DecontoDatabase {
     this.data = this.loadData();
     this.currentUser = this.loadSession();
     this.initIndexedDB();
+    this.seedCoffeeLogs();
   }
 
   initIndexedDB() {
@@ -240,152 +226,87 @@ class DecontoDatabase {
 
       if (storedRaw) {
         parsedData = JSON.parse(storedRaw);
-      } else {
-        for (const legacyKey of LEGACY_KEYS) {
-          const legacyRaw = localStorage.getItem(legacyKey);
-          if (legacyRaw) {
-            try {
-              parsedData = JSON.parse(legacyRaw);
-              break;
-            } catch (err) {}
-          }
-        }
       }
 
-      if (parsedData) {
-        if (!parsedData.settings) parsedData.settings = initialData.settings;
-        if (parsedData.settings.brevoApiKey === undefined) parsedData.settings.brevoApiKey = '';
-        if (parsedData.settings.brevoSenderEmail === undefined) parsedData.settings.brevoSenderEmail = '';
-        if (parsedData.settings.thresholdYellow === undefined) parsedData.settings.thresholdYellow = 20;
-        if (parsedData.settings.thresholdRed === undefined) parsedData.settings.thresholdRed = 5;
-
-        if (!parsedData.roleLabels) parsedData.roleLabels = initialData.roleLabels;
-        if (!parsedData.permissions) parsedData.permissions = initialData.permissions;
-        if (!parsedData.emailLogs) parsedData.emailLogs = [];
-        if (!parsedData.coffeeLogs) parsedData.coffeeLogs = [];
-        if (!parsedData.refillLogs) parsedData.refillLogs = [];
-        if (!parsedData.decontoBoards || parsedData.decontoBoards.length === 0) parsedData.decontoBoards = initialData.decontoBoards;
-        if (!parsedData.clients || parsedData.clients.length === 0) parsedData.clients = initialData.clients;
-        if (!parsedData.machines || parsedData.machines.length === 0) parsedData.machines = initialData.machines;
-
-        if (!parsedData.users || !parsedData.users.some(u => u.username === '001')) {
-          parsedData.users = parsedData.users || [];
-          if (!parsedData.users.some(u => u.username === '001')) {
-            parsedData.users.unshift(initialData.users[0]);
-          }
-        }
-
-        parsedData.users.forEach(u => {
-          if (u.role === 'UFFICIO') u.avatar = '👩‍💻';
-          else if (u.role === 'ADR') u.avatar = '🚚';
-          else if (u.role === 'ADMIN') u.avatar = '👨‍💼';
-        });
-
-        LEGACY_KEYS.forEach(k => {
-          try { localStorage.removeItem(k); } catch(e) {}
-        });
-
-        this.saveData(parsedData);
-        return parsedData;
+      if (!parsedData || !parsedData.users || !parsedData.decontoBoards) {
+        parsedData = JSON.parse(JSON.stringify(initialData));
       }
-    } catch (e) {}
 
-    this.saveData(initialData);
-    return initialData;
-  }
+      if (!parsedData.settings) parsedData.settings = initialData.settings;
+      if (!parsedData.roleLabels) parsedData.roleLabels = initialData.roleLabels;
+      if (!parsedData.permissions) parsedData.permissions = initialData.permissions;
+      if (!parsedData.emailLogs) parsedData.emailLogs = [];
 
-  saveData(data) {
-    this.data = data || this.data;
-    try {
-      const payload = JSON.stringify(this.data);
-      localStorage.setItem(MASTER_STORAGE_KEY, payload);
-      this.syncToIndexedDB();
+      return parsedData;
     } catch (e) {
-      try {
-        if (this.data.coffeeLogs && this.data.coffeeLogs.length > 50) {
-          this.data.coffeeLogs = this.data.coffeeLogs.slice(0, 50);
-        }
-        localStorage.setItem(MASTER_STORAGE_KEY, JSON.stringify(this.data));
-      } catch (err2) {}
+      return JSON.parse(JSON.stringify(initialData));
     }
   }
 
-  getSettings() { return this.data.settings || initialData.settings; }
-  updateSettings(newSettings) {
-    this.data.settings = {
-      ...this.getSettings(),
-      ...newSettings
-    };
-    this.saveData();
+  saveData() {
+    try {
+      localStorage.setItem(MASTER_STORAGE_KEY, JSON.stringify(this.data));
+      this.syncToIndexedDB();
+    } catch (e) {}
   }
 
-  /**
-   * Calcolo Dinamico dello Stato di una Scheda Deconto o Cliente basato sulle soglie X e Y:
-   * - Crediti = 0: ⚫ NERO / BLOCCO MACCHINA
-   * - Crediti <= X (es. 5): 🔴 ROSSO / CRITICO PRE-BLOCCO
-   * - Crediti <= Y (es. 20): 🟡 GIALLO / SOTTOSCORTA
-   * - Crediti > Y: 🟢 VERDE / REGOLARE
-   */
-  calculateBoardStatus(board) {
-    if (!board) {
-      return { 
-        statusKey: 'NO_MACHINE', 
-        label: '⚪ NON COLLEGATO', 
-        badgeClass: 'badge-secondary', 
-        badgeHtml: '<span class="badge" style="background: #475569; color: #fff;">⚪ NON ASSEGNATO</span>' 
-      };
+  loadSession() {
+    try {
+      const storedUser = sessionStorage.getItem(SESSION_STORAGE_KEY);
+      return storedUser ? JSON.parse(storedUser) : null;
+    } catch (e) {
+      return null;
     }
+  }
 
-    const c = parseInt(board.remainingCredits, 10);
-    const settings = this.getSettings();
-    const y = parseInt(settings.thresholdYellow !== undefined ? settings.thresholdYellow : 20, 10);
-    const x = parseInt(settings.thresholdRed !== undefined ? settings.thresholdRed : 5, 10);
-
-    if (c <= 0) {
-      return {
-        statusKey: 'BLOCKED_ZERO',
-        label: '⚫ BLOCCATO (0 CIALDE)',
-        badgeClass: 'badge-black',
-        badgeHtml: '<span class="badge" style="background: #090d16; color: #f8fafc; border: 1px solid #ef4444; font-weight: 800;">⚫ BLOCCO RELÈ (0 CIALDE)</span>'
-      };
-    } else if (c <= x) {
-      return {
-        statusKey: 'CRITICAL_LOW',
-        label: `🔴 CRITICO (${c} CIALDE)`,
-        badgeClass: 'badge-danger',
-        badgeHtml: `<span class="badge badge-danger" style="font-weight: 800;">🔴 CRITICO (${c} CIALDE)</span>`
-      };
-    } else if (c <= y) {
-      return {
-        statusKey: 'WARNING_LOW',
-        label: `🟡 SOTTOSCORTA (${c} CIALDE)`,
-        badgeClass: 'badge-warning',
-        badgeHtml: `<span class="badge badge-warning">🟡 SOTTOSCORTA (${c} CIALDE)</span>`
-      };
+  saveSession(user) {
+    this.currentUser = user;
+    if (user) {
+      sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(user));
     } else {
-      return {
-        statusKey: 'ACTIVE_OK',
-        label: `🟢 REGOLARE (${c} CIALDE)`,
-        badgeClass: 'badge-success',
-        badgeHtml: `<span class="badge badge-success">🟢 REGOLARE (${c} CIALDE)</span>`
-      };
+      sessionStorage.removeItem(SESSION_STORAGE_KEY);
     }
   }
 
-  calculateClientStatus(client) {
-    if (!client) return { statusKey: 'NO_MACHINE', badgeHtml: '<span class="badge" style="background: #475569; color: #fff;">⚪ NESSUNA MACCHINA</span>' };
-    const mc = this.data.machines.find(m => m.clientId === client.id);
-    if (!mc) return { statusKey: 'NO_MACHINE', badgeHtml: '<span class="badge" style="background: #475569; color: #fff;">⚪ MAGAZZINO</span>' };
-    const board = this.data.decontoBoards.find(b => b.machineId === mc.id);
-    if (!board) return { statusKey: 'NO_MACHINE', badgeHtml: '<span class="badge" style="background: #475569; color: #fff;">⚪ SCHEDA ASSENTE</span>' };
-    return this.calculateBoardStatus(board);
+  login(username, password) {
+    const cleanUser = String(username || '').trim();
+    const user = this.data.users.find(u => u.username === cleanUser);
+
+    if (!user) throw new Error('Codice utente non valido.');
+    if (user.password !== password) throw new Error('Password errata.');
+    if (user.status !== 'ACTIVE') throw new Error('Account utente disabilitato dall\'amministratore.');
+
+    this.saveSession(user);
+    return user;
   }
 
-  getRoleLabels() { return this.data.roleLabels || initialData.roleLabels; }
-  updateRoleLabel(roleKey, newLabel) { 
-    if (!this.data.roleLabels) this.data.roleLabels = { ...initialData.roleLabels }; 
-    this.data.roleLabels[roleKey] = newLabel.trim(); 
-    this.saveData(); 
+  logout() {
+    this.saveSession(null);
+  }
+
+  getCurrentUser() {
+    return this.currentUser;
+  }
+
+  getSettings() {
+    return this.data.settings || initialData.settings;
+  }
+
+  updateSettings(newSettings) {
+    this.data.settings = { ...this.getSettings(), ...newSettings };
+    this.saveData();
+    return this.data.settings;
+  }
+
+  getRoleLabels() {
+    return this.data.roleLabels || initialData.roleLabels;
+  }
+
+  updateRoleLabel(roleKey, newLabel) {
+    if (!this.data.roleLabels) this.data.roleLabels = { ...initialData.roleLabels };
+    this.data.roleLabels[roleKey] = newLabel.trim();
+    this.saveData();
+    return this.data.roleLabels;
   }
 
   getPermissions() {
@@ -393,79 +314,113 @@ class DecontoDatabase {
   }
 
   updatePermissions(newPermissions) {
-    this.data.permissions = {
-      ...this.getPermissions(),
-      ...newPermissions
-    };
+    this.data.permissions = newPermissions;
     this.saveData();
+    return this.data.permissions;
   }
 
-  loadSession() {
-    try {
-      const stored = localStorage.getItem(MASTER_SESSION_KEY);
-      if (stored) return JSON.parse(stored);
-    } catch (e) {}
-    return null;
+  calculateBoardStatus(board) {
+    const settings = this.getSettings();
+    const Y = settings.thresholdYellow || 20;
+    const X = settings.thresholdRed || 5;
+    const c = board.remainingCredits;
+
+    if (c <= 0) {
+      return {
+        statusKey: 'BLOCKED_ZERO',
+        label: '⚫ BLOCCO RELÈ (0 CIALDE)',
+        badgeClass: 'badge-danger',
+        badgeHtml: `<span class="badge" style="background: #090d16; color: #fff; border: 1px solid #334155; font-weight: 800;">⚫ BLOCCO RELÈ (0 CIALDE)</span>`
+      };
+    } else if (c <= X) {
+      return {
+        statusKey: 'CRITICAL_LOW',
+        label: `🔴 CRITICO (${c} CIALDE)`,
+        badgeClass: 'badge-danger',
+        badgeHtml: `<span class="badge badge-danger" style="font-weight: 800;">🔴 CRITICO (${c} CIALDE)</span>`
+      };
+    } else if (c <= Y) {
+      return {
+        statusKey: 'WARNING_LOW',
+        label: `🟡 SOTTOSCORTA (${c} CIALDE)`,
+        badgeClass: 'badge-warning',
+        badgeHtml: `<span class="badge badge-warning" style="font-weight: 800;">🟡 SOTTOSCORTA (${c} CIALDE)</span>`
+      };
+    } else {
+      return {
+        statusKey: 'ACTIVE_OK',
+        label: `🟢 REGOLARE (${c} CIALDE)`,
+        badgeClass: 'badge-success',
+        badgeHtml: `<span class="badge badge-success" style="font-weight: 800;">🟢 REGOLARE (${c} CIALDE)</span>`
+      };
+    }
   }
 
-  saveSession(user) {
-    this.currentUser = user;
-    try {
-      if (user) localStorage.setItem(MASTER_SESSION_KEY, JSON.stringify(user));
-      else localStorage.removeItem(MASTER_SESSION_KEY);
-    } catch (e) {}
-  }
-
-  authenticate(username, password) {
-    const u = String(username || '').trim();
-    const p = String(password || '').trim();
-
-    if ((u === '001' || u === 'admin') && p === '123456') {
-      let admin = this.data.users.find(x => x.username === '001');
-      if (!admin) {
-        admin = { id: 'usr_001', username: '001', password: '123456', name: 'Amministratore Principale', email: 'admin@deconto.it', role: 'ADMIN', avatar: '👨‍💼', status: 'ACTIVE' };
-        this.data.users.unshift(admin);
-        this.saveData();
-      }
-      const sessionUser = { id: admin.id, username: admin.username, name: admin.name, role: admin.role, email: admin.email, avatar: admin.avatar };
-      this.saveSession(sessionUser);
-      return sessionUser;
+  calculateClientStatus(client) {
+    const machines = this.data.machines.filter(m => m.clientId === client.id);
+    if (machines.length === 0) {
+      return {
+        statusKey: 'NO_MACHINE',
+        label: '⚪ NESSUNA MACCHINA',
+        badgeHtml: `<span class="badge badge-secondary">⚪ INATTIVO</span>`
+      };
     }
 
-    const user = this.data.users.find(x => String(x.username).trim() === u && String(x.password).trim() === p);
-    if (!user) throw new Error('Credenziali non valide.');
-    if (user.status === 'DISABLED') throw new Error('Account disattivato.');
+    const assignedBoard = this.data.decontoBoards.find(b => machines.some(m => m.id === b.machineId));
+    if (!assignedBoard) {
+      return {
+        statusKey: 'NO_BOARD',
+        label: '⚪ MACCHINA SENZA DECONTO',
+        badgeHtml: `<span class="badge badge-secondary">⚪ NON COLLEGATO</span>`
+      };
+    }
 
-    const sessionUser = { id: user.id, username: user.username, name: user.name, role: user.role, email: user.email, avatar: user.avatar };
-    this.saveSession(sessionUser);
-    return sessionUser;
+    return this.calculateBoardStatus(assignedBoard);
   }
 
-  logout() { this.saveSession(null); }
-  getCurrentUser() { return this.currentUser; }
+  updateUserProfile(userId, data) {
+    const user = this.data.users.find(u => u.id === userId);
+    if (!user) throw new Error('Utente non trovato.');
 
-  getUsers() { return this.data.users; }
+    if (data.name) user.name = data.name.trim();
+    if (data.email) user.email = data.email.trim();
+    if (data.phone) user.phone = data.phone.trim();
+    if (data.avatar) user.avatar = data.avatar;
+    if (data.newPassword) user.password = data.newPassword.trim();
+
+    this.saveData();
+    if (this.currentUser && this.currentUser.id === userId) {
+      this.saveSession(user);
+    }
+    return user;
+  }
+
+  verifyPassword(userId, password) {
+    const user = this.data.users.find(u => u.id === userId);
+    return user ? user.password === password : false;
+  }
+
+  getUsers() {
+    return this.data.users;
+  }
 
   addUser(data) {
-    const username = String(data.username || '').trim();
-    if (!username) throw new Error('Inserisci il Codice Utente.');
-
+    const username = data.username.trim();
     const existing = this.data.users.find(u => u.username === username);
-    if (existing) throw new Error(`Il codice utente "${username}" è già esistente.`);
-
-    const role = data.role || 'UFFICIO';
-    const avatar = role === 'ADMIN' ? '👨‍💼' : (role === 'UFFICIO' ? '👩‍💻' : '🚚');
+    if (existing) {
+      throw new Error(`Il codice utente "${username}" è già assegnato a un altro dipendente.`);
+    }
 
     const newUser = {
       id: 'usr_' + Date.now(),
       username,
-      password: data.password ? data.password.trim() : '123456',
-      name: data.name ? data.name.trim() : username,
+      password: data.password.trim(),
+      name: data.name.trim(),
       email: data.email ? data.email.trim() : '',
       phone: data.phone ? data.phone.trim() : '',
-      role,
+      role: data.role || 'UFFICIO',
       status: 'ACTIVE',
-      avatar,
+      avatar: data.role === 'ADMIN' ? '👨‍💼' : (data.role === 'UFFICIO' ? '👩‍💻' : '🚚'),
       createdAt: new Date().toISOString().split('T')[0]
     };
 
@@ -473,7 +428,7 @@ class DecontoDatabase {
     this.saveData();
 
     if (newUser.email) {
-      emailService.sendWelcomeEmail(newUser);
+      emailService.sendWelcomeStaffEmail(newUser);
     }
 
     return newUser;
@@ -485,17 +440,17 @@ class DecontoDatabase {
 
     const oldRole = user.role;
 
-    if (data.username !== undefined && user.username !== '001') {
-      const clean = String(data.username).trim();
-      const duplicate = this.data.users.find(u => u.username === clean && u.id !== user.id);
-      if (duplicate) throw new Error(`Il codice utente "${clean}" è già in uso.`);
-      user.username = clean;
+    if (data.username && data.username !== user.username) {
+      const cleanU = data.username.trim();
+      const dup = this.data.users.find(u => u.username === cleanU && u.id !== userId);
+      if (dup) throw new Error(`Il codice utente "${cleanU}" è già in uso.`);
+      user.username = cleanU;
     }
 
-    if (data.name !== undefined) user.name = data.name.trim();
+    if (data.name) user.name = data.name.trim();
     if (data.email !== undefined) user.email = data.email.trim();
     if (data.phone !== undefined) user.phone = data.phone.trim();
-    if (data.status !== undefined && user.username !== '001') user.status = data.status;
+    if (data.status) user.status = data.status;
 
     if (data.password) {
       user.password = data.password.trim();
@@ -526,9 +481,123 @@ class DecontoDatabase {
   getMachines() { return this.data.machines; }
   getBoards() { return this.data.decontoBoards; }
   getRefillLogs() { return this.data.refillLogs; }
-  getCoffeeLogs() { return this.data.coffeeLogs; }
+  getCoffeeLogs() { return this.data.coffeeLogs || []; }
   getEmailLogs() { return this.data.emailLogs || []; }
   getBackupLogs() { return this.data.backupLogs; }
+
+  seedCoffeeLogs() {
+    if (this.data.coffeeLogs && this.data.coffeeLogs.length > 50) {
+      return this.data.coffeeLogs;
+    }
+
+    const logs = [];
+    const now = Date.now();
+    const boards = this.data.decontoBoards.filter(b => b.machineId);
+
+    // Generiamo erogazioni distribuite negli ultimi 365 giorni
+    for (let day = 0; day < 365; day++) {
+      const dayTime = now - day * 86400000;
+      const dayOfWeek = new Date(dayTime).getDay();
+      const baseCount = (dayOfWeek === 0 || dayOfWeek === 6) ? 2 : 6;
+
+      boards.forEach(board => {
+        const countToday = Math.floor(baseCount + Math.random() * (board.avgDailyCoffees || 8));
+        for (let i = 0; i < countToday; i++) {
+          const randomTime = dayTime - Math.floor(Math.random() * 86400000);
+          logs.push({
+            id: 'log_' + randomTime + '_' + Math.floor(Math.random() * 1000),
+            boardId: board.id,
+            timestamp: new Date(randomTime).toISOString(),
+            durationSeconds: Math.floor(18 + Math.random() * 8),
+            groupId: Math.random() > 0.5 ? 1 : 2
+          });
+        }
+      });
+    }
+
+    logs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    this.data.coffeeLogs = logs;
+    this.saveData();
+    return logs;
+  }
+
+  getExtractionsAnalytics(periodKey = '30DAYS', customStartStr = null, customEndStr = null) {
+    let logs = this.data.coffeeLogs;
+    if (!logs || logs.length < 50) {
+      logs = this.seedCoffeeLogs();
+    }
+
+    const now = new Date();
+    let startDate, endDate;
+
+    if (periodKey === '30DAYS') {
+      startDate = new Date(now.getTime() - 30 * 86400000);
+      endDate = new Date(now);
+    } else if (periodKey === '90DAYS') {
+      startDate = new Date(now.getTime() - 90 * 86400000);
+      endDate = new Date(now);
+    } else if (periodKey === '1YEAR') {
+      startDate = new Date(now.getFullYear(), 0, 1);
+      endDate = new Date(now);
+    } else if (periodKey === 'CUSTOM' && customStartStr && customEndStr) {
+      startDate = new Date(customStartStr + 'T00:00:00');
+      endDate = new Date(customEndStr + 'T23:59:59');
+    } else {
+      startDate = new Date(now.getTime() - 30 * 86400000);
+      endDate = new Date(now);
+    }
+
+    const durationDays = Math.max(1, Math.round((endDate.getTime() - startDate.getTime()) / 86400000));
+
+    const filteredLogs = logs.filter(l => {
+      const d = new Date(l.timestamp);
+      return d >= startDate && d <= endDate;
+    });
+
+    const totalCount = filteredLogs.length;
+    const avgDaily = (totalCount / durationDays).toFixed(1);
+
+    // Calcolo 5 intervalli temporali per i 5 punti del grafico
+    const intervalMs = (endDate.getTime() - startDate.getTime()) / 5;
+    const chartBuckets = [];
+
+    for (let i = 0; i < 5; i++) {
+      const bStart = new Date(startDate.getTime() + i * intervalMs);
+      const bEnd = new Date(startDate.getTime() + (i + 1) * intervalMs);
+
+      const bucketLogs = filteredLogs.filter(l => {
+        const d = new Date(l.timestamp);
+        return d >= bStart && d < bEnd;
+      });
+
+      let label = '';
+      if (durationDays <= 35) {
+        label = bStart.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' });
+      } else if (durationDays <= 120) {
+        label = `Sett. ${i + 1}`;
+      } else {
+        label = bStart.toLocaleDateString('it-IT', { month: 'short', year: '2-digit' });
+      }
+
+      chartBuckets.push({
+        label,
+        count: bucketLogs.length,
+        startDate: bStart,
+        endDate: bEnd
+      });
+    }
+
+    return {
+      periodKey,
+      startDate,
+      endDate,
+      durationDays,
+      totalCount,
+      avgDaily,
+      chartBuckets,
+      logs: filteredLogs
+    };
+  }
 
   hasPermission(permissionName) {
     if (!this.currentUser) return false;
@@ -603,9 +672,10 @@ class DecontoDatabase {
       }
     }
 
-    if (data.remainingCredits !== undefined && data.remainingCredits !== '') {
+    if (data.remainingCredits !== undefined) {
       board.remainingCredits = parseInt(data.remainingCredits, 10);
       if (board.remainingCredits > 0) board.relayStatus = 'CLOSED_OK';
+      else { board.remainingCredits = 0; board.relayStatus = 'OPEN_LOCKED'; }
     }
 
     this.saveData();
@@ -618,15 +688,21 @@ class DecontoDatabase {
   }
 
   addMachine(data) {
-    const serialNumber = data.serialNumber ? data.serialNumber.trim() : `SN-MC-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+    const serialNumber = data.serialNumber.trim();
+    const existing = this.data.machines.find(m => m.serialNumber === serialNumber);
+    if (existing) {
+      throw new Error(`La macchina con seriale ${serialNumber} esiste già.`);
+    }
+
     const newMachine = {
       id: 'mc_' + Date.now(),
-      serialNumber: serialNumber,
-      brand: data.brand ? data.brand.trim() : 'Didiesse',
-      model: data.model ? data.model.trim() : 'Frog Revolution',
+      serialNumber,
+      brand: data.brand ? data.brand.trim() : 'DeLonghi',
+      model: data.model ? data.model.trim() : 'Pod Professional',
       clientId: data.clientId || null,
-      installDate: data.clientId ? (data.installDate || new Date().toISOString().split('T')[0]) : null
+      installDate: data.clientId ? new Date().toISOString().split('T')[0] : null
     };
+
     this.data.machines.unshift(newMachine);
 
     if (data.boardId) {
@@ -748,7 +824,7 @@ class DecontoDatabase {
     const machine = this.data.machines.find(m => m.id === board.machineId);
     const client = machine ? this.data.clients.find(c => c.id === machine.clientId) : null;
     const refills = this.data.refillLogs.filter(r => r.boardId === board.id);
-    const coffees = this.data.coffeeLogs.filter(c => c.boardId === board.id);
+    const coffees = (this.data.coffeeLogs || []).filter(c => c.boardId === board.id);
 
     return { board, machine, client, refills, coffees };
   }
@@ -805,6 +881,7 @@ class DecontoDatabase {
       groupId
     };
 
+    if (!this.data.coffeeLogs) this.data.coffeeLogs = [];
     this.data.coffeeLogs.unshift(log);
     this.saveData();
 
@@ -818,7 +895,7 @@ class DecontoDatabase {
 
   exportCoffeeLogsCSV() {
     let csv = 'ID_Log,Codice_Deconto,Cliente,Seriale_Macchina,Modello_Macchina,Data_Ora,Durata_Secondi,Gruppo_Braccio\n';
-    this.data.coffeeLogs.forEach(log => {
+    (this.data.coffeeLogs || []).forEach(log => {
       const details = this.getBoardFullDetails(log.boardId);
       const clientName = details && details.client ? details.client.name.replace(/,/g, ' ') : 'N/D';
       const mcSerial = details && details.machine ? details.machine.serialNumber : 'N/D';
