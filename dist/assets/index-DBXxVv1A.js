@@ -300,12 +300,12 @@
 
       </div>
     </div>
-  `}function u(e=`dashboard`,t=null,n=``,r=`ALL`,i=`shortCode`,o=`DESC`,s=null,c=`30DAYS`,l=`LINE`){let u=a.getClients(),d=a.getMachines(),f=a.getBoards(),p=a.getCoffeeLogs(),m=u.length,h=d.length,g=p.length,_=f.filter(e=>{let t=a.calculateBoardStatus(e);return t.statusKey===`WARNING_LOW`||t.statusKey===`CRITICAL_LOW`||t.statusKey===`BLOCKED_ZERO`}),v=f.filter(e=>{if(!n)return!0;let t=n.toLowerCase().trim(),i=a.getBoardFullDetails(e.id),o=i&&i.client?i.client.name.toLowerCase():``,s=i&&i.machine?i.machine.serialNumber.toLowerCase():``,c=i&&i.machine?i.machine.model.toLowerCase():``,l=e.shortCode.toLowerCase();return r===`CODE`?l.includes(t):r===`CLIENT`?o.includes(t):r===`MODEL`?c.includes(t)||s.includes(t):l.includes(t)||o.includes(t)||c.includes(t)||s.includes(t)});v.sort((e,t)=>{let n=a.getBoardFullDetails(e.id),r=a.getBoardFullDetails(t.id),s,c;return i===`shortCode`?(s=parseInt(e.shortCode,10),c=parseInt(t.shortCode,10)):i===`credits`?(s=e.remainingCredits,c=t.remainingCredits):i===`client`?(s=n&&n.client?n.client.name:``,c=r&&r.client?r.client.name:``):i===`model`?(s=n&&n.machine?n.machine.model:``,c=r&&r.machine?r.machine.model:``):i===`connection`?(s=+!!e.isOnlineWifi,c=+!!t.isOnlineWifi):i===`syncDate`?(s=new Date(e.lastSyncDate).getTime(),c=new Date(t.lastSyncDate).getTime()):(s=e.shortCode,c=t.shortCode),s<c?o===`ASC`?-1:1:s>c?o===`ASC`?1:-1:0});let y=e=>i===e?o===`ASC`?`▲`:`▼`:`<span style="opacity: 0.3;">↕</span>`,b=``;if(s===`kpi_clients`)b=`
+  `}function u(e=`dashboard`,t=null,n=``,r=`ALL`,i=`shortCode`,o=`DESC`,s=null,c=`30DAYS`,l=`LINE`,u=`2026-07-01`,d=`2026-08-02`){let f=a.getClients(),p=a.getMachines(),m=a.getBoards(),h=a.getCoffeeLogs(),g=f.length,_=p.length,v=h.length,y=m.filter(e=>{let t=a.calculateBoardStatus(e);return t.statusKey===`WARNING_LOW`||t.statusKey===`CRITICAL_LOW`||t.statusKey===`BLOCKED_ZERO`}),b=m.filter(e=>{if(!n)return!0;let t=n.toLowerCase().trim(),i=a.getBoardFullDetails(e.id),o=i&&i.client?i.client.name.toLowerCase():``,s=i&&i.machine?i.machine.serialNumber.toLowerCase():``,c=i&&i.machine?i.machine.model.toLowerCase():``,l=e.shortCode.toLowerCase();return r===`CODE`?l.includes(t):r===`CLIENT`?o.includes(t):r===`MODEL`?c.includes(t)||s.includes(t):l.includes(t)||o.includes(t)||c.includes(t)||s.includes(t)});b.sort((e,t)=>{let n=a.getBoardFullDetails(e.id),r=a.getBoardFullDetails(t.id),s,c;return i===`shortCode`?(s=parseInt(e.shortCode,10),c=parseInt(t.shortCode,10)):i===`credits`?(s=e.remainingCredits,c=t.remainingCredits):i===`client`?(s=n&&n.client?n.client.name:``,c=r&&r.client?r.client.name:``):i===`model`?(s=n&&n.machine?n.machine.model:``,c=r&&r.machine?r.machine.model:``):i===`connection`?(s=+!!e.isOnlineWifi,c=+!!t.isOnlineWifi):i===`syncDate`?(s=new Date(e.lastSyncDate).getTime(),c=new Date(t.lastSyncDate).getTime()):(s=e.shortCode,c=t.shortCode),s<c?o===`ASC`?-1:1:s>c?o===`ASC`?1:-1:0});let x=e=>i===e?o===`ASC`?`▲`:`▼`:`<span style="opacity: 0.3;">↕</span>`,S=``;if(s===`kpi_clients`)S=`
       <div class="modal-overlay" id="kpi-modal">
         <div class="modal-box" style="max-width: 800px; width: 95%;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px;">
             <h2 style="font-size: 1.4rem; font-weight: 800; color: var(--accent-cyan); margin: 0;">
-              📊 Analytics & Distribuzione Clienti Attivi (${m})
+              📊 Analytics & Distribuzione Clienti Attivi (${g})
             </h2>
             <button class="btn-close-kpi-modal" style="background: none; border: none; color: var(--text-muted); font-size: 1.6rem; cursor: pointer;">&times;</button>
           </div>
@@ -313,7 +313,7 @@
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
             <div style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 12px; border: 1px solid var(--border-subtle);">
               <h4 style="margin-top:0; color: var(--accent-purple);">📍 Ripartizione per Città:</h4>
-              ${u.map(e=>`
+              ${f.map(e=>`
                 <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.85rem;">
                   <span>🏢 ${e.name} (${e.city||`N/D`})</span>
                   <span class="badge badge-info">ATTIVO</span>
@@ -337,12 +337,12 @@
           </div>
         </div>
       </div>
-    `;else if(s===`kpi_machines`)b=`
+    `;else if(s===`kpi_machines`)S=`
       <div class="modal-overlay" id="kpi-modal">
         <div class="modal-box" style="max-width: 800px; width: 95%;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px;">
             <h2 style="font-size: 1.4rem; font-weight: 800; color: var(--accent-purple); margin: 0;">
-              ☕ Telemetria & Ripartizione Parco Macchine (${h})
+              ☕ Telemetria & Ripartizione Parco Macchine (${_})
             </h2>
             <button class="btn-close-kpi-modal" style="background: none; border: none; color: var(--text-muted); font-size: 1.6rem; cursor: pointer;">&times;</button>
           </div>
@@ -351,8 +351,8 @@
             <div style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 12px; border: 1px solid var(--border-subtle);">
               <h4 style="margin-top:0; color: var(--accent-cyan);">📡 Stato Connettività Hardware:</h4>
               <div style="margin-bottom: 12px; font-size: 0.85rem;">
-                • <strong>Schede Wi-Fi 6 Cloud (PRO):</strong> ${f.filter(e=>e.isOnlineWifi).length} Online<br>
-                • <strong>Schede Bluetooth (BASIC):</strong> ${f.filter(e=>!e.isOnlineWifi).length} Local Only
+                • <strong>Schede Wi-Fi 6 Cloud (PRO):</strong> ${m.filter(e=>e.isOnlineWifi).length} Online<br>
+                • <strong>Schede Bluetooth (BASIC):</strong> ${m.filter(e=>!e.isOnlineWifi).length} Local Only
               </div>
               <div style="font-size: 0.75rem; color: var(--text-muted);">
                 Le schede Bluetooth sincronizzano i log automaticamente al passaggio dell'Agente ADR.
@@ -361,7 +361,7 @@
 
             <div style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 12px; border: 1px solid var(--border-subtle);">
               <h4 style="margin-top:0; color: var(--accent-amber);">🛠️ Modelli Macchina più Diffusi:</h4>
-              ${d.map(e=>`
+              ${p.map(e=>`
                 <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.85rem;">
                   <span>☕ ${e.brand} - ${e.model}</span>
                   <code>${e.serialNumber}</code>
@@ -375,68 +375,151 @@
           </div>
         </div>
       </div>
-    `;else if(s===`kpi_extractions`)b=`
+    `;else if(s===`kpi_extractions`){let e=``,t=c===`30DAYS`?`Ultimi 30 Giorni`:c===`90DAYS`?`Ultimi 90 Giorni`:c===`1YEAR`?`Anno Corrente`:`Dal ${u} al ${d}`;e=l===`LINE`?`
+        <div style="height: 220px; position: relative; padding: 20px 10px 10px 10px; border-bottom: 2px solid var(--border-subtle);">
+          <svg viewBox="0 0 700 180" style="width: 100%; height: 100%; overflow: visible;">
+            <defs>
+              <linearGradient id="lineChartGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="var(--accent-cyan)" stop-opacity="0.4" />
+                <stop offset="100%" stop-color="var(--accent-cyan)" stop-opacity="0.0" />
+              </linearGradient>
+            </defs>
+
+            <!-- Area sfumata sotto la linea -->
+            <path d="M 30,140 Q 140,70 250,45 T 470,95 T 670,25 L 670,170 L 30,170 Z" fill="url(#lineChartGradient)" />
+
+            <!-- Curva a linea con tratto accentuato -->
+            <path d="M 30,140 Q 140,70 250,45 T 470,95 T 670,25" fill="none" stroke="var(--accent-cyan)" stroke-width="4" stroke-linecap="round" />
+
+            <!-- Punti/Nodi con Valori Numerici Evidenziati -->
+            <g>
+              <circle cx="30" cy="140" r="7" fill="#0f172a" stroke="var(--accent-cyan)" stroke-width="3" />
+              <text x="30" y="122" text-anchor="middle" fill="#fff" font-size="12" font-weight="900">120 ☕</text>
+
+              <circle cx="190" cy="70" r="7" fill="#0f172a" stroke="var(--accent-cyan)" stroke-width="3" />
+              <text x="190" y="52" text-anchor="middle" fill="#fff" font-size="12" font-weight="900">240 ☕</text>
+
+              <circle cx="350" cy="45" r="7" fill="#0f172a" stroke="var(--accent-cyan)" stroke-width="3" />
+              <text x="350" y="27" text-anchor="middle" fill="#fff" font-size="12" font-weight="900">380 ☕</text>
+
+              <circle cx="510" cy="95" r="7" fill="#0f172a" stroke="var(--accent-cyan)" stroke-width="3" />
+              <text x="510" y="77" text-anchor="middle" fill="#fff" font-size="12" font-weight="900">210 ☕</text>
+
+              <circle cx="670" cy="25" r="7" fill="#0f172a" stroke="var(--accent-cyan)" stroke-width="3" />
+              <text x="670" y="7" text-anchor="middle" fill="#fff" font-size="12" font-weight="900">520 ☕</text>
+            </g>
+          </svg>
+        </div>
+      `:`
+        <div style="height: 220px; display: flex; align-items: flex-end; gap: 20px; padding: 20px 10px 10px 10px; border-bottom: 2px solid var(--border-subtle);">
+          <div style="flex: 1; background: linear-gradient(to top, var(--accent-cyan), var(--accent-purple)); height: 35%; border-radius: 8px 8px 0 0; position: relative;">
+            <span style="position: absolute; top: -26px; left: 50%; transform: translateX(-50%); font-size: 0.8rem; font-weight: 800; color: #fff;">120 ☕</span>
+          </div>
+          <div style="flex: 1; background: linear-gradient(to top, var(--accent-cyan), var(--accent-purple)); height: 60%; border-radius: 8px 8px 0 0; position: relative;">
+            <span style="position: absolute; top: -26px; left: 50%; transform: translateX(-50%); font-size: 0.8rem; font-weight: 800; color: #fff;">240 ☕</span>
+          </div>
+          <div style="flex: 1; background: linear-gradient(to top, var(--accent-cyan), var(--accent-purple)); height: 85%; border-radius: 8px 8px 0 0; position: relative;">
+            <span style="position: absolute; top: -26px; left: 50%; transform: translateX(-50%); font-size: 0.8rem; font-weight: 800; color: #fff;">380 ☕</span>
+          </div>
+          <div style="flex: 1; background: linear-gradient(to top, var(--accent-cyan), var(--accent-purple)); height: 50%; border-radius: 8px 8px 0 0; position: relative;">
+            <span style="position: absolute; top: -26px; left: 50%; transform: translateX(-50%); font-size: 0.8rem; font-weight: 800; color: #fff;">210 ☕</span>
+          </div>
+          <div style="flex: 1; background: linear-gradient(to top, var(--accent-cyan), var(--accent-purple)); height: 95%; border-radius: 8px 8px 0 0; position: relative;">
+            <span style="position: absolute; top: -26px; left: 50%; transform: translateX(-50%); font-size: 0.8rem; font-weight: 800; color: #fff;">520 ☕</span>
+          </div>
+        </div>
+      `,S=`
       <div class="modal-overlay" id="kpi-modal">
-        <div class="modal-box" style="max-width: 860px; width: 95%;">
+        <div class="modal-box" style="max-width: 1240px; width: 96%; max-height: 90vh; overflow-y: auto;">
+          
+          <!-- Header Pop-up -->
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px;">
             <h2 style="font-size: 1.4rem; font-weight: 800; color: var(--accent-green); margin: 0;">
-              📈 Grafico & Analytics Consumi Erogazioni Totali (${g})
+              📈 Grafico & Analytics Consumi Erogazioni Totali (${v} Erogazioni)
             </h2>
             <button class="btn-close-kpi-modal" style="background: none; border: none; color: var(--text-muted); font-size: 1.6rem; cursor: pointer;">&times;</button>
           </div>
 
-          <!-- Controlli Periodo & Grafico -->
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: rgba(0,0,0,0.3); padding: 12px 16px; border-radius: 10px;">
-            <div style="display: flex; gap: 8px;">
-              <button class="btn ${c===`30DAYS`?`btn-primary`:`btn-secondary`} btn-kpi-period" data-period="30DAYS">Ultimi 30 Giorni</button>
-              <button class="btn ${c===`90DAYS`?`btn-primary`:`btn-secondary`} btn-kpi-period" data-period="90DAYS">Ultimi 90 Giorni</button>
-              <button class="btn ${c===`1YEAR`?`btn-primary`:`btn-secondary`} btn-kpi-period" data-period="1YEAR">Anno Corrente</button>
+          <!-- CONTROLLI PERIODO & SELETTORE GRAFICO -->
+          <div style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 12px; border: 1px solid var(--border-subtle); margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+              
+              <!-- Tasti Scelta Rapida Temporale -->
+              <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                <span style="font-weight: 800; font-size: 0.85rem; color: var(--accent-cyan); margin-right: 4px;">📅 Periodo:</span>
+                <button class="btn ${c===`30DAYS`?`btn-primary`:`btn-secondary`} btn-kpi-period" data-period="30DAYS">Ultimi 30 Giorni</button>
+                <button class="btn ${c===`90DAYS`?`btn-primary`:`btn-secondary`} btn-kpi-period" data-period="90DAYS">Ultimi 90 Giorni</button>
+                <button class="btn ${c===`1YEAR`?`btn-primary`:`btn-secondary`} btn-kpi-period" data-period="1YEAR">Anno Corrente</button>
+                <button class="btn ${c===`CUSTOM`?`btn-primary`:`btn-secondary`} btn-kpi-period" data-period="CUSTOM">📅 Personalizzato</button>
+              </div>
+
+              <!-- Tasti Cambio Stile Grafico (LINEE vs BARRE) -->
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <span style="font-weight: 800; font-size: 0.85rem; color: var(--accent-cyan); margin-right: 4px;">📊 Stile Grafico:</span>
+                <button class="btn ${l===`LINE`?`btn-primary`:`btn-secondary`} btn-kpi-charttype" data-charttype="LINE" style="${l===`LINE`?`background: var(--accent-cyan); color: #000; font-weight: 900;`:``}">
+                  📈 Grafico Linee
+                </button>
+                <button class="btn ${l===`BAR`?`btn-primary`:`btn-secondary`} btn-kpi-charttype" data-charttype="BAR" style="${l===`BAR`?`background: var(--accent-purple); color: #fff; font-weight: 900;`:``}">
+                  📊 Grafico Barre
+                </button>
+              </div>
+
             </div>
 
-            <div style="display: flex; gap: 8px;">
-              <button class="btn ${l===`LINE`?`btn-primary`:`btn-secondary`} btn-kpi-charttype" data-charttype="LINE">📈 Grafico Linee</button>
-              <button class="btn ${l===`BAR`?`btn-primary`:`btn-secondary`} btn-kpi-charttype" data-charttype="BAR">📊 Grafico Barre</button>
+            <!-- SELETTORE A TENDINA CALENDARIO PER IL FILTRO PERSONALIZZATO (SELEZIONATO) -->
+            ${c===`CUSTOM`?`
+              <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+                <div style="font-size: 0.85rem; font-weight: 800; color: var(--accent-amber);">
+                  🗓️ Seleziona Date dal Calendario:
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <label style="font-size: 0.8rem; color: var(--text-muted);">Data Inizio:</label>
+                  <input type="date" id="kpi-custom-start" value="${u}" style="padding: 8px 12px; background: var(--bg-primary); color: #fff; border: 1px solid var(--accent-cyan); border-radius: 8px; font-weight: 700;">
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <label style="font-size: 0.8rem; color: var(--text-muted);">Data Fine:</label>
+                  <input type="date" id="kpi-custom-end" value="${d}" style="padding: 8px 12px; background: var(--bg-primary); color: #fff; border: 1px solid var(--accent-cyan); border-radius: 8px; font-weight: 700;">
+                </div>
+
+                <button id="btn-apply-kpi-custom-date" class="btn btn-primary" style="padding: 8px 16px;">
+                  ✔️ Applica Filtro Calendario
+                </button>
+              </div>
+            `:``}
+
+          </div>
+
+          <!-- SCHERMO DEL GRAFICO DINAMICO -->
+          <div style="background: #0f172a; padding: 24px; border-radius: 14px; border: 1px solid var(--border-subtle); margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <div style="font-size: 0.9rem; color: #fff; font-weight: 800;">
+                Trend Erogazioni: <span style="color: var(--accent-cyan);">${t}</span>
+              </div>
+              <div class="badge badge-info" style="font-weight: 800;">
+                Modalità Visualizzazione: ${l===`LINE`?`📈 LINEA CONTINUA SVG`:`📊 ISTOGRAMMA A BARRE`}
+              </div>
+            </div>
+
+            ${e}
+
+            <div style="display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--text-muted); margin-top: 12px; font-weight: 700;">
+              <span>Fase 1 (Inizio)</span>
+              <span>Fase 2</span>
+              <span>Fase 3 (Picco)</span>
+              <span>Fase 4</span>
+              <span>Fase 5 (Attuale)</span>
             </div>
           </div>
 
-          <!-- Simulazione Grafico Visuale SVG / CSS -->
-          <div style="background: #0f172a; padding: 24px; border-radius: 12px; border: 1px solid var(--border-subtle); margin-bottom: 20px;">
-            <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
-              Trend Erogazioni (${c===`30DAYS`?`Giornaliero`:`Settimanale`}) - Modalità: <strong>${l}</strong>
-            </div>
-
-            <div style="height: 180px; display: flex; align-items: flex-end; gap: 16px; padding-bottom: 10px; border-bottom: 2px solid var(--border-subtle);">
-              <div style="flex: 1; background: linear-gradient(to top, var(--accent-cyan), var(--accent-purple)); height: 45%; border-radius: 6px 6px 0 0; position: relative;">
-                <span style="position: absolute; top: -22px; left: 50%; transform: translateX(-50%); font-size: 0.75rem; font-weight: bold;">120</span>
-              </div>
-              <div style="flex: 1; background: linear-gradient(to top, var(--accent-cyan), var(--accent-purple)); height: 70%; border-radius: 6px 6px 0 0; position: relative;">
-                <span style="position: absolute; top: -22px; left: 50%; transform: translateX(-50%); font-size: 0.75rem; font-weight: bold;">240</span>
-              </div>
-              <div style="flex: 1; background: linear-gradient(to top, var(--accent-cyan), var(--accent-purple)); height: 90%; border-radius: 6px 6px 0 0; position: relative;">
-                <span style="position: absolute; top: -22px; left: 50%; transform: translateX(-50%); font-size: 0.75rem; font-weight: bold;">380</span>
-              </div>
-              <div style="flex: 1; background: linear-gradient(to top, var(--accent-cyan), var(--accent-purple)); height: 60%; border-radius: 6px 6px 0 0; position: relative;">
-                <span style="position: absolute; top: -22px; left: 50%; transform: translateX(-50%); font-size: 0.75rem; font-weight: bold;">210</span>
-              </div>
-              <div style="flex: 1; background: linear-gradient(to top, var(--accent-cyan), var(--accent-purple)); height: 85%; border-radius: 6px 6px 0 0; position: relative;">
-                <span style="position: absolute; top: -22px; left: 50%; transform: translateX(-50%); font-size: 0.75rem; font-weight: bold;">310</span>
-              </div>
-            </div>
-            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); margin-top: 8px;">
-              <span>Settimana 1</span>
-              <span>Settimana 2</span>
-              <span>Settimana 3</span>
-              <span>Settimana 4</span>
-              <span>Oggi</span>
-            </div>
-          </div>
-
+          <!-- FOOTER POP-UP -->
           <div style="display: flex; justify-content: flex-end;">
             <button class="btn btn-secondary btn-close-kpi-modal">Chiudi Analytics Erogazioni</button>
           </div>
         </div>
       </div>
-    `;else if(s===`kpi_lowstock`){let e=f.length,t=0,n=0,r=0,i=0;f.forEach(e=>{let o=a.calculateBoardStatus(e);o.statusKey===`ACTIVE_OK`?t++:o.statusKey===`WARNING_LOW`?n++:o.statusKey===`CRITICAL_LOW`?r++:o.statusKey===`BLOCKED_ZERO`&&i++});let o=e>0?(t/e*100).toFixed(1):`0.0`,s=e>0?(n/e*100).toFixed(1):`0.0`,c=e>0?(r/e*100).toFixed(1):`0.0`,l=e>0?(i/e*100).toFixed(1):`0.0`,u=e>0?i/e*360:0,d=u+(e>0?r/e*360:0),p=d+(e>0?n/e*360:0);b=`
+    `}else if(s===`kpi_lowstock`){let e=m.length,t=0,n=0,r=0,i=0;m.forEach(e=>{let o=a.calculateBoardStatus(e);o.statusKey===`ACTIVE_OK`?t++:o.statusKey===`WARNING_LOW`?n++:o.statusKey===`CRITICAL_LOW`?r++:o.statusKey===`BLOCKED_ZERO`&&i++});let o=e>0?(t/e*100).toFixed(1):`0.0`,s=e>0?(n/e*100).toFixed(1):`0.0`,c=e>0?(r/e*100).toFixed(1):`0.0`,l=e>0?(i/e*100).toFixed(1):`0.0`,u=e>0?i/e*360:0,d=u+(e>0?r/e*360:0),f=d+(e>0?n/e*360:0);S=`
       <div class="modal-overlay" id="kpi-modal">
         <div class="modal-box" style="max-width: 1240px; width: 96%; max-height: 90vh; overflow-y: auto;">
           
@@ -459,7 +542,7 @@
 
               <!-- Grafico Donut Chart con Bordo Bianco & Glow per Evidenziare il Nero -->
               <div style="display: flex; justify-content: center; margin-bottom: 20px;">
-                <div style="width: 156px; height: 156px; border-radius: 50%; background: conic-gradient(#090d16 0deg ${u}deg, #ef4444 ${u}deg ${d}deg, #f59e0b ${d}deg ${p}deg, #10b981 ${p}deg 360deg); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 14px rgba(255, 255, 255, 0.4); border: 2.5px solid #ffffff;">
+                <div style="width: 156px; height: 156px; border-radius: 50%; background: conic-gradient(#090d16 0deg ${u}deg, #ef4444 ${u}deg ${d}deg, #f59e0b ${d}deg ${f}deg, #10b981 ${f}deg 360deg); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 14px rgba(255, 255, 255, 0.4); border: 2.5px solid #ffffff;">
                   <div style="width: 100px; height: 100px; border-radius: 50%; background: #1e293b; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid var(--border-subtle);">
                     <span style="font-size: 1.7rem; font-weight: 900; color: #fff;">${e}</span>
                     <span style="font-size: 0.65rem; color: var(--text-muted); font-weight: 700;">DECONTI TOT.</span>
@@ -507,7 +590,7 @@
                 <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--accent-rose); display: flex; align-items: center; gap: 8px;">
                   ⚠️ Schede Deconto da Attenzionare
                 </h3>
-                <span class="badge badge-warning">${_.length} Schede</span>
+                <span class="badge badge-warning">${y.length} Schede</span>
               </div>
 
               <div class="table-container" style="max-height: 480px; overflow-y: auto;">
@@ -522,7 +605,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    ${_.length>0?_.map(e=>{let t=a.getBoardFullDetails(e.id),n=t&&t.client?t.client.name:`N/D`,r=a.calculateBoardStatus(e);return`
+                    ${y.length>0?y.map(e=>{let t=a.getBoardFullDetails(e.id),n=t&&t.client?t.client.name:`N/D`,r=a.calculateBoardStatus(e);return`
                         <tr>
                           <td><strong style="font-family: monospace; color: var(--accent-cyan);">#${e.shortCode}</strong></td>
                           <td><strong style="font-size: 0.85rem;">${n}</strong></td>
@@ -554,7 +637,7 @@
           </div>
         </div>
       </div>
-    `}let x=``;if(t){let e=a.getBoardFullDetails(t);if(e&&e.board){let t=e.board,n=e.machine||{},r=e.client||{},i=e.coffees||[],o=t.avgDailyCoffees||12.4,s=o>0?Math.ceil(t.remainingCredits/o):`N/D`,c=s===`N/D`?`N/D`:new Date(Date.now()+s*864e5).toLocaleDateString(`it-IT`,{day:`2-digit`,month:`long`,year:`numeric`}),l=a.calculateBoardStatus(t);x=`
+    `}let C=``;if(t){let e=a.getBoardFullDetails(t);if(e&&e.board){let t=e.board,n=e.machine||{},r=e.client||{},i=e.coffees||[],o=t.avgDailyCoffees||12.4,s=o>0?Math.ceil(t.remainingCredits/o):`N/D`,c=s===`N/D`?`N/D`:new Date(Date.now()+s*864e5).toLocaleDateString(`it-IT`,{day:`2-digit`,month:`long`,year:`numeric`}),l=a.calculateBoardStatus(t);C=`
         <div class="modal-overlay" id="deconto-detail-modal">
           <div class="modal-box" style="max-width: 1020px; width: 95%; max-height: 90vh; overflow-y: auto;">
             
@@ -712,7 +795,7 @@
             <span class="stat-title">Clienti Attivi</span>
             <span class="stat-icon">🏢</span>
           </div>
-          <div class="stat-value">${m}</div>
+          <div class="stat-value">${g}</div>
           <div class="stat-sub" style="color: var(--accent-green);">
             ▲ 100% Attivi in Comodato
           </div>
@@ -727,7 +810,7 @@
             <span class="stat-title">Macchine Monitorate</span>
             <span class="stat-icon">☕</span>
           </div>
-          <div class="stat-value">${h}</div>
+          <div class="stat-value">${_}</div>
           <div class="stat-sub" style="color: var(--accent-purple);">
             ● Connessione ESP32-C6
           </div>
@@ -742,7 +825,7 @@
             <span class="stat-title">Erogazioni Totali</span>
             <span class="stat-icon">📈</span>
           </div>
-          <div class="stat-value">${g}</div>
+          <div class="stat-value">${v}</div>
           <div class="stat-sub" style="color: var(--accent-cyan);">
             ▲ +14% questo mese
           </div>
@@ -752,14 +835,14 @@
         </div>
 
         <!-- Tasto 4: Macchine in Scorta/Blocco -->
-        <div class="stat-card kpi-card-clickable" data-kpi="kpi_lowstock" style="cursor: pointer; position: relative; border-color: ${_.length>0?`var(--accent-amber)`:`var(--border-color)`};">
+        <div class="stat-card kpi-card-clickable" data-kpi="kpi_lowstock" style="cursor: pointer; position: relative; border-color: ${y.length>0?`var(--accent-amber)`:`var(--border-color)`};">
           <div class="stat-header">
             <span class="stat-title">Scorte &amp; Blocchi</span>
             <span class="stat-icon">⚠️</span>
           </div>
-          <div class="stat-value" style="color: ${_.length>0?`var(--accent-amber)`:`#fff`};">${_.length}</div>
+          <div class="stat-value" style="color: ${y.length>0?`var(--accent-amber)`:`#fff`};">${y.length}</div>
           <div class="stat-sub" style="color: var(--accent-amber);">
-            ${_.length>0?`Avviso consegna consigliata`:`Tutti i crediti regolari`}
+            ${y.length>0?`Avviso consegna consigliata`:`Tutti i crediti regolari`}
           </div>
           <div style="font-size: 0.72rem; color: var(--accent-cyan); margin-top: 8px; font-weight: 700;">
             🔍 Clicca per aprire il pop-up lista blocchi &rarr;
@@ -807,28 +890,28 @@
             <thead>
               <tr>
                 <th style="cursor: pointer; user-select: none;" class="th-sortable" data-col="shortCode">
-                  Numero Deconto ${y(`shortCode`)}
+                  Numero Deconto ${x(`shortCode`)}
                 </th>
                 <th style="cursor: pointer; user-select: none;" class="th-sortable" data-col="client">
-                  Cliente / Azienda ${y(`client`)}
+                  Cliente / Azienda ${x(`client`)}
                 </th>
                 <th style="cursor: pointer; user-select: none;" class="th-sortable" data-col="model">
-                  Modello Macchina ${y(`model`)}
+                  Modello Macchina ${x(`model`)}
                 </th>
                 <th>Seriale Macchina</th>
                 <th style="cursor: pointer; user-select: none;" class="th-sortable" data-col="credits">
-                  Battute Rimanenti ${y(`credits`)}
+                  Battute Rimanenti ${x(`credits`)}
                 </th>
                 <th style="cursor: pointer; user-select: none;" class="th-sortable" data-col="connection">
-                  Tipo Connessione ${y(`connection`)}
+                  Tipo Connessione ${x(`connection`)}
                 </th>
                 <th style="cursor: pointer; user-select: none;" class="th-sortable" data-col="syncDate">
-                  Data Ultima Sync ${y(`syncDate`)}
+                  Data Ultima Sync ${x(`syncDate`)}
                 </th>
               </tr>
             </thead>
             <tbody>
-              ${v.length>0?v.map(e=>{let t=a.getBoardFullDetails(e.id),n=t&&t.client?t.client.name:`N/D`,r=t&&t.machine?t.machine.model:`N/D`,i=t&&t.machine?t.machine.serialNumber:`N/D`,o=a.calculateBoardStatus(e);return`
+              ${b.length>0?b.map(e=>{let t=a.getBoardFullDetails(e.id),n=t&&t.client?t.client.name:`N/D`,r=t&&t.machine?t.machine.model:`N/D`,i=t&&t.machine?t.machine.serialNumber:`N/D`,o=a.calculateBoardStatus(e);return`
                   <tr>
                     <td>
                       <button class="btn btn-secondary btn-deconto-detail" data-code="${e.shortCode}" style="padding: 6px 12px; font-weight: 900; font-family: monospace; font-size: 1.1rem; color: var(--accent-cyan); border: 1px solid rgba(56, 189, 248, 0.4);">
@@ -858,8 +941,8 @@
         </div>
       </div>
     </div>
-    ${x}
-    ${b}
+    ${C}
+    ${S}
   `}function d(e,t=null,n=null){let r=a.getUsers(),i=a.getRoleLabels(),o=a.getPermissions(),s=a.getEmailLogs(),c=``;if(t){let e=r.find(e=>e.id===t);e&&(c=`
         <div class="modal-overlay" id="edit-staff-modal">
           <div class="modal-box" style="max-width: 540px; width: 95%;">
@@ -1974,12 +2057,12 @@
 
       </div>
     </div>
-  `}var g={currentUser:a.getCurrentUser(),activeTab:`dashboard`,showProfileModal:!1,editingStaffUserId:null,editingId:null,viewingDecontoCode:null,viewingEmailId:null,selectedSimBoardCode:`9901`,dashSearchQuery:``,dashSearchCategory:`ALL`,dashSortColumn:`shortCode`,dashSortDirection:`DESC`,viewingKpiModal:null,kpiPeriod:`30DAYS`,kpiChartType:`LINE`};function _(){let e=document.getElementById(`app`);if(!g.currentUser){e.innerHTML=c(),v();return}let t=g.currentUser,n=``;g.activeTab===`settings`?n=m():g.activeTab===`simulator`?n=h(g.selectedSimBoardCode):g.activeTab===`user_management`||g.activeTab===`permissions_matrix`?n=d(g.activeTab,g.editingStaffUserId,g.viewingEmailId):t.role===`ADMIN`||t.role===`UFFICIO`?n=g.activeTab===`clients`||g.activeTab===`machines`||g.activeTab===`deconto_boards`||g.activeTab===`qr_generator`||g.activeTab===`otp_generator`||g.activeTab===`refills_history`?f(g.activeTab,g.editingId):g.activeTab===`adr_visits`?p(g.activeTab):u(g.activeTab,g.viewingDecontoCode,g.dashSearchQuery,g.dashSearchCategory,g.dashSortColumn,g.dashSortDirection,g.viewingKpiModal,g.kpiPeriod,g.kpiChartType):t.role===`ADR`&&(n=g.activeTab===`adr_visits`?p(g.activeTab):f(g.activeTab,g.editingId));let r=``;g.showProfileModal&&(r=l(t)),e.innerHTML=`
+  `}var g={currentUser:a.getCurrentUser(),activeTab:`dashboard`,showProfileModal:!1,editingStaffUserId:null,editingId:null,viewingDecontoCode:null,viewingEmailId:null,selectedSimBoardCode:`9901`,dashSearchQuery:``,dashSearchCategory:`ALL`,dashSortColumn:`shortCode`,dashSortDirection:`DESC`,viewingKpiModal:null,kpiPeriod:`30DAYS`,kpiChartType:`LINE`,kpiCustomStart:`2026-07-01`,kpiCustomEnd:`2026-08-02`};function _(){let e=document.getElementById(`app`);if(!g.currentUser){e.innerHTML=c(),v();return}let t=g.currentUser,n=``;g.activeTab===`settings`?n=m():g.activeTab===`simulator`?n=h(g.selectedSimBoardCode):g.activeTab===`user_management`||g.activeTab===`permissions_matrix`?n=d(g.activeTab,g.editingStaffUserId,g.viewingEmailId):t.role===`ADMIN`||t.role===`UFFICIO`?n=g.activeTab===`clients`||g.activeTab===`machines`||g.activeTab===`deconto_boards`||g.activeTab===`qr_generator`||g.activeTab===`otp_generator`||g.activeTab===`refills_history`?f(g.activeTab,g.editingId):g.activeTab===`adr_visits`?p(g.activeTab):u(g.activeTab,g.viewingDecontoCode,g.dashSearchQuery,g.dashSearchCategory,g.dashSortColumn,g.dashSortDirection,g.viewingKpiModal,g.kpiPeriod,g.kpiChartType,g.kpiCustomStart,g.kpiCustomEnd):t.role===`ADR`&&(n=p(g.activeTab)),e.innerHTML=`
     <div class="app-container">
       ${s(t,g.activeTab)}
       <main class="main-content">
         ${n}
       </main>
     </div>
-    ${r}
-  `,y()}function v(){let e=document.getElementById(`login-form`),t=document.getElementById(`login-error-msg`);e&&e.addEventListener(`submit`,e=>{e.preventDefault();let n=document.getElementById(`login-username`).value,r=document.getElementById(`login-password`).value;try{let e=a.authenticate(n,r);g.currentUser=e,g.activeTab=e.role===`ADMIN`?`dashboard`:`clients`,_()}catch(e){t.innerText=e.message,t.style.display=`block`}})}function y(){let e=document.getElementById(`btn-logout`);e&&e.addEventListener(`click`,()=>{a.logout(),g.currentUser=null,_()});let t=document.getElementById(`btn-open-profile-modal`);t&&t.addEventListener(`click`,()=>{g.showProfileModal=!0,_()});let n=document.getElementById(`btn-close-profile-modal`),r=document.getElementById(`btn-cancel-profile`);n&&n.addEventListener(`click`,()=>{g.showProfileModal=!1,_()}),r&&r.addEventListener(`click`,()=>{g.showProfileModal=!1,_()}),document.querySelectorAll(`.nav-item`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-tab`);t&&(g.activeTab=t,g.editingId=null,_())})});let i=document.getElementById(`btn-toggle-add-user`),s=document.getElementById(`add-user-form-container`);i&&s&&i.addEventListener(`click`,()=>{s.style.display=s.style.display===`none`?`block`:`none`});let c=document.getElementById(`btn-cancel-add-user`);c&&s&&c.addEventListener(`click`,()=>{s.style.display=`none`});let l=document.getElementById(`btn-save-new-user`);l&&l.addEventListener(`click`,async()=>{let e=document.getElementById(`new-user-username`).value.trim(),t=document.getElementById(`new-user-password`).value.trim(),n=document.getElementById(`new-user-name`).value.trim(),r=document.getElementById(`new-user-role`).value,i=document.getElementById(`new-user-email`).value.trim(),o=document.getElementById(`new-user-phone`).value.trim();if(!e||!t||!n){alert(`Compila i campi obbligatori: Codice Utente, Password e Nome!`);return}try{a.addUser({username:e,password:t,name:n,role:r,email:i,phone:o}),alert(`✅ Utente dipendente "${n}" (Codice ${e}) salvato PERMANENTEMENTE nel database!`),_()}catch(e){alert(`Errore: ${e.message}`)}}),document.querySelectorAll(`.btn-edit-staff-user`).forEach(e=>{e.addEventListener(`click`,()=>{g.editingStaffUserId=e.getAttribute(`data-id`),_()})});let u=document.getElementById(`btn-close-edit-staff-modal`),d=document.getElementById(`btn-cancel-edit-staff`);u&&u.addEventListener(`click`,()=>{g.editingStaffUserId=null,_()}),d&&d.addEventListener(`click`,()=>{g.editingStaffUserId=null,_()});let f=document.getElementById(`edit-staff-form`);f&&f.addEventListener(`submit`,async e=>{e.preventDefault();let t=document.getElementById(`edit-staff-id`).value,n=document.getElementById(`edit-staff-username`)?document.getElementById(`edit-staff-username`).value:void 0,r=document.getElementById(`edit-staff-name`).value,i=document.getElementById(`edit-staff-role`)?document.getElementById(`edit-staff-role`).value:void 0,o=document.getElementById(`edit-staff-email`).value,s=document.getElementById(`edit-staff-phone`).value,c=document.getElementById(`edit-staff-password`).value;try{let e=a.updateUser(t,{username:n,name:r,role:i,email:o,phone:s,password:c?c.trim():void 0});g.editingStaffUserId=null,alert(`✅ Scheda Utente "${e.name}" salvata PERMANENTEMENTE!`),_()}catch(e){alert(`Errore: ${e.message}`)}}),document.querySelectorAll(`.btn-toggle-user-status`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-id`),n=e.getAttribute(`data-status`)===`ACTIVE`?`DISABLED`:`ACTIVE`;a.updateUser(t,{status:n}),_()})}),document.querySelectorAll(`.btn-delete-user`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-id`);if(confirm(`Sei sicuro di voler eliminare questo utente dipendente?`))try{a.deleteUser(t),_()}catch(e){alert(`Errore: ${e.message}`)}})});let p=document.getElementById(`btn-open-email-logs`);p&&p.addEventListener(`click`,()=>{let e=a.getEmailLogs();e.length>0?(g.viewingEmailId=e[0].id,_()):alert(`Nessuna email spedita di recente nel registro.`)});let m=document.getElementById(`btn-close-email-preview`),h=document.getElementById(`btn-close-email-preview-footer`);m&&m.addEventListener(`click`,()=>{g.viewingEmailId=null,_()}),h&&h.addEventListener(`click`,()=>{g.viewingEmailId=null,_()});let v=document.getElementById(`rename-role-labels-form`);v&&v.addEventListener(`submit`,e=>{e.preventDefault();let t=document.getElementById(`role_label_UFFICIO`).value.trim(),n=document.getElementById(`role_label_ADR`).value.trim();a.updateRoleLabel(`UFFICIO`,t),a.updateRoleLabel(`ADR`,n),alert(`✅ Nomi delle Categorie Utente aggiornati con successo!`),_()});let y=document.getElementById(`permissions-matrix-form`);y&&y.addEventListener(`submit`,e=>{e.preventDefault();let t=[`UFFICIO`,`ADR`],n=[`canViewClients`,`canCreateClients`,`canEditClients`,`canDeleteClients`,`canGenerateQr`,`canGenerateOtp`,`canBleRefill`,`canUseSimulator`],r={UFFICIO:{},ADR:{}};t.forEach(e=>{n.forEach(t=>{let n=document.getElementById(`perm_${e}_${t}`);n&&(r[e][t]=n.checked)})}),a.updatePermissions(r),alert(`✅ Matrice dei Permessi aggiornata con successo per tutti gli utenti!`),_()});let b=document.getElementById(`setting-logo-file`);b&&b.addEventListener(`change`,e=>{let t=e.target.files[0];if(t){if(!t.type.startsWith(`image/`)){alert(`Seleziona un file immagine valido (PNG, JPG, SVG).`);return}let e=new FileReader;e.onload=function(e){let t=e.target.result;a.updateSettings({customLogoUrl:t}),alert(`✅ Nuovo Logo Aziendale caricato con successo!`),_()},e.readAsDataURL(t)}});let x=document.getElementById(`btn-reset-logo`);x&&x.addEventListener(`click`,()=>{confirm(`Ripristinare il logo predefinito con icona caffè ☕?`)&&(a.updateSettings({customLogoUrl:null}),alert(`✅ Logo predefinito ripristinato!`),_())});let S=document.getElementById(`settings-brand-form`);S&&S.addEventListener(`submit`,e=>{e.preventDefault();let t=document.getElementById(`setting-brand-title`).value.trim(),n=document.getElementById(`setting-brand-subtitle`).value.trim();a.updateSettings({brandTitle:t,brandSubtitle:n}),alert(`✅ Titolo e Sottotitolo Brand salvati con successo!`),_()});let C=document.getElementById(`settings-thresholds-form`);C&&C.addEventListener(`submit`,e=>{e.preventDefault();let t=parseInt(document.getElementById(`setting-threshold-yellow`).value,10),n=parseInt(document.getElementById(`setting-threshold-red`).value,10);if(isNaN(t)||isNaN(n)||n>=t){alert(`Attenzione: La Soglia Critica Rossa (X) deve essere inferiore alla Soglia Sottoscorta Gialla (Y)!`);return}a.updateSettings({thresholdYellow:t,thresholdRed:n}),alert(`✅ Soglie Automatiche Salvate con Successo!\n\n🟢 VERDE: > ${t} cialde\n🟡 GIALLO (Sottoscorta): da ${n+1} a ${t} cialde\n🔴 ROSSO (Critico): da 1 a ${n} cialde\n⚫ NERO (Bloccato): 0 cialde`),_()});let w=document.getElementById(`settings-brevo-form`);w&&w.addEventListener(`submit`,e=>{e.preventDefault();let t=document.getElementById(`setting-brevo-key`).value.trim(),n=document.getElementById(`setting-brevo-sender`).value.trim();a.updateSettings({brevoApiKey:t,brevoSenderEmail:n}),alert(`✅ API Key ed Email Mittente Brevo salvate con successo!`),_()}),document.querySelectorAll(`.kpi-card-clickable`).forEach(e=>{e.addEventListener(`click`,()=>{g.viewingKpiModal=e.getAttribute(`data-kpi`),_()})}),document.querySelectorAll(`.btn-close-kpi-modal`).forEach(e=>{e.addEventListener(`click`,()=>{g.viewingKpiModal=null,_()})}),document.querySelectorAll(`.btn-kpi-period`).forEach(e=>{e.addEventListener(`click`,()=>{g.kpiPeriod=e.getAttribute(`data-period`),_()})}),document.querySelectorAll(`.btn-kpi-charttype`).forEach(e=>{e.addEventListener(`click`,()=>{g.kpiChartType=e.getAttribute(`data-charttype`),_()})});let T=document.getElementById(`btn-dash-search`),E=document.getElementById(`dash-search-input`);T&&E&&(T.addEventListener(`click`,()=>{g.dashSearchQuery=E.value,g.dashSearchCategory=document.getElementById(`dash-search-category`).value,_()}),E.addEventListener(`keypress`,e=>{e.key===`Enter`&&(g.dashSearchQuery=E.value,g.dashSearchCategory=document.getElementById(`dash-search-category`).value,_())}));let D=document.getElementById(`btn-dash-reset`);D&&D.addEventListener(`click`,()=>{g.dashSearchQuery=``,g.dashSearchCategory=`ALL`,_()}),document.querySelectorAll(`.th-sortable`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-col`);g.dashSortColumn===t?g.dashSortDirection=g.dashSortDirection===`ASC`?`DESC`:`ASC`:(g.dashSortColumn=t,g.dashSortDirection=`ASC`),_()})}),document.querySelectorAll(`.btn-deconto-detail`).forEach(e=>{e.addEventListener(`click`,()=>{g.viewingDecontoCode=e.getAttribute(`data-code`),_()})});let O=document.getElementById(`btn-close-deconto-modal`),k=document.getElementById(`btn-close-deconto-modal-footer`);O&&O.addEventListener(`click`,()=>{g.viewingDecontoCode=null,_()}),k&&k.addEventListener(`click`,()=>{g.viewingDecontoCode=null,_()});let A=document.getElementById(`btn-export-csv`);A&&A.addEventListener(`click`,()=>{let e=a.exportCoffeeLogsCSV(),t=new Blob([e],{type:`text/csv;charset=utf-8;`}),n=URL.createObjectURL(t),r=document.createElement(`a`);r.href=n,r.download=`DECONTO_Report_Consumi_${new Date().toISOString().split(`T`)[0]}.csv`,r.click(),alert(`📥 Report Consumi CSV Scaricato con successo!`)});let j=document.getElementById(`btn-trigger-backup`);j&&j.addEventListener(`click`,async()=>{j.disabled=!0,j.innerText=`⏳ Backup in corso su GitHub...`;let e=await o.executeBackupNow();alert(`✅ Backup GitHub Eseguito con Successo!\n\nRepository: https://github.com/emporioboldrini-stack/deconto-app.git\nCommit Hash: ${e.backupRecord.commitHash}\nEntità salvate: ${e.backupRecord.recordCount}`),_()});let M=document.getElementById(`btn-toggle-add-client`),N=document.getElementById(`add-client-form-container`);M&&N&&M.addEventListener(`click`,()=>{N.style.display=N.style.display===`none`?`block`:`none`});let P=document.getElementById(`btn-cancel-add-client`);P&&N&&P.addEventListener(`click`,()=>{N.style.display=`none`});let F=document.getElementById(`btn-save-new-client`);F&&F.addEventListener(`click`,()=>{let e=document.getElementById(`new-cli-name`).value.trim(),t=document.getElementById(`new-cli-ref`).value.trim(),n=document.getElementById(`new-cli-phone`).value.trim(),r=document.getElementById(`new-cli-email`).value.trim(),i=document.getElementById(`new-cli-city`).value.trim(),o=document.getElementById(`new-cli-address`).value.trim(),s=document.getElementById(`new-cli-machine`)?document.getElementById(`new-cli-machine`).value:null;if(!e){alert(`Compila la Ragione Sociale del Cliente!`);return}try{a.addClient({name:e,refPerson:t,phone:n,email:r,city:i,address:o,machineId:s}),alert(`✅ Cliente "${e}" salvato ed installato con successo!`),_()}catch(e){alert(`Errore: ${e.message}`)}}),document.querySelectorAll(`.btn-edit-client-standalone`).forEach(e=>{e.addEventListener(`click`,()=>{g.editingId=e.getAttribute(`data-id`),_()})}),document.querySelectorAll(`.btn-del-client-standalone`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-id`);if(confirm(`Eliminare questo cliente dall'anagrafica? Le macchine collegate torneranno in magazzino.`))try{a.deleteClient(t),_()}catch(e){alert(e.message)}})});let I=document.getElementById(`form-edit-client`);I&&I.addEventListener(`submit`,e=>{e.preventDefault();let t=document.getElementById(`edit-client-id`).value,n=document.getElementById(`edit-cli-name`).value,r=document.getElementById(`edit-cli-ref`).value,i=document.getElementById(`edit-cli-phone`).value,o=document.getElementById(`edit-cli-city`).value,s=document.getElementById(`edit-cli-address`).value,c=document.getElementById(`edit-cli-machine`)?document.getElementById(`edit-cli-machine`).value:void 0;try{a.updateClient(t,{name:n,refPerson:r,phone:i,city:o,address:s,assignedMachineId:c}),g.editingId=null,alert(`✅ Scheda Cliente e Macchina installata aggiornata!`),_()}catch(e){alert(e.message)}});let L=document.getElementById(`btn-toggle-add-machine`),R=document.getElementById(`add-machine-form-container`);L&&R&&L.addEventListener(`click`,()=>{R.style.display=R.style.display===`none`?`block`:`none`});let z=document.getElementById(`btn-cancel-add-machine`);z&&R&&z.addEventListener(`click`,()=>{R.style.display=`none`});let B=document.getElementById(`btn-save-new-machine`);B&&B.addEventListener(`click`,()=>{let e=document.getElementById(`new-mc-serial`).value.trim(),t=document.getElementById(`new-mc-brand`).value.trim(),n=document.getElementById(`new-mc-model`).value.trim(),r=document.getElementById(`new-mc-board`)?document.getElementById(`new-mc-board`).value:null,i=document.getElementById(`new-mc-client`).value;if(!e||!n){alert(`Compila Seriale e Modello della macchina!`);return}try{a.addMachine({serialNumber:e,brand:t,model:n,boardId:r,clientId:i}),alert(`✅ Macchina "${e}" registrata ed associata nel parco macchine!`),_()}catch(e){alert(`Errore: ${e.message}`)}}),document.querySelectorAll(`.btn-edit-machine-standalone`).forEach(e=>{e.addEventListener(`click`,()=>{g.editingId=e.getAttribute(`data-id`),_()})}),document.querySelectorAll(`.btn-del-machine-standalone`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-id`);if(confirm(`Eliminare questa macchina dal parco macchine?`))try{a.deleteMachine(t),_()}catch(e){alert(e.message)}})});let V=document.getElementById(`form-edit-machine`);V&&V.addEventListener(`submit`,e=>{e.preventDefault();let t=document.getElementById(`edit-mc-id`).value,n=document.getElementById(`edit-mc-serial`).value,r=document.getElementById(`edit-mc-brand`).value,i=document.getElementById(`edit-mc-model`).value,o=document.getElementById(`edit-mc-board`)?document.getElementById(`edit-mc-board`).value:void 0,s=document.getElementById(`edit-mc-client`).value;try{a.updateMachine(t,{serialNumber:n,brand:r,model:i,boardId:o,clientId:s}),g.editingId=null,alert(`✅ Macchina da Caffè e Scheda Deconto collegate con successo!`),_()}catch(e){alert(e.message)}});let H=document.getElementById(`btn-toggle-add-board`),U=document.getElementById(`add-board-form-container`);H&&U&&H.addEventListener(`click`,()=>{U.style.display=U.style.display===`none`?`block`:`none`});let W=document.getElementById(`btn-cancel-add-board`);W&&U&&W.addEventListener(`click`,()=>{U.style.display=`none`});let G=document.getElementById(`btn-save-new-board`);G&&G.addEventListener(`click`,()=>{let e=document.getElementById(`new-board-code`).value.trim(),t=document.getElementById(`new-board-hwserial`).value.trim(),n=document.getElementById(`new-board-credits`).value,r=document.getElementById(`new-board-version`).value,i=document.getElementById(`new-board-machine`).value;if(!e){alert(`Inserisci il codice a 4 cifre per la Scheda Deconto (es. 9902)!`);return}try{a.addBoard({shortCode:e,hwSerial:t,remainingCredits:n,version:r,machineId:i}),alert(`✅ NUOVA SCHEDA DECONTO #${e} CREATA CON SUCCESSO!`),_()}catch(e){alert(`Errore: ${e.message}`)}}),document.querySelectorAll(`.btn-edit-board-standalone`).forEach(e=>{e.addEventListener(`click`,()=>{g.editingId=e.getAttribute(`data-id`),_()})}),document.querySelectorAll(`.btn-del-board-standalone`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-id`);if(confirm(`Eliminare questa Scheda Hardware Deconto?`))try{a.deleteBoard(t),_()}catch(e){alert(e.message)}})});let K=document.getElementById(`form-edit-board`);K&&K.addEventListener(`submit`,e=>{e.preventDefault();let t=document.getElementById(`edit-board-id`).value,n=document.getElementById(`edit-board-shortcode`).value,r=document.getElementById(`edit-board-hwserial`).value,i=document.getElementById(`edit-board-credits`).value,o=document.getElementById(`edit-board-version`).value,s=document.getElementById(`edit-board-machine`).value;try{a.updateBoard(t,{shortCode:n,hwSerial:r,remainingCredits:i,version:o,machineId:s}),g.editingId=null,alert(`✅ Scheda Deconto aggiornata con successo!`),_()}catch(e){alert(e.message)}}),document.querySelectorAll(`#btn-close-edit-modal, #btn-cancel-edit-client, #btn-cancel-edit-mc, #btn-cancel-edit-board`).forEach(e=>{e.addEventListener(`click`,()=>{g.editingId=null,_()})});let q=document.getElementById(`sim-board-select`);q&&q.addEventListener(`change`,e=>{g.selectedSimBoardCode=e.target.value,_()});let J=document.getElementById(`btn-sim-brew`);J&&J.addEventListener(`click`,()=>{let e=g.selectedSimBoardCode||`9901`;document.getElementById(`signal-sense-volts`).innerText=`230V AC (Impulso)`,document.getElementById(`signal-sense-badge`).className=`badge badge-warning`,document.getElementById(`signal-sense-badge`).innerText=`EROGAZIONE IN CORSO`;let t=a.registerCoffeeExtraction(e,22,1);setTimeout(()=>{if(t&&t.success){let n=document.getElementById(`sim-console-log`);n&&(n.innerHTML+=`[EXTRACTION]: Caffè erogato su #${e}! Credito rimanente: ${t.remainingCredits}.<br>`,n.scrollTop=n.scrollHeight)}_()},600)});let Y=document.getElementById(`btn-sim-reset`);Y&&Y.addEventListener(`click`,()=>{let e=g.selectedSimBoardCode||`9901`;a.performRefill({boardShortCode:e,credits:200,method:`TEST_BENCH`,operatorId:g.currentUser?g.currentUser.id:`usr_001`}),alert(`✅ Ricaricate +200 cialde di prova sulla macchina #${e}!`),_()})}document.addEventListener(`DOMContentLoaded`,_);
+    ${g.showProfileModal?l(t):``}
+  `,y()}function v(){let e=document.getElementById(`login-form`);e&&e.addEventListener(`submit`,e=>{e.preventDefault();let t=document.getElementById(`login-username`).value.trim(),n=document.getElementById(`login-password`).value;try{let e=a.login(t,n);g.currentUser=e,g.activeTab=e.role===`ADR`?`adr_visits`:`dashboard`,_()}catch(e){alert(e.message)}})}function y(){document.querySelectorAll(`.nav-item`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-tab`);t&&(g.activeTab=t,g.editingId=null,g.editingStaffUserId=null,g.viewingDecontoCode=null,g.viewingEmailId=null,_())})});let e=document.getElementById(`btn-open-profile-modal`);e&&e.addEventListener(`click`,()=>{g.showProfileModal=!0,_()});let t=document.getElementById(`btn-close-profile-modal`),n=document.getElementById(`btn-cancel-profile-modal`);t&&t.addEventListener(`click`,()=>{g.showProfileModal=!1,_()}),n&&n.addEventListener(`click`,()=>{g.showProfileModal=!1,_()});let r=document.getElementById(`user-profile-form`);r&&r.addEventListener(`submit`,e=>{e.preventDefault();let t=document.getElementById(`profile-name`).value.trim(),n=document.getElementById(`profile-email`).value.trim(),r=document.getElementById(`profile-phone`).value.trim(),i=document.getElementById(`profile-avatar`).value,o=document.getElementById(`profile-current-password`).value,s=document.getElementById(`profile-new-password`).value,c=document.getElementById(`profile-confirm-password`).value;if(!a.verifyPassword(g.currentUser.id,o)){alert(`Password attuale non corretta!`);return}if(s||c){if(s!==c){alert(`Le nuove password inserite non coincidono!`);return}if(s.length<4){alert(`La nuova password deve contenere almeno 4 caratteri!`);return}}try{g.currentUser=a.updateUserProfile(g.currentUser.id,{name:t,email:n,phone:r,avatar:i,newPassword:s?s.trim():void 0}),g.showProfileModal=!1,alert(`✅ Profilo utente aggiornato con successo!`),_()}catch(e){alert(`Errore: ${e.message}`)}});let i=document.getElementById(`btn-logout`);i&&i.addEventListener(`click`,()=>{a.logout(),g.currentUser=null,g.activeTab=`dashboard`,_()});let s=document.getElementById(`btn-open-add-staff-modal`),c=document.getElementById(`btn-close-add-staff-modal`),l=document.getElementById(`btn-cancel-add-staff`),u=document.getElementById(`add-staff-modal`);s&&u&&s.addEventListener(`click`,()=>{u.style.display=`flex`}),c&&u&&c.addEventListener(`click`,()=>{u.style.display=`none`}),l&&u&&l.addEventListener(`click`,()=>{u.style.display=`none`});let d=document.getElementById(`add-staff-form`);d&&d.addEventListener(`submit`,async e=>{e.preventDefault();let t=document.getElementById(`new-user-username`).value.trim(),n=document.getElementById(`new-user-password`).value.trim(),r=document.getElementById(`new-user-name`).value.trim(),i=document.getElementById(`new-user-role`).value,o=document.getElementById(`new-user-email`).value.trim(),s=document.getElementById(`new-user-phone`).value.trim();if(!t||!n||!r){alert(`Compila i campi obbligatori: Codice Utente, Password e Nome!`);return}try{a.addUser({username:t,password:n,name:r,role:i,email:o,phone:s}),alert(`✅ Utente dipendente "${r}" (Codice ${t}) salvato PERMANENTEMENTE nel database!`),_()}catch(e){alert(`Errore: ${e.message}`)}}),document.querySelectorAll(`.btn-edit-staff-user`).forEach(e=>{e.addEventListener(`click`,()=>{g.editingStaffUserId=e.getAttribute(`data-id`),_()})});let f=document.getElementById(`btn-close-edit-staff-modal`),p=document.getElementById(`btn-cancel-edit-staff`);f&&f.addEventListener(`click`,()=>{g.editingStaffUserId=null,_()}),p&&p.addEventListener(`click`,()=>{g.editingStaffUserId=null,_()});let m=document.getElementById(`edit-staff-form`);m&&m.addEventListener(`submit`,async e=>{e.preventDefault();let t=document.getElementById(`edit-staff-id`).value,n=document.getElementById(`edit-staff-username`)?document.getElementById(`edit-staff-username`).value:void 0,r=document.getElementById(`edit-staff-name`).value,i=document.getElementById(`edit-staff-role`)?document.getElementById(`edit-staff-role`).value:void 0,o=document.getElementById(`edit-staff-email`).value,s=document.getElementById(`edit-staff-phone`).value,c=document.getElementById(`edit-staff-password`).value;try{let e=a.updateUser(t,{username:n,name:r,role:i,email:o,phone:s,password:c?c.trim():void 0});g.editingStaffUserId=null,alert(`✅ Scheda Utente "${e.name}" salvata PERMANENTEMENTE!`),_()}catch(e){alert(`Errore: ${e.message}`)}}),document.querySelectorAll(`.btn-toggle-user-status`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-id`),n=e.getAttribute(`data-status`)===`ACTIVE`?`DISABLED`:`ACTIVE`;a.updateUser(t,{status:n}),_()})}),document.querySelectorAll(`.btn-delete-user`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-id`);if(confirm(`Sei sicuro di voler eliminare questo utente dipendente?`))try{a.deleteUser(t),_()}catch(e){alert(`Errore: ${e.message}`)}})});let h=document.getElementById(`btn-open-email-logs`);h&&h.addEventListener(`click`,()=>{let e=a.getEmailLogs();e.length>0?(g.viewingEmailId=e[0].id,_()):alert(`Nessuna email spedita di recente nel registro.`)});let v=document.getElementById(`btn-close-email-preview`),y=document.getElementById(`btn-close-email-preview-footer`);v&&v.addEventListener(`click`,()=>{g.viewingEmailId=null,_()}),y&&y.addEventListener(`click`,()=>{g.viewingEmailId=null,_()});let b=document.getElementById(`rename-role-labels-form`);b&&b.addEventListener(`submit`,e=>{e.preventDefault();let t=document.getElementById(`role_label_UFFICIO`).value.trim(),n=document.getElementById(`role_label_ADR`).value.trim();a.updateRoleLabel(`UFFICIO`,t),a.updateRoleLabel(`ADR`,n),alert(`✅ Nomi delle Categorie Utente aggiornati con successo!`),_()});let x=document.getElementById(`permissions-matrix-form`);x&&x.addEventListener(`submit`,e=>{e.preventDefault();let t=[`UFFICIO`,`ADR`],n=[`canViewClients`,`canCreateClients`,`canEditClients`,`canDeleteClients`,`canGenerateQr`,`canGenerateOtp`,`canBleRefill`,`canUseSimulator`],r={UFFICIO:{},ADR:{}};t.forEach(e=>{n.forEach(t=>{let n=document.getElementById(`perm_${e}_${t}`);n&&(r[e][t]=n.checked)})}),a.updatePermissions(r),alert(`✅ Matrice dei Permessi aggiornata con successo per tutti gli utenti!`),_()});let S=document.getElementById(`setting-logo-file`);S&&S.addEventListener(`change`,e=>{let t=e.target.files[0];if(t){if(!t.type.startsWith(`image/`)){alert(`Seleziona un file immagine valido (PNG, JPG, SVG).`);return}let e=new FileReader;e.onload=function(e){let t=e.target.result;a.updateSettings({customLogoUrl:t}),alert(`✅ Nuovo Logo Aziendale caricato con successo!`),_()},e.readAsDataURL(t)}});let C=document.getElementById(`btn-reset-logo`);C&&C.addEventListener(`click`,()=>{confirm(`Ripristinare il logo predefinito con icona caffè ☕?`)&&(a.updateSettings({customLogoUrl:null}),alert(`✅ Logo predefinito ripristinato!`),_())});let w=document.getElementById(`settings-brand-form`);w&&w.addEventListener(`submit`,e=>{e.preventDefault();let t=document.getElementById(`setting-brand-title`).value.trim(),n=document.getElementById(`setting-brand-subtitle`).value.trim();a.updateSettings({brandTitle:t,brandSubtitle:n}),alert(`✅ Titolo e Sottotitolo Brand salvati con successo!`),_()});let T=document.getElementById(`settings-thresholds-form`);T&&T.addEventListener(`submit`,e=>{e.preventDefault();let t=parseInt(document.getElementById(`setting-threshold-yellow`).value,10),n=parseInt(document.getElementById(`setting-threshold-red`).value,10);if(isNaN(t)||isNaN(n)||n>=t){alert(`Attenzione: La Soglia Critica Rossa (X) deve essere inferiore alla Soglia Sottoscorta Gialla (Y)!`);return}a.updateSettings({thresholdYellow:t,thresholdRed:n}),alert(`✅ Soglie Automatiche Salvate con Successo!\n\n🟢 VERDE: > ${t} cialde\n🟡 GIALLO (Sottoscorta): da ${n+1} a ${t} cialde\n🔴 ROSSO (Critico): da 1 a ${n} cialde\n⚫ NERO (Bloccato): 0 cialde`),_()});let E=document.getElementById(`settings-brevo-form`);E&&E.addEventListener(`submit`,e=>{e.preventDefault();let t=document.getElementById(`setting-brevo-key`).value.trim(),n=document.getElementById(`setting-brevo-sender`).value.trim();a.updateSettings({brevoApiKey:t,brevoSenderEmail:n}),alert(`✅ API Key ed Email Mittente Brevo salvate con successo!`),_()}),document.querySelectorAll(`.kpi-card-clickable`).forEach(e=>{e.addEventListener(`click`,()=>{g.viewingKpiModal=e.getAttribute(`data-kpi`),_()})}),document.querySelectorAll(`.btn-close-kpi-modal`).forEach(e=>{e.addEventListener(`click`,()=>{g.viewingKpiModal=null,_()})}),document.querySelectorAll(`.btn-kpi-period`).forEach(e=>{e.addEventListener(`click`,()=>{g.kpiPeriod=e.getAttribute(`data-period`),_()})}),document.querySelectorAll(`.btn-kpi-charttype`).forEach(e=>{e.addEventListener(`click`,()=>{g.kpiChartType=e.getAttribute(`data-charttype`),_()})});let D=document.getElementById(`btn-apply-kpi-custom-date`);D&&D.addEventListener(`click`,()=>{let e=document.getElementById(`kpi-custom-start`).value,t=document.getElementById(`kpi-custom-end`).value;e&&t?(g.kpiCustomStart=e,g.kpiCustomEnd=t,alert(`✅ Filtro Date Personalizzato Applicato!\nDal: ${e}\nAl: ${t}`),_()):alert(`Seleziona sia la Data Inizio che la Data Fine dal calendario!`)});let O=document.getElementById(`btn-dash-search`),k=document.getElementById(`dash-search-input`);O&&k&&(O.addEventListener(`click`,()=>{g.dashSearchQuery=k.value,g.dashSearchCategory=document.getElementById(`dash-search-category`).value,_()}),k.addEventListener(`keypress`,e=>{e.key===`Enter`&&(g.dashSearchQuery=k.value,g.dashSearchCategory=document.getElementById(`dash-search-category`).value,_())}));let A=document.getElementById(`btn-dash-reset`);A&&A.addEventListener(`click`,()=>{g.dashSearchQuery=``,g.dashSearchCategory=`ALL`,_()}),document.querySelectorAll(`.th-sortable`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-col`);g.dashSortColumn===t?g.dashSortDirection=g.dashSortDirection===`ASC`?`DESC`:`ASC`:(g.dashSortColumn=t,g.dashSortDirection=`DESC`),_()})}),document.querySelectorAll(`.btn-deconto-detail`).forEach(e=>{e.addEventListener(`click`,()=>{g.viewingDecontoCode=e.getAttribute(`data-code`),_()})});let j=document.getElementById(`btn-close-deconto-modal`),M=document.getElementById(`btn-close-deconto-modal-footer`);j&&j.addEventListener(`click`,()=>{g.viewingDecontoCode=null,_()}),M&&M.addEventListener(`click`,()=>{g.viewingDecontoCode=null,_()});let N=document.getElementById(`btn-export-csv`);N&&N.addEventListener(`click`,()=>{let e=a.exportBoardsToCsv(),t=new Blob([e],{type:`text/csv;charset=utf-8;`}),n=URL.createObjectURL(t),r=document.createElement(`a`);r.setAttribute(`href`,n),r.setAttribute(`download`,`deconto_parco_macchine_${new Date().toISOString().slice(0,10)}.csv`),document.body.appendChild(r),r.click(),document.body.removeChild(r)});let P=document.getElementById(`btn-trigger-backup`);P&&P.addEventListener(`click`,async()=>{try{P.disabled=!0,P.innerHTML=`⏳ Backup in Corso...`;let e=await o.triggerBackup();alert(`✅ Backup Cloud completato!\nEsito: ${e.message}`)}catch(e){alert(`❌ Errore Backup GitHub: ${e.message}`)}finally{P.disabled=!1,P.innerHTML=`☁️ Esegui Backup GitHub`}})}_();

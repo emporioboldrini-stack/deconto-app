@@ -30,7 +30,9 @@ let state = {
 
   viewingKpiModal: null,
   kpiPeriod: '30DAYS',
-  kpiChartType: 'LINE'
+  kpiChartType: 'LINE',
+  kpiCustomStart: '2026-07-01',
+  kpiCustomEnd: '2026-08-02'
 };
 
 function renderApp() {
@@ -66,20 +68,13 @@ function renderApp() {
         state.dashSortDirection,
         state.viewingKpiModal,
         state.kpiPeriod,
-        state.kpiChartType
+        state.kpiChartType,
+        state.kpiCustomStart,
+        state.kpiCustomEnd
       );
     }
   } else if (user.role === 'ADR') {
-    if (state.activeTab === 'adr_visits') {
-      mainContentHtml = renderAdrPanel(state.activeTab);
-    } else {
-      mainContentHtml = renderOfficePanel(state.activeTab, state.editingId);
-    }
-  }
-
-  let modalHtml = '';
-  if (state.showProfileModal) {
-    modalHtml = renderUserProfileModal(user);
+    mainContentHtml = renderAdrPanel(state.activeTab);
   }
 
   appEl.innerHTML = `
@@ -89,91 +84,146 @@ function renderApp() {
         ${mainContentHtml}
       </main>
     </div>
-    ${modalHtml}
+    ${state.showProfileModal ? renderUserProfileModal(user) : ''}
   `;
 
-  attachMainEventListeners();
+  attachGlobalEventListeners();
 }
 
 function attachLoginEventListeners() {
   const loginForm = document.getElementById('login-form');
-  const errorMsg = document.getElementById('login-error-msg');
-
   if (loginForm) {
     loginForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      const username = document.getElementById('login-username').value;
+      const username = document.getElementById('login-username').value.trim();
       const password = document.getElementById('login-password').value;
 
       try {
-        const user = db.authenticate(username, password);
+        const user = db.login(username, password);
         state.currentUser = user;
-        state.activeTab = (user.role === 'ADMIN') ? 'dashboard' : 'clients';
+        state.activeTab = user.role === 'ADR' ? 'adr_visits' : 'dashboard';
         renderApp();
       } catch (err) {
-        errorMsg.innerText = err.message;
-        errorMsg.style.display = 'block';
+        alert(err.message);
       }
     });
   }
 }
 
-function attachMainEventListeners() {
+function attachGlobalEventListeners() {
+  // Sidebar navigation
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const tab = item.getAttribute('data-tab');
+      if (tab) {
+        state.activeTab = tab;
+        state.editingId = null;
+        state.editingStaffUserId = null;
+        state.viewingDecontoCode = null;
+        state.viewingEmailId = null;
+        renderApp();
+      }
+    });
+  });
+
+  // Modale Profilo Utente
+  const btnOpenProfile = document.getElementById('btn-open-profile-modal');
+  if (btnOpenProfile) {
+    btnOpenProfile.addEventListener('click', () => {
+      state.showProfileModal = true;
+      renderApp();
+    });
+  }
+
+  const btnCloseProfile = document.getElementById('btn-close-profile-modal');
+  const btnCancelProfile = document.getElementById('btn-cancel-profile-modal');
+  if (btnCloseProfile) btnCloseProfile.addEventListener('click', () => { state.showProfileModal = false; renderApp(); });
+  if (btnCancelProfile) btnCancelProfile.addEventListener('click', () => { state.showProfileModal = false; renderApp(); });
+
+  const profileForm = document.getElementById('user-profile-form');
+  if (profileForm) {
+    profileForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('profile-name').value.trim();
+      const email = document.getElementById('profile-email').value.trim();
+      const phone = document.getElementById('profile-phone').value.trim();
+      const avatar = document.getElementById('profile-avatar').value;
+      const currentPassword = document.getElementById('profile-current-password').value;
+      const newPassword = document.getElementById('profile-new-password').value;
+      const confirmPassword = document.getElementById('profile-confirm-password').value;
+
+      if (!db.verifyPassword(state.currentUser.id, currentPassword)) {
+        alert('Password attuale non corretta!');
+        return;
+      }
+
+      if (newPassword || confirmPassword) {
+        if (newPassword !== confirmPassword) {
+          alert('Le nuove password inserite non coincidono!');
+          return;
+        }
+        if (newPassword.length < 4) {
+          alert('La nuova password deve contenere almeno 4 caratteri!');
+          return;
+        }
+      }
+
+      try {
+        const updatedUser = db.updateUserProfile(state.currentUser.id, {
+          name,
+          email,
+          phone,
+          avatar,
+          newPassword: newPassword ? newPassword.trim() : undefined
+        });
+
+        state.currentUser = updatedUser;
+        state.showProfileModal = false;
+        alert('✅ Profilo utente aggiornato con successo!');
+        renderApp();
+      } catch (err) {
+        alert(`Errore: ${err.message}`);
+      }
+    });
+  }
+
   // Logout
   const btnLogout = document.getElementById('btn-logout');
   if (btnLogout) {
     btnLogout.addEventListener('click', () => {
       db.logout();
       state.currentUser = null;
+      state.activeTab = 'dashboard';
       renderApp();
     });
   }
 
-  // Profilo Utente
-  const btnProfile = document.getElementById('btn-open-profile-modal');
-  if (btnProfile) {
-    btnProfile.addEventListener('click', () => {
-      state.showProfileModal = true;
-      renderApp();
+  // --- 👥 GESTIONE PERSONALE DIPENDENTI EVENTI ---
+  const btnOpenAddStaffModal = document.getElementById('btn-open-add-staff-modal');
+  const btnCloseAddStaffModal = document.getElementById('btn-close-add-staff-modal');
+  const btnCancelAddStaff = document.getElementById('btn-cancel-add-staff');
+  const addStaffModal = document.getElementById('add-staff-modal');
+
+  if (btnOpenAddStaffModal && addStaffModal) {
+    btnOpenAddStaffModal.addEventListener('click', () => {
+      addStaffModal.style.display = 'flex';
+    });
+  }
+  if (btnCloseAddStaffModal && addStaffModal) {
+    btnCloseAddStaffModal.addEventListener('click', () => {
+      addStaffModal.style.display = 'none';
+    });
+  }
+  if (btnCancelAddStaff && addStaffModal) {
+    btnCancelAddStaff.addEventListener('click', () => {
+      addStaffModal.style.display = 'none';
     });
   }
 
-  const btnCloseModal = document.getElementById('btn-close-profile-modal');
-  const btnCancelProfile = document.getElementById('btn-cancel-profile');
-  if (btnCloseModal) btnCloseModal.addEventListener('click', () => { state.showProfileModal = false; renderApp(); });
-  if (btnCancelProfile) btnCancelProfile.addEventListener('click', () => { state.showProfileModal = false; renderApp(); });
-
-  // Navigazione Tab
-  document.querySelectorAll('.nav-item').forEach(el => {
-    el.addEventListener('click', () => {
-      const tab = el.getAttribute('data-tab');
-      if (tab) {
-        state.activeTab = tab;
-        state.editingId = null;
-        renderApp();
-      }
-    });
-  });
-
-  // --- 👥 GESTIONE PERSONALE EVENTI ---
-  const btnToggleAddUser = document.getElementById('btn-toggle-add-user');
-  const addUserFormContainer = document.getElementById('add-user-form-container');
-  if (btnToggleAddUser && addUserFormContainer) {
-    btnToggleAddUser.addEventListener('click', () => {
-      addUserFormContainer.style.display = addUserFormContainer.style.display === 'none' ? 'block' : 'none';
-    });
-  }
-
-  const btnCancelAddUser = document.getElementById('btn-cancel-add-user');
-  if (btnCancelAddUser && addUserFormContainer) {
-    btnCancelAddUser.addEventListener('click', () => {
-      addUserFormContainer.style.display = 'none';
-    });
-  }
-
-  const btnSaveNewUser = document.getElementById('btn-save-new-user');
-  if (btnSaveNewUser) {
-    btnSaveNewUser.addEventListener('click', async () => {
+  const addStaffForm = document.getElementById('add-staff-form');
+  if (addStaffForm) {
+    addStaffForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
       const username = document.getElementById('new-user-username').value.trim();
       const password = document.getElementById('new-user-password').value.trim();
       const name = document.getElementById('new-user-name').value.trim();
@@ -430,6 +480,22 @@ function attachMainEventListeners() {
     });
   });
 
+  const btnApplyCustomDate = document.getElementById('btn-apply-kpi-custom-date');
+  if (btnApplyCustomDate) {
+    btnApplyCustomDate.addEventListener('click', () => {
+      const start = document.getElementById('kpi-custom-start').value;
+      const end = document.getElementById('kpi-custom-end').value;
+      if (start && end) {
+        state.kpiCustomStart = start;
+        state.kpiCustomEnd = end;
+        alert(`✅ Filtro Date Personalizzato Applicato!\nDal: ${start}\nAl: ${end}`);
+        renderApp();
+      } else {
+        alert('Seleziona sia la Data Inizio che la Data Fine dal calendario!');
+      }
+    });
+  }
+
   // --- 🔍 DASHBOARD: RICERCA MULTI-CATEGORIA & ORDINAMENTO COLONNE ---
   const btnDashSearch = document.getElementById('btn-dash-search');
   const dashSearchInput = document.getElementById('dash-search-input');
@@ -465,13 +531,12 @@ function attachMainEventListeners() {
         state.dashSortDirection = state.dashSortDirection === 'ASC' ? 'DESC' : 'ASC';
       } else {
         state.dashSortColumn = col;
-        state.dashSortDirection = 'ASC';
+        state.dashSortDirection = 'DESC';
       }
       renderApp();
     });
   });
 
-  // --- 📟 DASHBOARD: POP-UP MODALE SCHEDA DECONTO (TASTO 5 - NUMERO DECONTO) ---
   document.querySelectorAll('.btn-deconto-detail').forEach(btn => {
     btn.addEventListener('click', () => {
       const code = btn.getAttribute('data-code');
@@ -485,297 +550,38 @@ function attachMainEventListeners() {
   if (btnCloseDecontoModal) btnCloseDecontoModal.addEventListener('click', () => { state.viewingDecontoCode = null; renderApp(); });
   if (btnCloseDecontoModalFooter) btnCloseDecontoModalFooter.addEventListener('click', () => { state.viewingDecontoCode = null; renderApp(); });
 
-  // Export CSV & Backup GitHub
   const btnExportCsv = document.getElementById('btn-export-csv');
   if (btnExportCsv) {
     btnExportCsv.addEventListener('click', () => {
-      const csv = db.exportCoffeeLogsCSV();
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const csvContent = db.exportBoardsToCsv();
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `DECONTO_Report_Consumi_${new Date().toISOString().split('T')[0]}.csv`;
-      a.click();
-      alert('📥 Report Consumi CSV Scaricato con successo!');
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `deconto_parco_macchine_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     });
   }
 
-  const btnBackup = document.getElementById('btn-trigger-backup');
-  if (btnBackup) {
-    btnBackup.addEventListener('click', async () => {
-      btnBackup.disabled = true;
-      btnBackup.innerText = '⏳ Backup in corso su GitHub...';
-      const res = await githubBackupService.executeBackupNow();
-      alert(`✅ Backup GitHub Eseguito con Successo!\n\nRepository: https://github.com/emporioboldrini-stack/deconto-app.git\nCommit Hash: ${res.backupRecord.commitHash}\nEntità salvate: ${res.backupRecord.recordCount}`);
-      renderApp();
-    });
-  }
-
-  // --- STEP 3: 🏢 ANAGRAFICA CLIENTE EVENTI ---
-  const btnToggleAddCli = document.getElementById('btn-toggle-add-client');
-  const addCliContainer = document.getElementById('add-client-form-container');
-  if (btnToggleAddCli && addCliContainer) {
-    btnToggleAddCli.addEventListener('click', () => {
-      addCliContainer.style.display = addCliContainer.style.display === 'none' ? 'block' : 'none';
-    });
-  }
-  const btnCancelAddCli = document.getElementById('btn-cancel-add-client');
-  if (btnCancelAddCli && addCliContainer) {
-    btnCancelAddCli.addEventListener('click', () => { addCliContainer.style.display = 'none'; });
-  }
-
-  const btnSaveNewClient = document.getElementById('btn-save-new-client');
-  if (btnSaveNewClient) {
-    btnSaveNewClient.addEventListener('click', () => {
-      const name = document.getElementById('new-cli-name').value.trim();
-      const refPerson = document.getElementById('new-cli-ref').value.trim();
-      const phone = document.getElementById('new-cli-phone').value.trim();
-      const email = document.getElementById('new-cli-email').value.trim();
-      const city = document.getElementById('new-cli-city').value.trim();
-      const address = document.getElementById('new-cli-address').value.trim();
-      const machineId = document.getElementById('new-cli-machine') ? document.getElementById('new-cli-machine').value : null;
-
-      if (!name) { alert('Compila la Ragione Sociale del Cliente!'); return; }
-
+  const btnTriggerBackup = document.getElementById('btn-trigger-backup');
+  if (btnTriggerBackup) {
+    btnTriggerBackup.addEventListener('click', async () => {
       try {
-        db.addClient({ name, refPerson, phone, email, city, address, machineId });
-        alert(`✅ Cliente "${name}" salvato ed installato con successo!`);
-        renderApp();
-      } catch (err) { alert(`Errore: ${err.message}`); }
-    });
-  }
-
-  document.querySelectorAll('.btn-edit-client-standalone').forEach(btn => {
-    btn.addEventListener('click', () => {
-      state.editingId = btn.getAttribute('data-id');
-      renderApp();
-    });
-  });
-
-  document.querySelectorAll('.btn-del-client-standalone').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const id = btn.getAttribute('data-id');
-      if (confirm('Eliminare questo cliente dall\'anagrafica? Le macchine collegate torneranno in magazzino.')) {
-        try {
-          db.deleteClient(id);
-          renderApp();
-        } catch(err) { alert(err.message); }
+        btnTriggerBackup.disabled = true;
+        btnTriggerBackup.innerHTML = '⏳ Backup in Corso...';
+        const res = await githubBackupService.triggerBackup();
+        alert(`✅ Backup Cloud completato!\nEsito: ${res.message}`);
+      } catch (err) {
+        alert(`❌ Errore Backup GitHub: ${err.message}`);
+      } finally {
+        btnTriggerBackup.disabled = false;
+        btnTriggerBackup.innerHTML = '☁️ Esegui Backup GitHub';
       }
-    });
-  });
-
-  const formEditClient = document.getElementById('form-edit-client');
-  if (formEditClient) {
-    formEditClient.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const id = document.getElementById('edit-client-id').value;
-      const name = document.getElementById('edit-cli-name').value;
-      const refPerson = document.getElementById('edit-cli-ref').value;
-      const phone = document.getElementById('edit-cli-phone').value;
-      const city = document.getElementById('edit-cli-city').value;
-      const address = document.getElementById('edit-cli-address').value;
-      const assignedMachineId = document.getElementById('edit-cli-machine') ? document.getElementById('edit-cli-machine').value : undefined;
-
-      try {
-        db.updateClient(id, { name, refPerson, phone, city, address, assignedMachineId });
-        state.editingId = null;
-        alert('✅ Scheda Cliente e Macchina installata aggiornata!');
-        renderApp();
-      } catch(err) { alert(err.message); }
-    });
-  }
-
-  // --- STEP 2: ☕ ANAGRAFICA MACCHINE EVENTI ---
-  const btnToggleAddMc = document.getElementById('btn-toggle-add-machine');
-  const addMcContainer = document.getElementById('add-machine-form-container');
-  if (btnToggleAddMc && addMcContainer) {
-    btnToggleAddMc.addEventListener('click', () => {
-      addMcContainer.style.display = addMcContainer.style.display === 'none' ? 'block' : 'none';
-    });
-  }
-  const btnCancelAddMc = document.getElementById('btn-cancel-add-machine');
-  if (btnCancelAddMc && addMcContainer) {
-    btnCancelAddMc.addEventListener('click', () => { addMcContainer.style.display = 'none'; });
-  }
-
-  const btnSaveNewMachine = document.getElementById('btn-save-new-machine');
-  if (btnSaveNewMachine) {
-    btnSaveNewMachine.addEventListener('click', () => {
-      const serialNumber = document.getElementById('new-mc-serial').value.trim();
-      const brand = document.getElementById('new-mc-brand').value.trim();
-      const model = document.getElementById('new-mc-model').value.trim();
-      const boardId = document.getElementById('new-mc-board') ? document.getElementById('new-mc-board').value : null;
-      const clientId = document.getElementById('new-mc-client').value;
-
-      if (!serialNumber || !model) { alert('Compila Seriale e Modello della macchina!'); return; }
-
-      try {
-        db.addMachine({ serialNumber, brand, model, boardId, clientId });
-        alert(`✅ Macchina "${serialNumber}" registrata ed associata nel parco macchine!`);
-        renderApp();
-      } catch (err) { alert(`Errore: ${err.message}`); }
-    });
-  }
-
-  document.querySelectorAll('.btn-edit-machine-standalone').forEach(btn => {
-    btn.addEventListener('click', () => {
-      state.editingId = btn.getAttribute('data-id');
-      renderApp();
-    });
-  });
-
-  document.querySelectorAll('.btn-del-machine-standalone').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const id = btn.getAttribute('data-id');
-      if (confirm('Eliminare questa macchina dal parco macchine?')) {
-        try {
-          db.deleteMachine(id);
-          renderApp();
-        } catch(err) { alert(err.message); }
-      }
-    });
-  });
-
-  const formEditMachine = document.getElementById('form-edit-machine');
-  if (formEditMachine) {
-    formEditMachine.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const id = document.getElementById('edit-mc-id').value;
-      const serialNumber = document.getElementById('edit-mc-serial').value;
-      const brand = document.getElementById('edit-mc-brand').value;
-      const model = document.getElementById('edit-mc-model').value;
-      const boardId = document.getElementById('edit-mc-board') ? document.getElementById('edit-mc-board').value : undefined;
-      const clientId = document.getElementById('edit-mc-client').value;
-
-      try {
-        db.updateMachine(id, { serialNumber, brand, model, boardId, clientId });
-        state.editingId = null;
-        alert('✅ Macchina da Caffè e Scheda Deconto collegate con successo!');
-        renderApp();
-      } catch(err) { alert(err.message); }
-    });
-  }
-
-  // --- STEP 1: 📟 ANAGRAFICA SCHEDE DECONTO EVENTI ---
-  const btnToggleAddBoard = document.getElementById('btn-toggle-add-board');
-  const addBoardContainer = document.getElementById('add-board-form-container');
-  if (btnToggleAddBoard && addBoardContainer) {
-    btnToggleAddBoard.addEventListener('click', () => {
-      addBoardContainer.style.display = addBoardContainer.style.display === 'none' ? 'block' : 'none';
-    });
-  }
-  const btnCancelAddBoard = document.getElementById('btn-cancel-add-board');
-  if (btnCancelAddBoard && addBoardContainer) {
-    btnCancelAddBoard.addEventListener('click', () => { addBoardContainer.style.display = 'none'; });
-  }
-
-  const btnSaveNewBoard = document.getElementById('btn-save-new-board');
-  if (btnSaveNewBoard) {
-    btnSaveNewBoard.addEventListener('click', () => {
-      const shortCode = document.getElementById('new-board-code').value.trim();
-      const hwSerial = document.getElementById('new-board-hwserial').value.trim();
-      const remainingCredits = document.getElementById('new-board-credits').value;
-      const version = document.getElementById('new-board-version').value;
-      const machineId = document.getElementById('new-board-machine').value;
-
-      if (!shortCode) { alert('Inserisci il codice a 4 cifre per la Scheda Deconto (es. 9902)!'); return; }
-
-      try {
-        db.addBoard({ shortCode, hwSerial, remainingCredits, version, machineId });
-        alert(`✅ NUOVA SCHEDA DECONTO #${shortCode} CREATA CON SUCCESSO!`);
-        renderApp();
-      } catch (err) { alert(`Errore: ${err.message}`); }
-    });
-  }
-
-  document.querySelectorAll('.btn-edit-board-standalone').forEach(btn => {
-    btn.addEventListener('click', () => {
-      state.editingId = btn.getAttribute('data-id');
-      renderApp();
-    });
-  });
-
-  document.querySelectorAll('.btn-del-board-standalone').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const id = btn.getAttribute('data-id');
-      if (confirm('Eliminare questa Scheda Hardware Deconto?')) {
-        try {
-          db.deleteBoard(id);
-          renderApp();
-        } catch(err) { alert(err.message); }
-      }
-    });
-  });
-
-  const formEditBoard = document.getElementById('form-edit-board');
-  if (formEditBoard) {
-    formEditBoard.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const id = document.getElementById('edit-board-id').value;
-      const shortCode = document.getElementById('edit-board-shortcode').value;
-      const hwSerial = document.getElementById('edit-board-hwserial').value;
-      const remainingCredits = document.getElementById('edit-board-credits').value;
-      const version = document.getElementById('edit-board-version').value;
-      const machineId = document.getElementById('edit-board-machine').value;
-
-      try {
-        db.updateBoard(id, { shortCode, hwSerial, remainingCredits, version, machineId });
-        state.editingId = null;
-        alert('✅ Scheda Deconto aggiornata con successo!');
-        renderApp();
-      } catch(err) { alert(err.message); }
-    });
-  }
-
-  // Chiusura Modali Generiche
-  document.querySelectorAll('#btn-close-edit-modal, #btn-cancel-edit-client, #btn-cancel-edit-mc, #btn-cancel-edit-board').forEach(btn => {
-    btn.addEventListener('click', () => {
-      state.editingId = null;
-      renderApp();
-    });
-  });
-
-  // Simulatore Hardware
-  const simBoardSelect = document.getElementById('sim-board-select');
-  if (simBoardSelect) {
-    simBoardSelect.addEventListener('change', (e) => {
-      state.selectedSimBoardCode = e.target.value;
-      renderApp();
-    });
-  }
-
-  const btnSimBrew = document.getElementById('btn-sim-brew');
-  if (btnSimBrew) {
-    btnSimBrew.addEventListener('click', () => {
-      const shortCode = state.selectedSimBoardCode || '9901';
-      document.getElementById('signal-sense-volts').innerText = '230V AC (Impulso)';
-      document.getElementById('signal-sense-badge').className = 'badge badge-warning';
-      document.getElementById('signal-sense-badge').innerText = 'EROGAZIONE IN CORSO';
-
-      const res = db.registerCoffeeExtraction(shortCode, 22, 1);
-
-      setTimeout(() => {
-        if (res && res.success) {
-          const consoleEl = document.getElementById('sim-console-log');
-          if (consoleEl) {
-            consoleEl.innerHTML += `[EXTRACTION]: Caffè erogato su #${shortCode}! Credito rimanente: ${res.remainingCredits}.<br>`;
-            consoleEl.scrollTop = consoleEl.scrollHeight;
-          }
-        }
-        renderApp();
-      }, 600);
-    });
-  }
-
-  const btnSimReset = document.getElementById('btn-sim-reset');
-  if (btnSimReset) {
-    btnSimReset.addEventListener('click', () => {
-      const shortCode = state.selectedSimBoardCode || '9901';
-      db.performRefill({ boardShortCode: shortCode, credits: 200, method: 'TEST_BENCH', operatorId: state.currentUser ? state.currentUser.id : 'usr_001' });
-      alert(`✅ Ricaricate +200 cialde di prova sulla macchina #${shortCode}!`);
-      renderApp();
     });
   }
 }
 
-document.addEventListener('DOMContentLoaded', renderApp);
+// Inizializzazione Applicazione
+renderApp();

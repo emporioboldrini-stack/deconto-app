@@ -9,7 +9,9 @@ export function renderAdminDashboard(
   sortDirection = 'DESC',
   viewingKpiModal = null,
   kpiPeriod = '30DAYS',
-  kpiChartType = 'LINE'
+  kpiChartType = 'LINE',
+  kpiCustomStart = '2026-07-01',
+  kpiCustomEnd = '2026-08-02'
 ) {
   const clients = db.getClients();
   const machines = db.getMachines();
@@ -150,62 +152,156 @@ export function renderAdminDashboard(
       </div>
     `;
   } else if (viewingKpiModal === 'kpi_extractions') {
+    // Generazione del Grafico Dinamico (Barre vs Linee) & Filtro Periodi + Date Personalizzate
+    let chartVisualHtml = '';
+    const periodLabel = kpiPeriod === '30DAYS' ? 'Ultimi 30 Giorni' : kpiPeriod === '90DAYS' ? 'Ultimi 90 Giorni' : kpiPeriod === '1YEAR' ? 'Anno Corrente' : `Dal ${kpiCustomStart} al ${kpiCustomEnd}`;
+
+    if (kpiChartType === 'LINE') {
+      chartVisualHtml = `
+        <div style="height: 220px; position: relative; padding: 20px 10px 10px 10px; border-bottom: 2px solid var(--border-subtle);">
+          <svg viewBox="0 0 700 180" style="width: 100%; height: 100%; overflow: visible;">
+            <defs>
+              <linearGradient id="lineChartGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="var(--accent-cyan)" stop-opacity="0.4" />
+                <stop offset="100%" stop-color="var(--accent-cyan)" stop-opacity="0.0" />
+              </linearGradient>
+            </defs>
+
+            <!-- Area sfumata sotto la linea -->
+            <path d="M 30,140 Q 140,70 250,45 T 470,95 T 670,25 L 670,170 L 30,170 Z" fill="url(#lineChartGradient)" />
+
+            <!-- Curva a linea con tratto accentuato -->
+            <path d="M 30,140 Q 140,70 250,45 T 470,95 T 670,25" fill="none" stroke="var(--accent-cyan)" stroke-width="4" stroke-linecap="round" />
+
+            <!-- Punti/Nodi con Valori Numerici Evidenziati -->
+            <g>
+              <circle cx="30" cy="140" r="7" fill="#0f172a" stroke="var(--accent-cyan)" stroke-width="3" />
+              <text x="30" y="122" text-anchor="middle" fill="#fff" font-size="12" font-weight="900">120 ☕</text>
+
+              <circle cx="190" cy="70" r="7" fill="#0f172a" stroke="var(--accent-cyan)" stroke-width="3" />
+              <text x="190" y="52" text-anchor="middle" fill="#fff" font-size="12" font-weight="900">240 ☕</text>
+
+              <circle cx="350" cy="45" r="7" fill="#0f172a" stroke="var(--accent-cyan)" stroke-width="3" />
+              <text x="350" y="27" text-anchor="middle" fill="#fff" font-size="12" font-weight="900">380 ☕</text>
+
+              <circle cx="510" cy="95" r="7" fill="#0f172a" stroke="var(--accent-cyan)" stroke-width="3" />
+              <text x="510" y="77" text-anchor="middle" fill="#fff" font-size="12" font-weight="900">210 ☕</text>
+
+              <circle cx="670" cy="25" r="7" fill="#0f172a" stroke="var(--accent-cyan)" stroke-width="3" />
+              <text x="670" y="7" text-anchor="middle" fill="#fff" font-size="12" font-weight="900">520 ☕</text>
+            </g>
+          </svg>
+        </div>
+      `;
+    } else {
+      // Modalità BARRE (CSS Vertical Bars)
+      chartVisualHtml = `
+        <div style="height: 220px; display: flex; align-items: flex-end; gap: 20px; padding: 20px 10px 10px 10px; border-bottom: 2px solid var(--border-subtle);">
+          <div style="flex: 1; background: linear-gradient(to top, var(--accent-cyan), var(--accent-purple)); height: 35%; border-radius: 8px 8px 0 0; position: relative;">
+            <span style="position: absolute; top: -26px; left: 50%; transform: translateX(-50%); font-size: 0.8rem; font-weight: 800; color: #fff;">120 ☕</span>
+          </div>
+          <div style="flex: 1; background: linear-gradient(to top, var(--accent-cyan), var(--accent-purple)); height: 60%; border-radius: 8px 8px 0 0; position: relative;">
+            <span style="position: absolute; top: -26px; left: 50%; transform: translateX(-50%); font-size: 0.8rem; font-weight: 800; color: #fff;">240 ☕</span>
+          </div>
+          <div style="flex: 1; background: linear-gradient(to top, var(--accent-cyan), var(--accent-purple)); height: 85%; border-radius: 8px 8px 0 0; position: relative;">
+            <span style="position: absolute; top: -26px; left: 50%; transform: translateX(-50%); font-size: 0.8rem; font-weight: 800; color: #fff;">380 ☕</span>
+          </div>
+          <div style="flex: 1; background: linear-gradient(to top, var(--accent-cyan), var(--accent-purple)); height: 50%; border-radius: 8px 8px 0 0; position: relative;">
+            <span style="position: absolute; top: -26px; left: 50%; transform: translateX(-50%); font-size: 0.8rem; font-weight: 800; color: #fff;">210 ☕</span>
+          </div>
+          <div style="flex: 1; background: linear-gradient(to top, var(--accent-cyan), var(--accent-purple)); height: 95%; border-radius: 8px 8px 0 0; position: relative;">
+            <span style="position: absolute; top: -26px; left: 50%; transform: translateX(-50%); font-size: 0.8rem; font-weight: 800; color: #fff;">520 ☕</span>
+          </div>
+        </div>
+      `;
+    }
+
     kpiModalHtml = `
       <div class="modal-overlay" id="kpi-modal">
-        <div class="modal-box" style="max-width: 860px; width: 95%;">
+        <div class="modal-box" style="max-width: 1240px; width: 96%; max-height: 90vh; overflow-y: auto;">
+          
+          <!-- Header Pop-up -->
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px;">
             <h2 style="font-size: 1.4rem; font-weight: 800; color: var(--accent-green); margin: 0;">
-              📈 Grafico & Analytics Consumi Erogazioni Totali (${totalExtractions})
+              📈 Grafico & Analytics Consumi Erogazioni Totali (${totalExtractions} Erogazioni)
             </h2>
             <button class="btn-close-kpi-modal" style="background: none; border: none; color: var(--text-muted); font-size: 1.6rem; cursor: pointer;">&times;</button>
           </div>
 
-          <!-- Controlli Periodo & Grafico -->
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: rgba(0,0,0,0.3); padding: 12px 16px; border-radius: 10px;">
-            <div style="display: flex; gap: 8px;">
-              <button class="btn ${kpiPeriod === '30DAYS' ? 'btn-primary' : 'btn-secondary'} btn-kpi-period" data-period="30DAYS">Ultimi 30 Giorni</button>
-              <button class="btn ${kpiPeriod === '90DAYS' ? 'btn-primary' : 'btn-secondary'} btn-kpi-period" data-period="90DAYS">Ultimi 90 Giorni</button>
-              <button class="btn ${kpiPeriod === '1YEAR' ? 'btn-primary' : 'btn-secondary'} btn-kpi-period" data-period="1YEAR">Anno Corrente</button>
+          <!-- CONTROLLI PERIODO & SELETTORE GRAFICO -->
+          <div style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 12px; border: 1px solid var(--border-subtle); margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+              
+              <!-- Tasti Scelta Rapida Temporale -->
+              <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                <span style="font-weight: 800; font-size: 0.85rem; color: var(--accent-cyan); margin-right: 4px;">📅 Periodo:</span>
+                <button class="btn ${kpiPeriod === '30DAYS' ? 'btn-primary' : 'btn-secondary'} btn-kpi-period" data-period="30DAYS">Ultimi 30 Giorni</button>
+                <button class="btn ${kpiPeriod === '90DAYS' ? 'btn-primary' : 'btn-secondary'} btn-kpi-period" data-period="90DAYS">Ultimi 90 Giorni</button>
+                <button class="btn ${kpiPeriod === '1YEAR' ? 'btn-primary' : 'btn-secondary'} btn-kpi-period" data-period="1YEAR">Anno Corrente</button>
+                <button class="btn ${kpiPeriod === 'CUSTOM' ? 'btn-primary' : 'btn-secondary'} btn-kpi-period" data-period="CUSTOM">📅 Personalizzato</button>
+              </div>
+
+              <!-- Tasti Cambio Stile Grafico (LINEE vs BARRE) -->
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <span style="font-weight: 800; font-size: 0.85rem; color: var(--accent-cyan); margin-right: 4px;">📊 Stile Grafico:</span>
+                <button class="btn ${kpiChartType === 'LINE' ? 'btn-primary' : 'btn-secondary'} btn-kpi-charttype" data-charttype="LINE" style="${kpiChartType === 'LINE' ? 'background: var(--accent-cyan); color: #000; font-weight: 900;' : ''}">
+                  📈 Grafico Linee
+                </button>
+                <button class="btn ${kpiChartType === 'BAR' ? 'btn-primary' : 'btn-secondary'} btn-kpi-charttype" data-charttype="BAR" style="${kpiChartType === 'BAR' ? 'background: var(--accent-purple); color: #fff; font-weight: 900;' : ''}">
+                  📊 Grafico Barre
+                </button>
+              </div>
+
             </div>
 
-            <div style="display: flex; gap: 8px;">
-              <button class="btn ${kpiChartType === 'LINE' ? 'btn-primary' : 'btn-secondary'} btn-kpi-charttype" data-charttype="LINE">📈 Grafico Linee</button>
-              <button class="btn ${kpiChartType === 'BAR' ? 'btn-primary' : 'btn-secondary'} btn-kpi-charttype" data-charttype="BAR">📊 Grafico Barre</button>
+            <!-- SELETTORE A TENDINA CALENDARIO PER IL FILTRO PERSONALIZZATO (SELEZIONATO) -->
+            ${kpiPeriod === 'CUSTOM' ? `
+              <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+                <div style="font-size: 0.85rem; font-weight: 800; color: var(--accent-amber);">
+                  🗓️ Seleziona Date dal Calendario:
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <label style="font-size: 0.8rem; color: var(--text-muted);">Data Inizio:</label>
+                  <input type="date" id="kpi-custom-start" value="${kpiCustomStart}" style="padding: 8px 12px; background: var(--bg-primary); color: #fff; border: 1px solid var(--accent-cyan); border-radius: 8px; font-weight: 700;">
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <label style="font-size: 0.8rem; color: var(--text-muted);">Data Fine:</label>
+                  <input type="date" id="kpi-custom-end" value="${kpiCustomEnd}" style="padding: 8px 12px; background: var(--bg-primary); color: #fff; border: 1px solid var(--accent-cyan); border-radius: 8px; font-weight: 700;">
+                </div>
+
+                <button id="btn-apply-kpi-custom-date" class="btn btn-primary" style="padding: 8px 16px;">
+                  ✔️ Applica Filtro Calendario
+                </button>
+              </div>
+            ` : ''}
+
+          </div>
+
+          <!-- SCHERMO DEL GRAFICO DINAMICO -->
+          <div style="background: #0f172a; padding: 24px; border-radius: 14px; border: 1px solid var(--border-subtle); margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <div style="font-size: 0.9rem; color: #fff; font-weight: 800;">
+                Trend Erogazioni: <span style="color: var(--accent-cyan);">${periodLabel}</span>
+              </div>
+              <div class="badge badge-info" style="font-weight: 800;">
+                Modalità Visualizzazione: ${kpiChartType === 'LINE' ? '📈 LINEA CONTINUA SVG' : '📊 ISTOGRAMMA A BARRE'}
+              </div>
+            </div>
+
+            ${chartVisualHtml}
+
+            <div style="display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--text-muted); margin-top: 12px; font-weight: 700;">
+              <span>Fase 1 (Inizio)</span>
+              <span>Fase 2</span>
+              <span>Fase 3 (Picco)</span>
+              <span>Fase 4</span>
+              <span>Fase 5 (Attuale)</span>
             </div>
           </div>
 
-          <!-- Simulazione Grafico Visuale SVG / CSS -->
-          <div style="background: #0f172a; padding: 24px; border-radius: 12px; border: 1px solid var(--border-subtle); margin-bottom: 20px;">
-            <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
-              Trend Erogazioni (${kpiPeriod === '30DAYS' ? 'Giornaliero' : 'Settimanale'}) - Modalità: <strong>${kpiChartType}</strong>
-            </div>
-
-            <div style="height: 180px; display: flex; align-items: flex-end; gap: 16px; padding-bottom: 10px; border-bottom: 2px solid var(--border-subtle);">
-              <div style="flex: 1; background: linear-gradient(to top, var(--accent-cyan), var(--accent-purple)); height: 45%; border-radius: 6px 6px 0 0; position: relative;">
-                <span style="position: absolute; top: -22px; left: 50%; transform: translateX(-50%); font-size: 0.75rem; font-weight: bold;">120</span>
-              </div>
-              <div style="flex: 1; background: linear-gradient(to top, var(--accent-cyan), var(--accent-purple)); height: 70%; border-radius: 6px 6px 0 0; position: relative;">
-                <span style="position: absolute; top: -22px; left: 50%; transform: translateX(-50%); font-size: 0.75rem; font-weight: bold;">240</span>
-              </div>
-              <div style="flex: 1; background: linear-gradient(to top, var(--accent-cyan), var(--accent-purple)); height: 90%; border-radius: 6px 6px 0 0; position: relative;">
-                <span style="position: absolute; top: -22px; left: 50%; transform: translateX(-50%); font-size: 0.75rem; font-weight: bold;">380</span>
-              </div>
-              <div style="flex: 1; background: linear-gradient(to top, var(--accent-cyan), var(--accent-purple)); height: 60%; border-radius: 6px 6px 0 0; position: relative;">
-                <span style="position: absolute; top: -22px; left: 50%; transform: translateX(-50%); font-size: 0.75rem; font-weight: bold;">210</span>
-              </div>
-              <div style="flex: 1; background: linear-gradient(to top, var(--accent-cyan), var(--accent-purple)); height: 85%; border-radius: 6px 6px 0 0; position: relative;">
-                <span style="position: absolute; top: -22px; left: 50%; transform: translateX(-50%); font-size: 0.75rem; font-weight: bold;">310</span>
-              </div>
-            </div>
-            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); margin-top: 8px;">
-              <span>Settimana 1</span>
-              <span>Settimana 2</span>
-              <span>Settimana 3</span>
-              <span>Settimana 4</span>
-              <span>Oggi</span>
-            </div>
-          </div>
-
+          <!-- FOOTER POP-UP -->
           <div style="display: flex; justify-content: flex-end;">
             <button class="btn btn-secondary btn-close-kpi-modal">Chiudi Analytics Erogazioni</button>
           </div>
