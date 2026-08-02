@@ -70,12 +70,16 @@ function renderApp() {
       contentHtml = renderAdrPanel();
       break;
     case 'client_diy':
+    case 'otp_generator':
+    case 'qr_generator':
+    case 'refills_history':
       contentHtml = renderClientDiyPanel();
       break;
     case 'simulator':
       contentHtml = renderHardwareSimulator();
       break;
     case 'user_mgmt':
+    case 'user_management':
     case 'permissions_matrix':
       contentHtml = renderUserManagementPanel(state.activeTab, state.editingStaffUserId, state.viewingEmailId);
       break;

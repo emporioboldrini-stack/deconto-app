@@ -59,7 +59,7 @@ export function renderSidebar(currentUser, activeTab) {
             <span class="nav-icon">📊</span>
             <span>Dashboard IoT & KPI</span>
           </a>
-          <a class="nav-item ${activeTab === 'user_management' ? 'active' : ''}" data-tab="user_management">
+          <a class="nav-item ${(activeTab === 'user_mgmt' || activeTab === 'user_management') ? 'active' : ''}" data-tab="user_mgmt">
             <span class="nav-icon">👥</span>
             <span>Gestione Personale</span>
           </a>
@@ -88,7 +88,7 @@ export function renderSidebar(currentUser, activeTab) {
 
         ${isUfficio ? `
           <div class="nav-section-title">STRUMENTI OPERATIVI</div>
-          <a class="nav-item ${activeTab === 'otp_generator' ? 'active' : ''}" data-tab="otp_generator">
+          <a class="nav-item ${(activeTab === 'client_diy' || activeTab === 'otp_generator') ? 'active' : ''}" data-tab="client_diy">
             <span class="nav-icon">🔑</span>
             <span>Generatore OTP WhatsApp</span>
           </a>

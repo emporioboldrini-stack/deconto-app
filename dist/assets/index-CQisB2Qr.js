@@ -179,7 +179,7 @@
             <span class="nav-icon">📊</span>
             <span>Dashboard IoT & KPI</span>
           </a>
-          <a class="nav-item ${t===`user_management`?`active`:``}" data-tab="user_management">
+          <a class="nav-item ${t===`user_mgmt`||t===`user_management`?`active`:``}" data-tab="user_mgmt">
             <span class="nav-icon">👥</span>
             <span>Gestione Personale</span>
           </a>
@@ -208,7 +208,7 @@
 
         ${a?`
           <div class="nav-section-title">STRUMENTI OPERATIVI</div>
-          <a class="nav-item ${t===`otp_generator`?`active`:``}" data-tab="otp_generator">
+          <a class="nav-item ${t===`client_diy`||t===`otp_generator`?`active`:``}" data-tab="client_diy">
             <span class="nav-icon">🔑</span>
             <span>Generatore OTP WhatsApp</span>
           </a>
@@ -2090,7 +2090,7 @@
       </div>
 
     </div>
-  `}var h={currentUser:i.getCurrentUser(),activeTab:`dashboard`,editingId:null,editingStaffUserId:null,showProfileModal:!1,dashSearchQuery:``,dashSearchCategory:`ALL`,dashSortColumn:`shortCode`,dashSortDirection:`DESC`,viewingDecontoCode:null,viewingEmailId:null,viewingKpiModal:null,kpiPeriod:`30DAYS`,kpiChartType:`LINE`,kpiCustomStart:`2026-07-01`,kpiCustomEnd:`2026-08-02`};function g(){let e=document.getElementById(`app`);if(!h.currentUser){e.innerHTML=a(),_();return}let t=``;switch(h.activeTab){case`dashboard`:t=s(h.activeTab,h.viewingDecontoCode,h.dashSearchQuery,h.dashSearchCategory,h.dashSortColumn,h.dashSortDirection,h.viewingKpiModal,h.kpiPeriod,h.kpiChartType,h.kpiCustomStart,h.kpiCustomEnd);break;case`clients`:case`machines`:case`deconto_boards`:t=c(h.activeTab,h.editingId);break;case`adr_visits`:t=l();break;case`client_diy`:t=u();break;case`simulator`:t=d();break;case`user_mgmt`:case`permissions_matrix`:t=f(h.activeTab,h.editingStaffUserId,h.viewingEmailId);break;case`settings`:t=m();break;default:t=s()}let n=p(h.showProfileModal,h.currentUser);e.innerHTML=`
+  `}var h={currentUser:i.getCurrentUser(),activeTab:`dashboard`,editingId:null,editingStaffUserId:null,showProfileModal:!1,dashSearchQuery:``,dashSearchCategory:`ALL`,dashSortColumn:`shortCode`,dashSortDirection:`DESC`,viewingDecontoCode:null,viewingEmailId:null,viewingKpiModal:null,kpiPeriod:`30DAYS`,kpiChartType:`LINE`,kpiCustomStart:`2026-07-01`,kpiCustomEnd:`2026-08-02`};function g(){let e=document.getElementById(`app`);if(!h.currentUser){e.innerHTML=a(),_();return}let t=``;switch(h.activeTab){case`dashboard`:t=s(h.activeTab,h.viewingDecontoCode,h.dashSearchQuery,h.dashSearchCategory,h.dashSortColumn,h.dashSortDirection,h.viewingKpiModal,h.kpiPeriod,h.kpiChartType,h.kpiCustomStart,h.kpiCustomEnd);break;case`clients`:case`machines`:case`deconto_boards`:t=c(h.activeTab,h.editingId);break;case`adr_visits`:t=l();break;case`client_diy`:case`otp_generator`:case`qr_generator`:case`refills_history`:t=u();break;case`simulator`:t=d();break;case`user_mgmt`:case`user_management`:case`permissions_matrix`:t=f(h.activeTab,h.editingStaffUserId,h.viewingEmailId);break;case`settings`:t=m();break;default:t=s()}let n=p(h.showProfileModal,h.currentUser);e.innerHTML=`
     <div class="app-layout">
       ${o(h.currentUser,h.activeTab)}
       <main class="main-content">
