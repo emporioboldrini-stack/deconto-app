@@ -620,9 +620,16 @@ class DecontoDatabase {
 
     const logs = [];
     const now = Date.now();
-    const boards = this.data.decontoBoards.filter(b => b.machineId);
+    const boards = this.data.decontoBoards ? this.data.decontoBoards.filter(b => b.machineId) : [];
 
-    // Generiamo erogazioni distribuite negli ultimi 365 giorni
+    // Se non ci sono schede registrate o collegate, non generare log di test
+    if (boards.length === 0) {
+      this.data.coffeeLogs = [];
+      this.saveData();
+      return [];
+    }
+
+    // Generiamo erogazioni distribuite negli ultimi 365 giorni solo se ci sono schede attive
     for (let day = 0; day < 365; day++) {
       const dayTime = now - day * 86400000;
       const dayOfWeek = new Date(dayTime).getDay();
@@ -650,8 +657,10 @@ class DecontoDatabase {
   }
 
   getExtractionsAnalytics(periodKey = '30DAYS', customStartStr = null, customEndStr = null) {
-    let logs = this.data.coffeeLogs;
-    if (!logs || logs.length < 50) {
+    let logs = this.data.coffeeLogs || [];
+    
+    // Genera log fittizi solo per demo se ci sono schede registrate ma nessun log reale
+    if (logs.length === 0 && this.data.decontoBoards && this.data.decontoBoards.length > 0) {
       logs = this.seedCoffeeLogs();
     }
 
