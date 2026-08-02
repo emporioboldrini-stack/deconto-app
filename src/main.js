@@ -16,7 +16,7 @@ import { renderSettingsPanel } from './components/SettingsPanel.js';
 // Stato Globale dell'Applicazione
 const state = {
   currentUser: db.getCurrentUser(),
-  activeTab: 'dashboard', // dashboard, clients, machines, deconto_boards, adr_visits, client_diy, simulator, user_mgmt, settings
+  activeTab: 'dashboard', // dashboard, clients, machines, deconto_boards, adr_visits, client_diy, simulator, user_mgmt, permissions_matrix, settings
   editingId: null, // ID dell'elemento in modifica (cliente, macchina o deconto)
   editingStaffUserId: null, // ID dell'utente dipendente in modifica
   showProfileModal: false,
@@ -76,7 +76,8 @@ function renderApp() {
       contentHtml = renderHardwareSimulator();
       break;
     case 'user_mgmt':
-      contentHtml = renderUserManagementPanel(state.editingStaffUserId, state.viewingEmailId);
+    case 'permissions_matrix':
+      contentHtml = renderUserManagementPanel(state.activeTab, state.editingStaffUserId, state.viewingEmailId);
       break;
     case 'settings':
       contentHtml = renderSettingsPanel();
