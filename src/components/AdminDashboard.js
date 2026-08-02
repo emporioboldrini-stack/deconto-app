@@ -114,7 +114,7 @@ export function renderAdminDashboard(
   } else if (viewingKpiModal === 'kpi_machines') {
     kpiModalHtml = `
       <div class="modal-overlay" id="kpi-modal">
-        <div class="modal-box" style="max-width: 800px; width: 95%;">
+        <div class="modal-box" style="max-width: 1240px; width: 96%; max-height: 90vh; overflow-y: auto;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px;">
             <h2 style="font-size: 1.4rem; font-weight: 800; color: var(--accent-purple); margin: 0;">
               ☕ Telemetria & Ripartizione Parco Macchine (${totalMachines})
