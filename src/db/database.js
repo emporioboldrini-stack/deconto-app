@@ -355,6 +355,11 @@ class DecontoDatabase {
     if (!masterData.emailLogs) masterData.emailLogs = [];
     if (!masterData.backupLogs) masterData.backupLogs = [];
 
+    // Rimuovi log orfani di schede Deconto cancellate
+    const activeBoardIds = new Set(masterData.decontoBoards.map(b => b.id));
+    masterData.coffeeLogs = masterData.coffeeLogs.filter(log => activeBoardIds.has(log.boardId));
+    masterData.refillLogs = masterData.refillLogs.filter(log => activeBoardIds.has(log.boardId));
+
     // Salva per allineare tutte le chiavi
     try {
       const payload = JSON.stringify(masterData);
@@ -820,8 +825,13 @@ class DecontoDatabase {
   }
 
   deleteBoard(boardId) {
-    this.data.decontoBoards = this.data.decontoBoards.filter(b => b.id !== boardId && b.shortCode !== boardId);
-    this.saveData();
+    const board = this.data.decontoBoards.find(b => b.id === boardId || b.shortCode === boardId);
+    if (board) {
+      this.data.coffeeLogs = (this.data.coffeeLogs || []).filter(c => c.boardId !== board.id);
+      this.data.refillLogs = (this.data.refillLogs || []).filter(r => r.boardId !== board.id);
+      this.data.decontoBoards = this.data.decontoBoards.filter(b => b.id !== board.id);
+      this.saveData();
+    }
   }
 
   addMachine(data) {
