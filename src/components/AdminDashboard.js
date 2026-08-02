@@ -95,12 +95,12 @@ export function renderAdminDashboard(
             </div>
 
             <div style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 12px; border: 1px solid var(--border-subtle);">
-              <h4 style="margin-top:0; color: var(--accent-green);">📈 Performance Parco Clienti:</h4>
-              <div style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
-                • <strong>Tasso di Rinnovo Cialde:</strong> 94.2%<br>
-                • <strong>Media Consumo Mensile per Cliente:</strong> 340 caffè<br>
-                • <strong>Clienti Top Spesa:</strong> Bar Milano Central & Ristorante La Perla<br>
-                • <strong>Contratti Comodato Attivi:</strong> 100%
+              <h4 style="margin-top:0; color: var(--accent-green);">📈 Riepilogo Parco Clienti:</h4>
+              <div style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.8;">
+                • <strong>Totale Clienti Registrati:</strong> <span style="color:#fff;font-weight:800;">${totalClients}</span><br>
+                • <strong>Macchine Installate:</strong> <span style="color:#fff;font-weight:800;">${machines.filter(m => m.clientId).length} / ${machines.length}</span><br>
+                • <strong>Schede Deconto Associate:</strong> <span style="color:#fff;font-weight:800;">${boards.filter(b => b.machineId).length} / ${boards.length}</span><br>
+                • <strong>Erogazioni Totali Storiche:</strong> <span style="color:var(--accent-cyan);font-weight:800;">${coffeeLogs.length}</span>
               </div>
             </div>
           </div>
@@ -566,12 +566,12 @@ export function renderAdminDashboard(
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                   <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px; border: 1px solid var(--border-subtle);">
                     <div style="font-size: 0.75rem; color: var(--text-muted);">Odomedro Macchina:</div>
-                    <div style="font-size: 1.2rem; font-weight: 800; color: #fff; margin-top: 2px;">${(b.machineExtractions || 1855).toLocaleString('it-IT')} ☕</div>
+                    <div style="font-size: 1.2rem; font-weight: 800; color: #fff; margin-top: 2px;">${(b.machineExtractions || 0).toLocaleString('it-IT')} ☕</div>
                   </div>
 
                   <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px; border: 1px solid var(--border-subtle);">
                     <div style="font-size: 0.75rem; color: var(--text-muted);">Storico Hardware:</div>
-                    <div style="font-size: 1.2rem; font-weight: 800; color: var(--accent-cyan); margin-top: 2px;">${(b.lifetimeExtractions || 4920).toLocaleString('it-IT')} ☕</div>
+                    <div style="font-size: 1.2rem; font-weight: 800; color: var(--accent-cyan); margin-top: 2px;">${(b.lifetimeExtractions || 0).toLocaleString('it-IT')} ☕</div>
                   </div>
 
                   <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px; border: 1px solid var(--border-subtle);">
@@ -590,11 +590,11 @@ export function renderAdminDashboard(
                 <!-- Scheda Parametri Diagnostici Hardware -->
                 <div style="background: rgba(0,0,0,0.3); padding: 14px; border-radius: 10px; border: 1px solid var(--border-subtle); font-size: 0.8rem; line-height: 1.6;">
                   <div style="font-weight: 800; color: var(--accent-cyan); margin-bottom: 6px;">🔧 Parametri Tecnologici Hardware ESP32-C6:</div>
-                  <div>• <strong>Seriale Scheda:</strong> <code>${b.hwSerial || 'DC-HW-8841'}</code></div>
-                  <div>• <strong>Indirizzo MAC:</strong> <code>${b.macAddress || 'C6:3F:8A:11:34:67'}</code></div>
-                  <div>• <strong>Firmware Attivo:</strong> <code>${b.firmwareVersion || 'v2.1.0-ESP32-C6'}</code></div>
-                  <div>• <strong>Segnale Wi-Fi (RSSI):</strong> <code>${b.rssi || -62} dBm (Eccellente)</code></div>
-                  <div>• <strong>Ultimo Battito Heartbeat:</strong> <code>${new Date(b.lastSyncDate).toLocaleString('it-IT')}</code></div>
+                  <div>• <strong>Seriale Scheda:</strong> <code>${b.hwSerial || 'N/D'}</code></div>
+                  <div>• <strong>Indirizzo MAC:</strong> <code>${b.macAddress || 'N/D'}</code></div>
+                  <div>• <strong>Firmware Attivo:</strong> <code>${b.firmwareVersion || 'N/D'}</code></div>
+                  <div>• <strong>Segnale Wi-Fi (RSSI):</strong> <code>${b.rssi ? b.rssi + ' dBm' : 'N/D'}</code></div>
+                  <div>• <strong>Ultimo Battito Heartbeat:</strong> <code>${b.lastSyncDate ? new Date(b.lastSyncDate).toLocaleString('it-IT') : 'N/D'}</code></div>
                 </div>
 
               </div>
@@ -640,7 +640,7 @@ export function renderAdminDashboard(
           </div>
           <div class="stat-value">${totalClients}</div>
           <div class="stat-sub" style="color: var(--accent-green);">
-            ▲ 100% Attivi in Comodato
+            ${machines.filter(m => m.clientId).length} macchine assegnate
           </div>
           <div style="font-size: 0.72rem; color: var(--accent-cyan); margin-top: 8px; font-weight: 700;">
             🔍 Clicca per aprire il pop-up analytics &amp; mappa &rarr;
@@ -670,7 +670,7 @@ export function renderAdminDashboard(
           </div>
           <div class="stat-value">${totalExtractions}</div>
           <div class="stat-sub" style="color: var(--accent-cyan);">
-            ▲ +14% questo mese
+            ${coffeeLogs.length > 0 ? '▲ Storico reale registrato' : '● Nessuna erogazione ancora'}
           </div>
           <div style="font-size: 0.72rem; color: var(--accent-cyan); margin-top: 8px; font-weight: 700;">
             🔍 Clicca per aprire il grafico consumi &rarr;
