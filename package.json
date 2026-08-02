@@ -1,8 +1,8 @@
 {
   "name": "deconto-app",
-  "version": "1.5.0-PC",
+  "version": "1.6.0-PC",
   "private": true,
-  "description": "Piattaforma Web & PWA IoT Deconto per la gestione ed erogazione macchine da caffè in comodato d'uso - Version V1.5PC",
+  "description": "Piattaforma Web & PWA IoT Deconto per la gestione ed erogazione macchine da caffè in comodato d'uso - Version V1.6PC",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

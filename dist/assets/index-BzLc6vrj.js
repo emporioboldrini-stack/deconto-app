@@ -199,7 +199,7 @@
         <!-- 4. IN BASSO SOTTO IMPOSTAZIONI: Versione & Data Ultima Modifica -->
         <div style="margin-top: 24px; padding: 14px 12px; border-top: 1px solid var(--border-subtle); text-align: center; background: rgba(0,0,0,0.25); border-radius: 8px;">
           <div style="font-weight: 800; font-size: 0.8rem; color: var(--accent-cyan);">
-            Versione: V1.5PC
+            Versione: V1.6PC
           </div>
           <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">
             Data ultima modifica: 02/08/2026
