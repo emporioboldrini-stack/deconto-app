@@ -1,9 +1,9 @@
 import { emailService } from '../services/emailService.js';
 
 /**
- * DECONTO IoT System - Master Database Engine v14
+ * DECONTO IoT System - Master Database Engine v15
  * Dual Persistence: LocalStorage + IndexedDB Vault.
- * Gestione Completa Utenti Dipendenti & Matrice Permessi.
+ * Gestione Automatica degli Stati (Verde, Giallo, Rosso, Nero) basata su Soglie Dinamiche Configurabili.
  */
 
 const MASTER_STORAGE_KEY = 'DECONTO_MASTER_STORE_PERSISTENT';
@@ -22,7 +22,9 @@ const initialData = {
     brandTitle: 'DECONTO',
     brandSubtitle: 'IoT Vending System',
     brevoApiKey: '',
-    brevoSenderEmail: ''
+    brevoSenderEmail: '',
+    thresholdYellow: 20, // Soglia Y: <= 20 Giallo (Sottoscorta)
+    thresholdRed: 5      // Soglia X: <= 5 Rosso (Critico pre-blocco)
   },
 
   roleLabels: {
@@ -93,18 +95,18 @@ const initialData = {
   },
 
   clients: [
-    { id: 'cli_1', name: 'Bar Milano Central', refPerson: 'Mario Rossi', phone: '+39 02 5551234', address: 'Via Roma 12, Milano', city: 'Milano', status: 'ACTIVE' },
-    { id: 'cli_2', name: 'Ristorante La Perla', refPerson: 'Elena Neri', phone: '+39 06 7778899', address: 'Corso Italia 45, Roma', city: 'Roma', status: 'ACTIVE' },
-    { id: 'cli_3', name: 'Studio Legale Brambilla', refPerson: 'Avv. Brambilla', phone: '+39 02 4443322', address: 'Via Montenapoleone 8, Milano', city: 'Milano', status: 'WARNING' },
-    { id: 'cli_4', name: 'Officina Meccanica Conti', refPerson: 'Luigi Conti', phone: '+39 011 998877', address: 'Via Garibaldi 102, Torino', city: 'Torino', status: 'ACTIVE' },
-    { id: 'cli_5', name: 'Hotel Bellavista', refPerson: 'Stefano Bellini', phone: '+39 051 889900', address: 'Piazza Maggiore 3, Bologna', city: 'Bologna', status: 'ACTIVE' }
+    { id: 'cli_1', name: 'Bar Milano Central', refPerson: 'Mario Rossi', phone: '+39 02 5551234', address: 'Via Roma 12, Milano', city: 'Milano' },
+    { id: 'cli_2', name: 'Ristorante La Perla', refPerson: 'Elena Neri', phone: '+39 06 7778899', address: 'Corso Italia 45, Roma', city: 'Roma' },
+    { id: 'cli_3', name: 'Studio Legale Brambilla', refPerson: 'Avv. Brambilla', phone: '+39 02 4443322', address: 'Via Montenapoleone 8, Milano', city: 'Milano' },
+    { id: 'cli_4', name: 'Officina Meccanica Conti', refPerson: 'Luigi Conti', phone: '+39 011 998877', address: 'Via Garibaldi 102, Torino', city: 'Torino' },
+    { id: 'cli_5', name: 'Hotel Bellavista', refPerson: 'Stefano Bellini', phone: '+39 051 889900', address: 'Piazza Maggiore 3, Bologna', city: 'Bologna' }
   ],
   machines: [
-    { id: 'mc_1', serialNumber: 'SN-MC-2026-9912', brand: 'DeLonghi', model: 'DeLonghi Pod Professional 1G', clientId: 'cli_1', installDate: '2025-11-10', status: 'INSTALLED' },
-    { id: 'mc_2', serialNumber: 'SN-MC-2026-8843', brand: 'Faber', model: 'Faber Slot Plast Single', clientId: 'cli_2', installDate: '2026-01-15', status: 'INSTALLED' },
-    { id: 'mc_3', serialNumber: 'SN-MC-2026-7711', brand: 'Didiesse', model: 'Didiesse Frog Revolution', clientId: 'cli_3', installDate: '2026-02-20', status: 'INSTALLED' },
-    { id: 'mc_4', serialNumber: 'SN-MC-2026-4409', brand: 'Spinel', model: 'Spinel Pinocchio Professional', clientId: 'cli_4', installDate: '2026-03-05', status: 'INSTALLED' },
-    { id: 'mc_5', serialNumber: 'SN-MC-2026-5500', brand: 'Grimac', model: 'Grimac Terry Opus 1', clientId: null, installDate: null, status: 'STOCK' }
+    { id: 'mc_1', serialNumber: 'SN-MC-2026-9912', brand: 'DeLonghi', model: 'DeLonghi Pod Professional 1G', clientId: 'cli_1', installDate: '2025-11-10' },
+    { id: 'mc_2', serialNumber: 'SN-MC-2026-8843', brand: 'Faber', model: 'Faber Slot Plast Single', clientId: 'cli_2', installDate: '2026-01-15' },
+    { id: 'mc_3', serialNumber: 'SN-MC-2026-7711', brand: 'Didiesse', model: 'Didiesse Frog Revolution', clientId: 'cli_3', installDate: '2026-02-20' },
+    { id: 'mc_4', serialNumber: 'SN-MC-2026-4409', brand: 'Spinel', model: 'Spinel Pinocchio Professional', clientId: 'cli_4', installDate: '2026-03-05' },
+    { id: 'mc_5', serialNumber: 'SN-MC-2026-5500', brand: 'Grimac', model: 'Grimac Terry Opus 1', clientId: null, installDate: null }
   ],
   decontoBoards: [
     {
@@ -115,7 +117,6 @@ const initialData = {
       machineId: 'mc_1',
       version: 'BASIC',
       remainingCredits: 145,
-      lowStockThreshold: 20,
       relayStatus: 'CLOSED_OK',
       firmwareVersion: 'v2.1.0-ESP32-C6',
       isOnlineWifi: true,
@@ -133,7 +134,6 @@ const initialData = {
       machineId: 'mc_2',
       version: 'PRO',
       remainingCredits: 320,
-      lowStockThreshold: 20,
       relayStatus: 'CLOSED_OK',
       firmwareVersion: 'v2.1.0-ESP32-C6',
       isOnlineWifi: false,
@@ -150,8 +150,7 @@ const initialData = {
       macAddress: 'C6:3F:8A:33:55:10',
       machineId: 'mc_3',
       version: 'BASIC',
-      remainingCredits: 9,
-      lowStockThreshold: 20,
+      remainingCredits: 7,
       relayStatus: 'CLOSED_OK',
       firmwareVersion: 'v2.1.0-ESP32-C6',
       isOnlineWifi: false,
@@ -168,9 +167,8 @@ const initialData = {
       macAddress: 'C6:3F:8A:44:99:01',
       machineId: 'mc_4',
       version: 'BASIC',
-      remainingCredits: 198,
-      lowStockThreshold: 20,
-      relayStatus: 'CLOSED_OK',
+      remainingCredits: 0,
+      relayStatus: 'OPEN_LOCKED',
       firmwareVersion: 'v2.1.0-ESP32-C6',
       isOnlineWifi: true,
       rssi: -58,
@@ -187,7 +185,6 @@ const initialData = {
       machineId: null,
       version: 'PRO',
       remainingCredits: 500,
-      lowStockThreshold: 20,
       relayStatus: 'CLOSED_OK',
       firmwareVersion: 'v2.1.0-ESP32-C6',
       isOnlineWifi: false,
@@ -259,6 +256,8 @@ class DecontoDatabase {
         if (!parsedData.settings) parsedData.settings = initialData.settings;
         if (parsedData.settings.brevoApiKey === undefined) parsedData.settings.brevoApiKey = '';
         if (parsedData.settings.brevoSenderEmail === undefined) parsedData.settings.brevoSenderEmail = '';
+        if (parsedData.settings.thresholdYellow === undefined) parsedData.settings.thresholdYellow = 20;
+        if (parsedData.settings.thresholdRed === undefined) parsedData.settings.thresholdRed = 5;
 
         if (!parsedData.roleLabels) parsedData.roleLabels = initialData.roleLabels;
         if (!parsedData.permissions) parsedData.permissions = initialData.permissions;
@@ -318,6 +317,68 @@ class DecontoDatabase {
       ...newSettings
     };
     this.saveData();
+  }
+
+  /**
+   * Calcolo Dinamico dello Stato di una Scheda Deconto o Cliente basato sulle soglie X e Y:
+   * - Crediti = 0: ⚫ NERO / BLOCCO MACCHINA
+   * - Crediti <= X (es. 5): 🔴 ROSSO / CRITICO PRE-BLOCCO
+   * - Crediti <= Y (es. 20): 🟡 GIALLO / SOTTOSCORTA
+   * - Crediti > Y: 🟢 VERDE / REGOLARE
+   */
+  calculateBoardStatus(board) {
+    if (!board) {
+      return { 
+        statusKey: 'NO_MACHINE', 
+        label: '⚪ NON COLLEGATO', 
+        badgeClass: 'badge-secondary', 
+        badgeHtml: '<span class="badge" style="background: #475569; color: #fff;">⚪ NON ASSEGNATO</span>' 
+      };
+    }
+
+    const c = parseInt(board.remainingCredits, 10);
+    const settings = this.getSettings();
+    const y = parseInt(settings.thresholdYellow !== undefined ? settings.thresholdYellow : 20, 10);
+    const x = parseInt(settings.thresholdRed !== undefined ? settings.thresholdRed : 5, 10);
+
+    if (c <= 0) {
+      return {
+        statusKey: 'BLOCKED_ZERO',
+        label: '⚫ BLOCCATO (0 CIALDE)',
+        badgeClass: 'badge-black',
+        badgeHtml: '<span class="badge" style="background: #090d16; color: #f8fafc; border: 1px solid #ef4444; font-weight: 800;">⚫ BLOCCO RELÈ (0 CIALDE)</span>'
+      };
+    } else if (c <= x) {
+      return {
+        statusKey: 'CRITICAL_LOW',
+        label: `🔴 CRITICO (${c} CIALDE)`,
+        badgeClass: 'badge-danger',
+        badgeHtml: `<span class="badge badge-danger" style="font-weight: 800;">🔴 CRITICO (${c} CIALDE)</span>`
+      };
+    } else if (c <= y) {
+      return {
+        statusKey: 'WARNING_LOW',
+        label: `🟡 SOTTOSCORTA (${c} CIALDE)`,
+        badgeClass: 'badge-warning',
+        badgeHtml: `<span class="badge badge-warning">🟡 SOTTOSCORTA (${c} CIALDE)</span>`
+      };
+    } else {
+      return {
+        statusKey: 'ACTIVE_OK',
+        label: `🟢 REGOLARE (${c} CIALDE)`,
+        badgeClass: 'badge-success',
+        badgeHtml: `<span class="badge badge-success">🟢 REGOLARE (${c} CIALDE)</span>`
+      };
+    }
+  }
+
+  calculateClientStatus(client) {
+    if (!client) return { statusKey: 'NO_MACHINE', badgeHtml: '<span class="badge" style="background: #475569; color: #fff;">⚪ NESSUNA MACCHINA</span>' };
+    const mc = this.data.machines.find(m => m.clientId === client.id);
+    if (!mc) return { statusKey: 'NO_MACHINE', badgeHtml: '<span class="badge" style="background: #475569; color: #fff;">⚪ MAGAZZINO</span>' };
+    const board = this.data.decontoBoards.find(b => b.machineId === mc.id);
+    if (!board) return { statusKey: 'NO_MACHINE', badgeHtml: '<span class="badge" style="background: #475569; color: #fff;">⚪ SCHEDA ASSENTE</span>' };
+    return this.calculateBoardStatus(board);
   }
 
   getRoleLabels() { return this.data.roleLabels || initialData.roleLabels; }
@@ -494,7 +555,6 @@ class DecontoDatabase {
       machineId: data.machineId || null,
       version: data.version || 'BASIC',
       remainingCredits: parseInt(data.remainingCredits !== undefined ? data.remainingCredits : 200, 10),
-      lowStockThreshold: parseInt(data.lowStockThreshold || 20, 10),
       relayStatus: 'CLOSED_OK',
       firmwareVersion: 'v2.1.0-ESP32-C6',
       isOnlineWifi: false,
@@ -547,9 +607,6 @@ class DecontoDatabase {
       board.remainingCredits = parseInt(data.remainingCredits, 10);
       if (board.remainingCredits > 0) board.relayStatus = 'CLOSED_OK';
     }
-    if (data.lowStockThreshold !== undefined && data.lowStockThreshold !== '') {
-      board.lowStockThreshold = parseInt(data.lowStockThreshold, 10);
-    }
 
     this.saveData();
     return board;
@@ -568,8 +625,7 @@ class DecontoDatabase {
       brand: data.brand ? data.brand.trim() : 'Didiesse',
       model: data.model ? data.model.trim() : 'Frog Revolution',
       clientId: data.clientId || null,
-      installDate: data.clientId ? (data.installDate || new Date().toISOString().split('T')[0]) : null,
-      status: data.clientId ? 'INSTALLED' : 'STOCK'
+      installDate: data.clientId ? (data.installDate || new Date().toISOString().split('T')[0]) : null
     };
     this.data.machines.unshift(newMachine);
 
@@ -597,7 +653,6 @@ class DecontoDatabase {
 
     if (data.clientId !== undefined) {
       machine.clientId = data.clientId || null;
-      machine.status = machine.clientId ? 'INSTALLED' : 'STOCK';
       if (machine.clientId && !machine.installDate) {
         machine.installDate = new Date().toISOString().split('T')[0];
       }
@@ -634,8 +689,7 @@ class DecontoDatabase {
       phone: data.phone ? data.phone.trim() : '+39 ',
       email: data.email ? data.email.trim() : '',
       address: data.address ? data.address.trim() : '',
-      city: data.city ? data.city.trim() : '',
-      status: 'ACTIVE'
+      city: data.city ? data.city.trim() : ''
     };
     this.data.clients.unshift(newClient);
 
@@ -643,7 +697,6 @@ class DecontoDatabase {
       const mc = this.data.machines.find(m => m.id === data.machineId);
       if (mc) {
         mc.clientId = newClient.id;
-        mc.status = 'INSTALLED';
         mc.installDate = new Date().toISOString().split('T')[0];
       }
     }
@@ -662,7 +715,6 @@ class DecontoDatabase {
     if (data.email !== undefined) client.email = data.email.trim();
     if (data.city !== undefined) client.city = data.city.trim();
     if (data.address !== undefined) client.address = data.address.trim();
-    if (data.status) client.status = data.status;
 
     if (data.assignedMachineId !== undefined) {
       const targetMcId = data.assignedMachineId || null;
@@ -670,7 +722,6 @@ class DecontoDatabase {
         const mc = this.data.machines.find(m => m.id === targetMcId);
         if (mc) {
           mc.clientId = client.id;
-          mc.status = 'INSTALLED';
           if (!mc.installDate) mc.installDate = new Date().toISOString().split('T')[0];
         }
       }
@@ -684,7 +735,6 @@ class DecontoDatabase {
     this.data.machines.forEach(m => {
       if (m.clientId === clientId) {
         m.clientId = null;
-        m.status = 'STOCK';
       }
     });
     this.data.clients = this.data.clients.filter(c => c.id !== clientId);
@@ -761,7 +811,7 @@ class DecontoDatabase {
     return {
       success: true,
       remainingCredits: board.remainingCredits,
-      isLowStock: board.remainingCredits < board.lowStockThreshold,
+      isLowStock: board.remainingCredits <= (this.getSettings().thresholdYellow || 20),
       relayStatus: board.relayStatus
     };
   }

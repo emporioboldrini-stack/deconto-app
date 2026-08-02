@@ -322,7 +322,7 @@ function attachMainEventListeners() {
     });
   }
 
-  // --- 🛠️ IMPOSTAZIONI: LOGO DA PC, BRAND & BREVO API ---
+  // --- 🛠️ IMPOSTAZIONI: LOGO DA PC, BRAND, SOGLIE X/Y & BREVO API ---
   const logoFileInput = document.getElementById('setting-logo-file');
   if (logoFileInput) {
     logoFileInput.addEventListener('change', (e) => {
@@ -365,6 +365,24 @@ function attachMainEventListeners() {
 
       db.updateSettings({ brandTitle, brandSubtitle });
       alert('✅ Titolo e Sottotitolo Brand salvati con successo!');
+      renderApp();
+    });
+  }
+
+  const settingsThresholdsForm = document.getElementById('settings-thresholds-form');
+  if (settingsThresholdsForm) {
+    settingsThresholdsForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const thresholdYellow = parseInt(document.getElementById('setting-threshold-yellow').value, 10);
+      const thresholdRed = parseInt(document.getElementById('setting-threshold-red').value, 10);
+
+      if (isNaN(thresholdYellow) || isNaN(thresholdRed) || thresholdRed >= thresholdYellow) {
+        alert('Attenzione: La Soglia Critica Rossa (X) deve essere inferiore alla Soglia Sottoscorta Gialla (Y)!');
+        return;
+      }
+
+      db.updateSettings({ thresholdYellow, thresholdRed });
+      alert(`✅ Soglie Automatiche Salvate con Successo!\n\n🟢 VERDE: > ${thresholdYellow} cialde\n🟡 GIALLO (Sottoscorta): da ${thresholdRed + 1} a ${thresholdYellow} cialde\n🔴 ROSSO (Critico): da 1 a ${thresholdRed} cialde\n⚫ NERO (Bloccato): 0 cialde`);
       renderApp();
     });
   }
@@ -697,12 +715,11 @@ function attachMainEventListeners() {
       const shortCode = document.getElementById('edit-board-shortcode').value;
       const hwSerial = document.getElementById('edit-board-hwserial').value;
       const remainingCredits = document.getElementById('edit-board-credits').value;
-      const lowStockThreshold = document.getElementById('edit-board-threshold').value;
       const version = document.getElementById('edit-board-version').value;
       const machineId = document.getElementById('edit-board-machine').value;
 
       try {
-        db.updateBoard(id, { shortCode, hwSerial, remainingCredits, lowStockThreshold, version, machineId });
+        db.updateBoard(id, { shortCode, hwSerial, remainingCredits, version, machineId });
         state.editingId = null;
         alert('✅ Scheda Deconto aggiornata con successo!');
         renderApp();
