@@ -1,3 +1,4 @@
+import './styles/index.css';
 import { db } from './db/database.js';
 import { emailService } from './services/emailService.js';
 
