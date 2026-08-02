@@ -3,26 +3,11 @@ import { db } from '../db/database.js';
 export function renderSettingsPanel() {
   const settings = db.getSettings();
 
-  const gasScriptSnippet = `function doPost(e) {
-  try {
-    var data = JSON.parse(e.postData.contents);
-    MailApp.sendEmail({
-      to: data.to,
-      subject: data.subject,
-      htmlBody: data.htmlBody,
-      body: data.body || "Messaggio Notifica DECONTO IoT System"
-    });
-    return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
-  } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() })).setMimeType(ContentService.MimeType.JSON);
-  }
-}`;
-
   return `
     <div>
       <div style="margin-bottom: 24px;">
         <h1 style="font-size: 1.8rem; font-weight: 800;">⚙️ Impostazioni Piattaforma & Personalizzazione Brand</h1>
-        <p style="color: var(--text-muted);">Personalizza il logo aziendale, l'intestazione ed i servizi di notifica email (Brevo / Google Apps Script)</p>
+        <p style="color: var(--text-muted);">Personalizza il logo aziendale, l'intestazione ed il servizio email Brevo (Sendinblue API)</p>
       </div>
 
       <div class="card-grid" style="grid-template-columns: 1fr 1fr;">
@@ -83,7 +68,7 @@ export function renderSettingsPanel() {
 
       </div>
 
-      <!-- Card 3: Servizio Email BREVO / Sendinblue (Opzione consigliata) -->
+      <!-- Card 3: Servizio Email BREVO / Sendinblue -->
       <div class="stat-card" style="margin-top: 24px; padding: 24px; border: 2px solid var(--accent-cyan);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
           <h3 style="margin: 0; color: var(--accent-cyan);">✉️ Servizio Email Reale BREVO (ex Sendinblue - brevo.com):</h3>
@@ -91,7 +76,7 @@ export function renderSettingsPanel() {
         </div>
 
         <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">
-          <strong>BREVO (brevo.com)</strong> è il servizio gratuito di invio email transazionali (ex Sendinblue). Offre 300 email gratuite al giorno e non richiede installazione di script. Inserisci la tua API Key trovata su <em>brevo.com &rarr; API Keys</em> per attivare l'invio istantaneo.
+          <strong>BREVO (brevo.com)</strong> è il servizio gratuito di invio email transazionali. Offre 300 email gratuite al giorno. Inserisci la tua API Key trovata su <em>brevo.com &rarr; API Keys</em> per attivare l'invio istantaneo.
         </p>
 
         <form id="settings-brevo-form" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 16px; align-items: end;">
@@ -111,36 +96,6 @@ export function renderSettingsPanel() {
         </form>
       </div>
 
-      <!-- Card 4: Servizio Notifiche Email via Google Apps Script (GAS) -->
-      <div class="stat-card" style="margin-top: 24px; padding: 24px; border: 1px solid var(--accent-green);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-          <h3 style="margin: 0; color: var(--accent-green);">✉️ Alternativa: Google Apps Script (GAS):</h3>
-          <span class="badge badge-success">GRATUITO CON ACCOUNT GOOGLE</span>
-        </div>
-
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">
-          In alternativa a Brevo, puoi utilizzare un piccolo script <strong>Google Apps Script</strong> come nella conversazione GAS SOMS.
-        </p>
-
-        <form id="settings-gas-form" style="margin-bottom: 20px;">
-          <div style="margin-bottom: 16px;">
-            <label style="font-size: 0.85rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 6px;">
-              URL Endpoint Web App Google Apps Script (es. https://script.google.com/macros/s/AKfycb.../exec):
-            </label>
-            <div style="display: flex; gap: 12px;">
-              <input type="url" id="setting-gas-url" value="${settings.gasScriptUrl || ''}" placeholder="https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec" style="flex: 1; padding: 12px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 8px; font-weight: 700; font-family: monospace;">
-              <button type="submit" class="btn btn-success" style="padding: 12px 24px;">
-                💾 Salva URL GAS
-              </button>
-            </div>
-          </div>
-        </form>
-
-        <div style="background: rgba(16, 185, 129, 0.1); border-left: 4px solid var(--accent-green); padding: 16px; border-radius: 6px;">
-          <h4 style="margin-top: 0; color: var(--accent-green); font-size: 0.95rem;">📋 Script Google pronto all'uso:</h4>
-          <pre style="background: #0f172a; color: #38bdf8; padding: 12px; border-radius: 6px; font-size: 0.8rem; font-family: monospace; overflow-x: auto; border: 1px solid var(--border-subtle); margin: 0;">${gasScriptSnippet}</pre>
-        </div>
-      </div>
     </div>
   `;
 }

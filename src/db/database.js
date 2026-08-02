@@ -1,12 +1,9 @@
 import { emailService } from '../services/emailService.js';
 
 /**
- * DECONTO IoT System - Master Database Engine v12
- * 
- * Flusso a 3 Step Completo & Bidirezionale:
- * 1. Creazione Scheda Deconto (Libera a banco o montata su Macchina).
- * 2. Associazione Deconto <-> Macchina nella Scheda Parco Macchine.
- * 3. Installazione Macchina <-> Cliente nella Scheda Anagrafica Clienti.
+ * DECONTO IoT System - Master Database Engine v13
+ * Dual Persistence: LocalStorage + IndexedDB Vault.
+ * Rimossa completamente l'integrazione con Google Apps Script (GAS), conservata l'API Brevo.com.
  */
 
 const MASTER_STORAGE_KEY = 'DECONTO_MASTER_STORE_PERSISTENT';
@@ -24,7 +21,6 @@ const initialData = {
     customLogoUrl: null,
     brandTitle: 'DECONTO',
     brandSubtitle: 'IoT Vending System',
-    gasScriptUrl: '',
     brevoApiKey: '',
     brevoSenderEmail: ''
   },
@@ -262,6 +258,9 @@ class DecontoDatabase {
 
       if (parsedData) {
         if (!parsedData.settings) parsedData.settings = initialData.settings;
+        if (parsedData.settings.brevoApiKey === undefined) parsedData.settings.brevoApiKey = '';
+        if (parsedData.settings.brevoSenderEmail === undefined) parsedData.settings.brevoSenderEmail = '';
+
         if (!parsedData.roleLabels) parsedData.roleLabels = initialData.roleLabels;
         if (!parsedData.permissions) parsedData.permissions = initialData.permissions;
         if (!parsedData.emailLogs) parsedData.emailLogs = [];
@@ -314,7 +313,13 @@ class DecontoDatabase {
   }
 
   getSettings() { return this.data.settings || initialData.settings; }
-  updateSettings(newSettings) { this.data.settings = { ...this.getSettings(), ...newSettings }; this.saveData(); }
+  updateSettings(newSettings) {
+    this.data.settings = {
+      ...this.getSettings(),
+      ...newSettings
+    };
+    this.saveData();
+  }
 
   getRoleLabels() { return this.data.roleLabels || initialData.roleLabels; }
   updateRoleLabel(roleKey, newLabel) { if (!this.data.roleLabels) this.data.roleLabels = { ...initialData.roleLabels }; this.data.roleLabels[roleKey] = newLabel.trim(); this.saveData(); }
@@ -379,7 +384,6 @@ class DecontoDatabase {
     return rolePerms ? !!rolePerms[permissionName] : false;
   }
 
-  // --- STEP 1: 📟 ANAGRAFICA SCHEDE DECONTO ---
   addBoard(data) {
     const shortCode = String(data.shortCode || '').trim();
     if (!shortCode) throw new Error('Inserisci il Codice 4 Cifre del Deconto.');
@@ -411,11 +415,9 @@ class DecontoDatabase {
 
     this.data.decontoBoards.unshift(newBoard);
 
-    // Se è stata selezionata una macchina in fase di creazione scheda, sincronizza la macchina
     if (data.machineId) {
       const mc = this.data.machines.find(m => m.id === data.machineId);
       if (mc) {
-        // Rimuove la scheda precedentemente associata a questa macchina se presente
         this.data.decontoBoards.forEach(b => {
           if (b.id !== newBoard.id && b.machineId === mc.id) b.machineId = null;
         });
@@ -443,7 +445,6 @@ class DecontoDatabase {
       const targetMcId = data.machineId || null;
       board.machineId = targetMcId;
       if (targetMcId) {
-        // Scollega altre schede eventualmente montate su questa macchina
         this.data.decontoBoards.forEach(b => {
           if (b.id !== board.id && b.machineId === targetMcId) b.machineId = null;
         });
@@ -467,7 +468,6 @@ class DecontoDatabase {
     this.saveData();
   }
 
-  // --- STEP 2: ☕ ANAGRAFICA PARCO MACCHINE ---
   addMachine(data) {
     const serialNumber = data.serialNumber ? data.serialNumber.trim() : `SN-MC-2026-${Math.floor(1000 + Math.random() * 9000)}`;
     const newMachine = {
@@ -481,11 +481,9 @@ class DecontoDatabase {
     };
     this.data.machines.unshift(newMachine);
 
-    // Se è stata selezionata una scheda Deconto, aggiorna la scheda Deconto associata
     if (data.boardId) {
       const board = this.data.decontoBoards.find(b => b.id === data.boardId || b.shortCode === data.boardId);
       if (board) {
-        // Scollega la scheda da altre macchine
         this.data.decontoBoards.forEach(b => {
           if (b.machineId === newMachine.id) b.machineId = null;
         });
@@ -513,14 +511,11 @@ class DecontoDatabase {
       }
     }
 
-    // Gestione dell'associazione Scheda Deconto dalla macchina
     if (data.boardId !== undefined) {
       const targetBoardId = data.boardId || null;
-      // Prima scollega tutte le schede montate su questa macchina
       this.data.decontoBoards.forEach(b => {
         if (b.machineId === machine.id) b.machineId = null;
       });
-      // Collega la nuova scheda se selezionata
       if (targetBoardId) {
         const board = this.data.decontoBoards.find(b => b.id === targetBoardId || b.shortCode === targetBoardId);
         if (board) board.machineId = machine.id;
@@ -539,7 +534,6 @@ class DecontoDatabase {
     this.saveData();
   }
 
-  // --- STEP 3: 🏢 ANAGRAFICA CLIENTE ---
   addClient(data) {
     const newClient = {
       id: 'cli_' + Date.now(),
@@ -553,7 +547,6 @@ class DecontoDatabase {
     };
     this.data.clients.unshift(newClient);
 
-    // Se in creazione cliente viene installata subito una macchina
     if (data.machineId) {
       const mc = this.data.machines.find(m => m.id === data.machineId);
       if (mc) {
@@ -579,7 +572,6 @@ class DecontoDatabase {
     if (data.address !== undefined) client.address = data.address.trim();
     if (data.status) client.status = data.status;
 
-    // Assegna/Installa nuova macchina al cliente se specificata
     if (data.assignedMachineId !== undefined) {
       const targetMcId = data.assignedMachineId || null;
       if (targetMcId) {

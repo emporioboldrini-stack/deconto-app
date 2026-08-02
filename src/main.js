@@ -28,9 +28,9 @@ let state = {
   dashSortColumn: 'shortCode',
   dashSortDirection: 'DESC',
 
-  viewingKpiModal: null, // 'kpi_clients' | 'kpi_machines' | 'kpi_extractions' | 'kpi_lowstock'
-  kpiPeriod: '30DAYS',    // '30DAYS' | '90DAYS' | '1YEAR'
-  kpiChartType: 'LINE'   // 'LINE' | 'BAR'
+  viewingKpiModal: null,
+  kpiPeriod: '30DAYS',
+  kpiChartType: 'LINE'
 };
 
 function renderApp() {
@@ -154,6 +154,66 @@ function attachMainEventListeners() {
       }
     });
   });
+
+  // --- 🛠️ IMPOSTAZIONI: LOGO DA PC, TESTO INTOLAZIONE BRAND & BREVO API ---
+  const logoFileInput = document.getElementById('setting-logo-file');
+  if (logoFileInput) {
+    logoFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        if (!file.type.startsWith('image/')) {
+          alert('Seleziona un file immagine valido (PNG, JPG, SVG).');
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          const base64Image = event.target.result;
+          db.updateSettings({ customLogoUrl: base64Image });
+          alert('✅ Nuovo Logo Aziendale caricato con successo!');
+          renderApp();
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
+  const btnResetLogo = document.getElementById('btn-reset-logo');
+  if (btnResetLogo) {
+    btnResetLogo.addEventListener('click', () => {
+      if (confirm('Ripristinare il logo predefinito con icona caffè ☕?')) {
+        db.updateSettings({ customLogoUrl: null });
+        alert('✅ Logo predefinito ripristinato!');
+        renderApp();
+      }
+    });
+  }
+
+  const settingsBrandForm = document.getElementById('settings-brand-form');
+  if (settingsBrandForm) {
+    settingsBrandForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const brandTitle = document.getElementById('setting-brand-title').value.trim();
+      const brandSubtitle = document.getElementById('setting-brand-subtitle').value.trim();
+
+      db.updateSettings({ brandTitle, brandSubtitle });
+      alert('✅ Titolo e Sottotitolo Brand salvati con successo!');
+      renderApp();
+    });
+  }
+
+  const settingsBrevoForm = document.getElementById('settings-brevo-form');
+  if (settingsBrevoForm) {
+    settingsBrevoForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const key = document.getElementById('setting-brevo-key').value.trim();
+      const sender = document.getElementById('setting-brevo-sender').value.trim();
+
+      db.updateSettings({ brevoApiKey: key, brevoSenderEmail: sender });
+      alert('✅ API Key ed Email Mittente Brevo salvate con successo!');
+      renderApp();
+    });
+  }
 
   // --- 📊 DASHBOARD: POP-UP MODALI CARDS KPI (TASTI 1, 2, 3, 4) ---
   document.querySelectorAll('.kpi-card-clickable').forEach(card => {
