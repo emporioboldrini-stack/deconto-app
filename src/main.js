@@ -150,46 +150,24 @@ function attachGlobalEventListeners() {
   if (btnCloseProfile) btnCloseProfile.addEventListener('click', () => { state.showProfileModal = false; renderApp(); });
   if (btnCancelProfile) btnCancelProfile.addEventListener('click', () => { state.showProfileModal = false; renderApp(); });
 
-  const profileForm = document.getElementById('user-profile-form');
+  const profileForm = document.getElementById('profile-edit-form');
   if (profileForm) {
     profileForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const name = document.getElementById('profile-name').value.trim();
       const email = document.getElementById('profile-email').value.trim();
-      const phone = document.getElementById('profile-phone').value.trim();
-      const avatar = document.getElementById('profile-avatar').value;
-      const currentPassword = document.getElementById('profile-current-password').value;
       const newPassword = document.getElementById('profile-new-password').value;
-      const confirmPassword = document.getElementById('profile-confirm-password').value;
-
-      if (!db.verifyPassword(state.currentUser.id, currentPassword)) {
-        alert('Password attuale non corretta!');
-        return;
-      }
-
-      if (newPassword || confirmPassword) {
-        if (newPassword !== confirmPassword) {
-          alert('Le nuove password inserite non coincidono!');
-          return;
-        }
-        if (newPassword.length < 4) {
-          alert('La nuova password deve contenere almeno 4 caratteri!');
-          return;
-        }
-      }
 
       try {
         const updatedUser = db.updateUserProfile(state.currentUser.id, {
           name,
           email,
-          phone,
-          avatar,
           newPassword: newPassword ? newPassword.trim() : undefined
         });
 
         state.currentUser = updatedUser;
         state.showProfileModal = false;
-        alert('✅ Profilo utente aggiornato con successo!');
+        alert('✅ Credenziali del profilo aggiornate con successo!');
         renderApp();
       } catch (err) {
         alert(`Errore: ${err.message}`);
