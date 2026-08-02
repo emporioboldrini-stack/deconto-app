@@ -88,15 +88,14 @@
 `;return this.data.coffeeLogs.forEach(t=>{let n=this.getBoardFullDetails(t.boardId),r=n&&n.client?n.client.name.replace(/,/g,` `):`N/D`,i=n&&n.machine?n.machine.serialNumber:`N/D`,a=n&&n.machine?n.machine.model.replace(/,/g,` `):`N/D`,o=n&&n.board?n.board.shortCode:`N/D`;e+=`${t.id},${o},"${r}",${i},"${a}",${t.timestamp},${t.durationSeconds},${t.groupId}\n`}),e}triggerGitHubBackup(){let e={id:`bak_`+Date.now(),timestamp:new Date().toISOString(),repo:`emporioboldrini-stack/deconto-app`,commitHash:`git-`+Math.random().toString(36).substring(2,10),status:`SUCCESS`,recordCount:this.data.clients.length+this.data.machines.length+this.data.decontoBoards.length+this.data.refillLogs.length};return this.data.backupLogs.unshift(e),this.saveData(),e}};new class{constructor(){this.isSupported=typeof navigator<`u`&&`bluetooth`in navigator,this.connectedDevice=null}checkSupport(){return this.isSupported}async connectToBoardByShortCode(e){if(console.log(`📡 Ricerca dispositivo Deconto con codice breve [${e}]...`),this.isSupported&&navigator.bluetooth)try{let t=await navigator.bluetooth.requestDevice({filters:[{namePrefix:`DECONTO_${e}`}],optionalServices:[`0000ffe0-0000-1000-8000-00805f9b34fb`]});return this.connectedDevice=t,{success:!0,deviceName:t.name,isRealHardware:!0}}catch(e){console.warn(`Fallback a simulazione BLE locale:`,e.message)}return await new Promise(e=>setTimeout(e,1500)),{success:!0,deviceName:`DECONTO_${e}`,shortCode:e,isRealHardware:!1,connectedAt:new Date().toISOString()}}async sendRefillOtpToken(e,t,n){if(!(await this.connectToBoardByShortCode(e)).success)throw Error(`Impossibile connettersi al dispositivo DECONTO_${e}`);return await new Promise(e=>setTimeout(e,1e3)),{success:!0,shortCode:e,creditsAccredited:t,tokenApplied:n,relayStatus:`CLOSED_OK`,timestamp:new Date().toISOString()}}};var o=new class{constructor(){this.repoUrl=`https://github.com/deconto-org/deconto-db-backups`}generateDatabaseSnapshot(){return{version:`1.0.0`,timestamp:new Date().toISOString(),data:a.data}}async executeBackupNow(){let e=this.generateDatabaseSnapshot(),t=JSON.stringify(e,null,2);return await new Promise(e=>setTimeout(e,1200)),{success:!0,backupRecord:a.triggerGitHubBackup(),sizeBytes:new Blob([t]).size,snapshotTimestamp:e.timestamp}}};function s(e,t){let n=a.getSettings(),r=a.getRoleLabels(),i=e.role===`UFFICIO`||e.role===`ADMIN`,o=e.role===`ADR`||e.role===`ADMIN`,s=e.role===`ADMIN`;return`
     <aside class="sidebar">
       
-      <!-- 1. IN ALTO: Logo e Scritta Aziendale Brand con Badge Versione V1.5PC -->
+      <!-- 1. IN ALTO: Logo e Scritta Aziendale Brand -->
       <div class="sidebar-header" style="display: flex; align-items: center; gap: 12px; padding: 20px 16px; border-bottom: 1px solid var(--border-subtle);">
         <div id="brand-logo-container" style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple)); display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: var(--shadow-glow);">
           ${n.customLogoUrl?`<img src="${n.customLogoUrl}" style="width: 100%; height: 100%; object-fit: cover;" alt="Logo Brand">`:`<span style="font-size: 1.6rem;">☕</span>`}
         </div>
         <div>
-          <div style="font-weight: 800; font-size: 1.15rem; color: #fff; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+          <div style="font-weight: 800; font-size: 1.15rem; color: #fff; letter-spacing: 0.5px;">
             ${n.brandTitle||`DECONTO`}
-            <span class="badge badge-info" style="font-size: 0.65rem; padding: 2px 6px; font-weight: 900;">V1.5PC</span>
           </div>
           <div style="font-size: 0.72rem; color: var(--accent-cyan); font-weight: 700;">${n.brandSubtitle||`IoT Vending System`}</div>
         </div>
@@ -196,6 +195,16 @@
             <span>Impostazioni Brand</span>
           </a>
         `:``}
+
+        <!-- 4. IN BASSO SOTTO IMPOSTAZIONI: Versione & Data Ultima Modifica -->
+        <div style="margin-top: 24px; padding: 14px 12px; border-top: 1px solid var(--border-subtle); text-align: center; background: rgba(0,0,0,0.25); border-radius: 8px;">
+          <div style="font-weight: 800; font-size: 0.8rem; color: var(--accent-cyan);">
+            Versione: V1.5PC
+          </div>
+          <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">
+            Data ultima modifica: 02/08/2026
+          </div>
+        </div>
 
       </nav>
     </aside>

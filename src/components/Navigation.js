@@ -8,10 +8,12 @@ export function renderSidebar(currentUser, activeTab) {
   const isAdr = currentUser.role === 'ADR' || currentUser.role === 'ADMIN';
   const isAdmin = currentUser.role === 'ADMIN';
 
+  const lastModifiedDate = '02/08/2026';
+
   return `
     <aside class="sidebar">
       
-      <!-- 1. IN ALTO: Logo e Scritta Aziendale Brand con Badge Versione V1.5PC -->
+      <!-- 1. IN ALTO: Logo e Scritta Aziendale Brand -->
       <div class="sidebar-header" style="display: flex; align-items: center; gap: 12px; padding: 20px 16px; border-bottom: 1px solid var(--border-subtle);">
         <div id="brand-logo-container" style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple)); display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: var(--shadow-glow);">
           ${settings.customLogoUrl 
@@ -19,9 +21,8 @@ export function renderSidebar(currentUser, activeTab) {
             : `<span style="font-size: 1.6rem;">☕</span>`}
         </div>
         <div>
-          <div style="font-weight: 800; font-size: 1.15rem; color: #fff; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+          <div style="font-weight: 800; font-size: 1.15rem; color: #fff; letter-spacing: 0.5px;">
             ${settings.brandTitle || 'DECONTO'}
-            <span class="badge badge-info" style="font-size: 0.65rem; padding: 2px 6px; font-weight: 900;">V1.5PC</span>
           </div>
           <div style="font-size: 0.72rem; color: var(--accent-cyan); font-weight: 700;">${settings.brandSubtitle || 'IoT Vending System'}</div>
         </div>
@@ -121,6 +122,16 @@ export function renderSidebar(currentUser, activeTab) {
             <span>Impostazioni Brand</span>
           </a>
         ` : ''}
+
+        <!-- 4. IN BASSO SOTTO IMPOSTAZIONI: Versione & Data Ultima Modifica -->
+        <div style="margin-top: 24px; padding: 14px 12px; border-top: 1px solid var(--border-subtle); text-align: center; background: rgba(0,0,0,0.25); border-radius: 8px;">
+          <div style="font-weight: 800; font-size: 0.8rem; color: var(--accent-cyan);">
+            Versione: V1.5PC
+          </div>
+          <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">
+            Data ultima modifica: ${lastModifiedDate}
+          </div>
+        </div>
 
       </nav>
     </aside>
