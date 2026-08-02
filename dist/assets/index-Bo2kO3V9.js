@@ -438,7 +438,7 @@
       </div>
     `;else if(s===`kpi_lowstock`){let e=f.length,t=0,n=0,r=0,i=0;f.forEach(e=>{let o=a.calculateBoardStatus(e);o.statusKey===`ACTIVE_OK`?t++:o.statusKey===`WARNING_LOW`?n++:o.statusKey===`CRITICAL_LOW`?r++:o.statusKey===`BLOCKED_ZERO`&&i++});let o=e>0?(t/e*100).toFixed(1):`0.0`,s=e>0?(n/e*100).toFixed(1):`0.0`,c=e>0?(r/e*100).toFixed(1):`0.0`,l=e>0?(i/e*100).toFixed(1):`0.0`,u=e>0?i/e*360:0,d=u+(e>0?r/e*360:0),p=d+(e>0?n/e*360:0);b=`
       <div class="modal-overlay" id="kpi-modal">
-        <div class="modal-box" style="max-width: 1060px; width: 95%;">
+        <div class="modal-box" style="max-width: 1240px; width: 96%; max-height: 90vh; overflow-y: auto;">
           
           <!-- Header Pop-up -->
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px;">
@@ -448,27 +448,27 @@
             <button class="btn-close-kpi-modal" style="background: none; border: none; color: var(--text-muted); font-size: 1.6rem; cursor: pointer;">&times;</button>
           </div>
 
-          <!-- LAYOUT AFFIANCATO IN 2 COLONNE (SINISTRA: GRAFICO + TABELLA RIFERIMENTI, DESTRA: ELENCO DECONTI) -->
-          <div style="display: grid; grid-template-columns: 1fr 1.15fr; gap: 24px; align-items: start;">
+          <!-- LAYOUT AFFIANCATO IN 2 COLONNE CON DIMENSIONI AMPLIATE -->
+          <div style="display: grid; grid-template-columns: 1fr 1.35fr; gap: 24px; align-items: start;">
             
-            <!-- COLONNA DI SINISTRA: Grafico a Ciambella + Tabella Riferimenti % -->
+            <!-- COLONNA DI SINISTRA: Grafico a Ciambella Contornato di Bianco + Tabella Riferimenti % -->
             <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 14px; border: 1px solid var(--border-subtle);">
               <h3 style="margin-top: 0; font-size: 1.1rem; font-weight: 800; color: var(--accent-cyan); margin-bottom: 16px;">
                 📈 Analisi Percentuale Parco Deconti
               </h3>
 
-              <!-- Grafico Donut Chart -->
+              <!-- Grafico Donut Chart con Bordo Bianco & Glow per Evidenziare il Nero -->
               <div style="display: flex; justify-content: center; margin-bottom: 20px;">
-                <div style="width: 150px; height: 150px; border-radius: 50%; background: conic-gradient(#090d16 0deg ${u}deg, #ef4444 ${u}deg ${d}deg, #f59e0b ${d}deg ${p}deg, #10b981 ${p}deg 360deg); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(0,0,0,0.5);">
-                  <div style="width: 96px; height: 96px; border-radius: 50%; background: #1e293b; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid var(--border-subtle);">
-                    <span style="font-size: 1.6rem; font-weight: 900; color: #fff;">${e}</span>
+                <div style="width: 156px; height: 156px; border-radius: 50%; background: conic-gradient(#090d16 0deg ${u}deg, #ef4444 ${u}deg ${d}deg, #f59e0b ${d}deg ${p}deg, #10b981 ${p}deg 360deg); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 14px rgba(255, 255, 255, 0.4); border: 2.5px solid #ffffff;">
+                  <div style="width: 100px; height: 100px; border-radius: 50%; background: #1e293b; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid var(--border-subtle);">
+                    <span style="font-size: 1.7rem; font-weight: 900; color: #fff;">${e}</span>
                     <span style="font-size: 0.65rem; color: var(--text-muted); font-weight: 700;">DECONTI TOT.</span>
                   </div>
                 </div>
               </div>
 
               <!-- Tabella Riferimento Numeri & Percentuali -->
-              <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+              <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem;">
                 <thead>
                   <tr style="border-bottom: 1px solid var(--border-subtle); text-align: left; color: var(--text-muted);">
                     <th style="padding: 6px;">Stato Hardware</th>
@@ -493,7 +493,7 @@
                     <td style="padding: 8px 6px; text-align: right; color: var(--accent-rose); font-weight: 800;">${c}%</td>
                   </tr>
                   <tr>
-                    <td style="padding: 8px 6px;"><span class="badge" style="background: #090d16; color: #fff; border: 1px solid #334155;">⚫ NERO (BLOCCO 0 CIALDE)</span></td>
+                    <td style="padding: 8px 6px;"><span class="badge" style="background: #090d16; color: #fff; border: 1px solid #ffffff;">⚫ NERO (BLOCCO 0 CIALDE)</span></td>
                     <td style="padding: 8px 6px; text-align: center;"><strong>${i}</strong></td>
                     <td style="padding: 8px 6px; text-align: right; color: #fff; font-weight: 800;">${l}%</td>
                   </tr>
@@ -510,7 +510,7 @@
                 <span class="badge badge-warning">${_.length} Schede</span>
               </div>
 
-              <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+              <div class="table-container" style="max-height: 480px; overflow-y: auto;">
                 <table style="width: 100%;">
                   <thead>
                     <tr>
