@@ -57,23 +57,28 @@ body {
   background: var(--accent-cyan);
 }
 
-/* Glassmorphism & Layout */
-.app-container {
+/* Glassmorphism & Layout Affiancato */
+.app-container, .app-layout {
   display: flex;
+  flex-direction: row;
   min-height: 100vh;
+  width: 100%;
 }
 
 .sidebar {
   width: 280px;
+  min-width: 280px;
+  flex-shrink: 0;
   background-color: var(--bg-secondary);
   border-right: 1px solid var(--border-subtle);
-  padding: 24px;
+  padding: 20px 16px;
   display: flex;
   flex-direction: column;
 }
 
 .main-content {
   flex: 1;
+  min-width: 0;
   padding: 32px;
   overflow-y: auto;
 }
@@ -118,19 +123,21 @@ body {
   padding: 12px 16px;
   border-radius: var(--radius-sm);
   color: var(--text-muted);
-  text-decoration: none;
-  font-weight: 500;
-  transition: all 0.2s ease;
+  font-weight: 600;
   cursor: pointer;
-  border: 1px solid transparent;
+  transition: all 0.2s ease;
 }
-.nav-item:hover, .nav-item.active {
-  background-color: rgba(56, 189, 248, 0.1);
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-main);
+}
+.nav-item.active {
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.15), rgba(129, 140, 248, 0.05));
   color: var(--accent-cyan);
-  border-color: rgba(56, 189, 248, 0.2);
+  border-left: 3px solid var(--accent-cyan);
 }
 
-/* Component Cards */
+/* Dashboard Cards & Grid */
 .card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -138,64 +145,40 @@ body {
   margin-bottom: 32px;
 }
 .stat-card {
-  background: var(--bg-card);
+  background: var(--bg-secondary);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   padding: 20px;
   box-shadow: var(--shadow-card);
-  position: relative;
-  overflow: hidden;
 }
-.stat-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 4px;
-  height: 100%;
-  background: var(--accent-cyan);
+.stat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
 }
-.stat-card.warning::before { background: var(--accent-amber); }
-.stat-card.danger::before { background: var(--accent-rose); }
-.stat-card.success::before { background: var(--accent-green); }
-
-.stat-label {
-  font-size: 0.85rem;
+.stat-title {
+  font-size: 0.875rem;
   color: var(--text-muted);
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+}
+.stat-icon {
+  font-size: 1.25rem;
 }
 .stat-value {
   font-size: 2rem;
   font-weight: 800;
   color: var(--text-main);
-  margin: 8px 0;
 }
-.stat-desc {
-  font-size: 0.8rem;
-  color: var(--text-dim);
-}
-
-/* Badges */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: 9999px;
+.stat-sub {
   font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
+  margin-top: 6px;
+  font-weight: 600;
 }
-.badge-success { background: rgba(52, 211, 153, 0.15); color: var(--accent-green); border: 1px solid rgba(52, 211, 153, 0.3); }
-.badge-warning { background: rgba(251, 191, 36, 0.15); color: var(--accent-amber); border: 1px solid rgba(251, 191, 36, 0.3); }
-.badge-danger { background: rgba(244, 63, 94, 0.15); color: var(--accent-rose); border: 1px solid rgba(244, 63, 94, 0.3); }
-.badge-info { background: rgba(56, 189, 248, 0.15); color: var(--accent-cyan); border: 1px solid rgba(56, 189, 248, 0.3); }
 
 /* Tables */
 .table-container {
-  background: var(--bg-card);
+  background: var(--bg-secondary);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   overflow: hidden;
@@ -207,24 +190,43 @@ table {
   text-align: left;
 }
 th {
-  background-color: rgba(255, 255, 255, 0.02);
-  padding: 14px 18px;
-  color: var(--text-muted);
+  background: rgba(0, 0, 0, 0.2);
+  padding: 14px 20px;
   font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
   border-bottom: 1px solid var(--border-subtle);
 }
 td {
-  padding: 16px 18px;
+  padding: 16px 20px;
   border-bottom: 1px solid var(--border-subtle);
   font-size: 0.9rem;
 }
-tr:hover {
-  background-color: rgba(255, 255, 255, 0.02);
+tr:last-child td {
+  border-bottom: none;
+}
+tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
 }
 
-/* Buttons */
+/* Badges & Buttons */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.badge-success { background: rgba(52, 211, 153, 0.15); color: var(--accent-green); border: 1px solid rgba(52, 211, 153, 0.3); }
+.badge-warning { background: rgba(251, 191, 36, 0.15); color: var(--accent-amber); border: 1px solid rgba(251, 191, 36, 0.3); }
+.badge-danger  { background: rgba(244, 63, 94, 0.15);  color: var(--accent-rose);  border: 1px solid rgba(244, 63, 94, 0.3); }
+.badge-info    { background: rgba(56, 189, 248, 0.15);  color: var(--accent-cyan);  border: 1px solid rgba(56, 189, 248, 0.3); }
+.badge-secondary{ background: rgba(255, 255, 255, 0.08); color: var(--text-muted);  border: 1px solid var(--border-subtle); }
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -232,15 +234,15 @@ tr:hover {
   gap: 8px;
   padding: 10px 18px;
   border-radius: var(--radius-sm);
-  font-weight: 600;
-  font-size: 0.9rem;
+  font-weight: 700;
+  font-size: 0.875rem;
   cursor: pointer;
-  border: none;
   transition: all 0.2s ease;
+  border: none;
 }
 .btn-primary {
   background: linear-gradient(135deg, var(--accent-cyan), #0284c7);
-  color: #fff;
+  color: #000;
   box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
 }
 .btn-primary:hover {
@@ -248,19 +250,15 @@ tr:hover {
   box-shadow: 0 6px 16px rgba(56, 189, 248, 0.4);
 }
 .btn-secondary {
-  background-color: rgba(255, 255, 255, 0.08);
+  background: var(--bg-card);
   color: var(--text-main);
   border: 1px solid var(--border-color);
 }
 .btn-secondary:hover {
-  background-color: rgba(255, 255, 255, 0.12);
-}
-.btn-success {
-  background: linear-gradient(135deg, var(--accent-green), #059669);
-  color: #fff;
+  background: var(--border-color);
 }
 
-/* Modal Popup */
+/* Modals */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -268,7 +266,7 @@ tr:hover {
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -278,8 +276,6 @@ tr:hover {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
-  padding: 32px;
-  max-width: 500px;
-  width: 90%;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+  padding: 28px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75);
 }
