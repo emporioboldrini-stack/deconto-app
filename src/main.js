@@ -470,31 +470,26 @@ function attachGlobalEventListeners() {
   }
 
   // --- 👥 GESTIONE PERSONALE DIPENDENTI EVENTI ---
-  const btnOpenAddStaffModal = document.getElementById('btn-open-add-staff-modal');
-  const btnCloseAddStaffModal = document.getElementById('btn-close-add-staff-modal');
-  const btnCancelAddStaff = document.getElementById('btn-cancel-add-staff');
-  const addStaffModal = document.getElementById('add-staff-modal');
+  const btnToggleAddUser = document.getElementById('btn-toggle-add-user');
+  const addUserFormContainer = document.getElementById('add-user-form-container');
+  const btnCancelAddUser = document.getElementById('btn-cancel-add-user');
+  const btnSaveNewUser = document.getElementById('btn-save-new-user');
 
-  if (btnOpenAddStaffModal && addStaffModal) {
-    btnOpenAddStaffModal.addEventListener('click', () => {
-      addStaffModal.style.display = 'flex';
-    });
-  }
-  if (btnCloseAddStaffModal && addStaffModal) {
-    btnCloseAddStaffModal.addEventListener('click', () => {
-      addStaffModal.style.display = 'none';
-    });
-  }
-  if (btnCancelAddStaff && addStaffModal) {
-    btnCancelAddStaff.addEventListener('click', () => {
-      addStaffModal.style.display = 'none';
+  if (btnToggleAddUser && addUserFormContainer) {
+    btnToggleAddUser.addEventListener('click', () => {
+      const isHidden = addUserFormContainer.style.display === 'none' || !addUserFormContainer.style.display;
+      addUserFormContainer.style.display = isHidden ? 'block' : 'none';
     });
   }
 
-  const addStaffForm = document.getElementById('add-staff-form');
-  if (addStaffForm) {
-    addStaffForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
+  if (btnCancelAddUser && addUserFormContainer) {
+    btnCancelAddUser.addEventListener('click', () => {
+      addUserFormContainer.style.display = 'none';
+    });
+  }
+
+  if (btnSaveNewUser) {
+    btnSaveNewUser.addEventListener('click', () => {
       const username = document.getElementById('new-user-username').value.trim();
       const password = document.getElementById('new-user-password').value.trim();
       const name = document.getElementById('new-user-name').value.trim();
