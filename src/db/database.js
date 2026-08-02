@@ -290,42 +290,72 @@ class DecontoDatabase {
   }
 
   loadData() {
-    let masterData = JSON.parse(JSON.stringify(initialData));
+    let masterData = null;
 
-    // Scansiona le chiavi salvate nel browser per recuperare solo dati personalizzati (utenti o schede create dall'operatore)
-    for (const key of ALL_STORAGE_KEYS) {
-      try {
-        const storedRaw = localStorage.getItem(key);
-        if (storedRaw) {
-          const parsed = JSON.parse(storedRaw);
-          if (parsed && parsed.users && Array.isArray(parsed.users)) {
-            // Unisci gli utenti creati manualmente
-            parsed.users.forEach(u => {
-              if (!masterData.users.some(mu => mu.id === u.id || mu.username === u.username)) {
-                masterData.users.push(u);
-              }
-            });
-
-            // Unisci eventuali clienti/macchine/deconti custom creati dall'utente
-            if (parsed.decontoBoards && Array.isArray(parsed.decontoBoards)) {
-              parsed.decontoBoards.forEach(b => {
-                if (!masterData.decontoBoards.some(mb => mb.id === b.id || mb.shortCode === b.shortCode)) {
-                  masterData.decontoBoards.push(b);
-                }
-              });
-            }
-          }
-        }
-      } catch (e) {}
+    // 1. Prova a caricare dal database principale corrente
+    try {
+      const storedRaw = localStorage.getItem(MASTER_STORAGE_KEY);
+      if (storedRaw) {
+        masterData = JSON.parse(storedRaw);
+      }
+    } catch (e) {
+      masterData = null;
     }
 
-    if (!masterData.settings) masterData.settings = initialData.settings;
-    if (!masterData.roleLabels) masterData.roleLabels = initialData.roleLabels;
-    if (!masterData.permissions) masterData.permissions = initialData.permissions;
-    if (!masterData.emailLogs) masterData.emailLogs = [];
-    if (!masterData.coffeeLogs) masterData.coffeeLogs = [];
+    // 2. Se non c'è, prova a caricare da una delle chiavi precedenti
+    if (!masterData) {
+      for (const key of ALL_STORAGE_KEYS) {
+        try {
+          const storedRaw = localStorage.getItem(key);
+          if (storedRaw) {
+            masterData = JSON.parse(storedRaw);
+            if (masterData) break;
+          }
+        } catch (e) {}
+      }
+    }
 
-    // Salva immediatamente il master di 8 Deconti esatti su tutte le chiavi
+    // 3. Se ancora non c'è nulla, usa initialData
+    if (!masterData) {
+      masterData = JSON.parse(JSON.stringify(initialData));
+    } else {
+      // Unisci le impostazioni salvate con i valori di default in caso di chiavi mancanti
+      if (!masterData.settings) masterData.settings = { ...initialData.settings };
+      else masterData.settings = { ...initialData.settings, ...masterData.settings };
+
+      if (!masterData.roleLabels) masterData.roleLabels = { ...initialData.roleLabels };
+      else masterData.roleLabels = { ...initialData.roleLabels, ...masterData.roleLabels };
+
+      if (!masterData.permissions) masterData.permissions = { ...initialData.permissions };
+      else masterData.permissions = { ...initialData.permissions, ...masterData.permissions };
+
+      if (!masterData.users || !Array.isArray(masterData.users)) {
+        masterData.users = [...initialData.users];
+      } else {
+        initialData.users.forEach(u => {
+          if (!masterData.users.some(mu => mu.username === u.username)) {
+            masterData.users.push(u);
+          }
+        });
+      }
+
+      if (!masterData.clients || !Array.isArray(masterData.clients)) {
+        masterData.clients = [...initialData.clients];
+      }
+      if (!masterData.machines || !Array.isArray(masterData.machines)) {
+        masterData.machines = [...initialData.machines];
+      }
+      if (!masterData.decontoBoards || !Array.isArray(masterData.decontoBoards)) {
+        masterData.decontoBoards = [...initialData.decontoBoards];
+      }
+    }
+
+    if (!masterData.refillLogs) masterData.refillLogs = [];
+    if (!masterData.coffeeLogs) masterData.coffeeLogs = [];
+    if (!masterData.emailLogs) masterData.emailLogs = [];
+    if (!masterData.backupLogs) masterData.backupLogs = [];
+
+    // Salva per allineare tutte le chiavi
     try {
       const payload = JSON.stringify(masterData);
       ALL_STORAGE_KEYS.forEach(k => localStorage.setItem(k, payload));
