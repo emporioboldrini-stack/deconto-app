@@ -2,6 +2,13 @@ import { emailService } from '../services/emailService.js';
 
 const MASTER_STORAGE_KEY = 'deconto_app_master_db_v2';
 const SESSION_STORAGE_KEY = 'deconto_app_user_session';
+const ALL_STORAGE_KEYS = [
+  'deconto_app_master_db_v2',
+  'deconto_app_master_db_v1',
+  'deconto_app_master_db',
+  'deconto_vending_db',
+  'deconto_db'
+];
 
 const initialData = {
   settings: {
@@ -220,40 +227,84 @@ class DecontoDatabase {
   }
 
   loadData() {
-    try {
-      let storedRaw = localStorage.getItem(MASTER_STORAGE_KEY);
-      let parsedData = null;
+    let masterData = null;
 
-      if (storedRaw) {
-        parsedData = JSON.parse(storedRaw);
-      }
+    // 1. Scansiona tutte le chiavi possibili per non perdere MAI dati da versioni o sessioni precedenti
+    for (const key of ALL_STORAGE_KEYS) {
+      try {
+        const storedRaw = localStorage.getItem(key);
+        if (storedRaw) {
+          const parsed = JSON.parse(storedRaw);
+          if (parsed && parsed.users && Array.isArray(parsed.users)) {
+            if (!masterData) {
+              masterData = parsed;
+            } else {
+              // Unisci gli utenti da chiavi differenti
+              parsed.users.forEach(u => {
+                if (!masterData.users.some(mu => mu.id === u.id || mu.username === u.username)) {
+                  masterData.users.push(u);
+                }
+              });
 
-      if (!parsedData || !parsedData.users || !parsedData.decontoBoards) {
-        parsedData = JSON.parse(JSON.stringify(initialData));
-      }
+              // Unisci clienti, macchine e deconti
+              if (parsed.clients && Array.isArray(parsed.clients)) {
+                parsed.clients.forEach(c => {
+                  if (!masterData.clients.some(mc => mc.id === c.id)) masterData.clients.push(c);
+                });
+              }
+              if (parsed.machines && Array.isArray(parsed.machines)) {
+                parsed.machines.forEach(m => {
+                  if (!masterData.machines.some(mm => mm.id === m.id)) masterData.machines.push(m);
+                });
+              }
+              if (parsed.decontoBoards && Array.isArray(parsed.decontoBoards)) {
+                parsed.decontoBoards.forEach(b => {
+                  if (!masterData.decontoBoards.some(mb => mb.id === b.id || mb.shortCode === b.shortCode)) masterData.decontoBoards.push(b);
+                });
+              }
+            }
+          }
+        }
+      } catch (e) {}
+    }
 
-      // Aggiornamento automatico della password admin principale se rimasta a 123
-      if (parsedData.users && parsedData.users.length > 0) {
-        const adminUser = parsedData.users.find(u => u.username === '001');
-        if (adminUser && adminUser.password === '123') {
-          adminUser.password = '123456';
+    if (!masterData) {
+      masterData = JSON.parse(JSON.stringify(initialData));
+    }
+
+    // Assicurati che gli utenti base esistano sempre mantenendo ogni dipendente aggiunto
+    initialData.users.forEach(initUser => {
+      const existing = masterData.users.find(u => u.id === initUser.id || u.username === initUser.username);
+      if (!existing) {
+        masterData.users.push(initUser);
+      } else {
+        if (existing.username === '001' && existing.password === '123') {
+          existing.password = '123456';
         }
       }
+    });
 
-      if (!parsedData.settings) parsedData.settings = initialData.settings;
-      if (!parsedData.roleLabels) parsedData.roleLabels = initialData.roleLabels;
-      if (!parsedData.permissions) parsedData.permissions = initialData.permissions;
-      if (!parsedData.emailLogs) parsedData.emailLogs = [];
+    if (!masterData.settings) masterData.settings = initialData.settings;
+    if (!masterData.roleLabels) masterData.roleLabels = initialData.roleLabels;
+    if (!masterData.permissions) masterData.permissions = initialData.permissions;
+    if (!masterData.emailLogs) masterData.emailLogs = [];
+    if (!masterData.coffeeLogs) masterData.coffeeLogs = [];
 
-      return parsedData;
-    } catch (e) {
-      return JSON.parse(JSON.stringify(initialData));
-    }
+    // Salva immediatamente su tutte le chiavi per sincronizzazione totale
+    try {
+      const payload = JSON.stringify(masterData);
+      ALL_STORAGE_KEYS.forEach(k => localStorage.setItem(k, payload));
+    } catch (e) {}
+
+    return masterData;
   }
 
   saveData() {
     try {
-      localStorage.setItem(MASTER_STORAGE_KEY, JSON.stringify(this.data));
+      const payload = JSON.stringify(this.data);
+      ALL_STORAGE_KEYS.forEach(key => {
+        localStorage.setItem(key, payload);
+      });
       this.syncToIndexedDB();
     } catch (e) {}
   }
