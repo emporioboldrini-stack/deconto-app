@@ -1,70 +1,57 @@
-import './styles/index.css';
 import { db } from './db/database.js';
-import { bleService } from './services/bluetooth.js';
-import { githubBackupService } from './services/githubBackup.js';
 import { emailService } from './services/emailService.js';
-import { renderSidebar } from './components/Navigation.js';
+
 import { renderLoginScreen } from './components/LoginScreen.js';
-import { renderUserProfileModal } from './components/UserProfileModal.js';
+import { renderSidebar } from './components/Navigation.js';
 import { renderAdminDashboard } from './components/AdminDashboard.js';
-import { renderUserManagementPanel } from './components/UserManagementPanel.js';
 import { renderOfficePanel } from './components/OfficePanel.js';
 import { renderAdrPanel } from './components/AdrPanel.js';
-import { renderSettingsPanel } from './components/SettingsPanel.js';
+import { renderClientDiyPanel } from './components/ClientDiyPanel.js';
 import { renderHardwareSimulator } from './components/HardwareSimulator.js';
+import { renderUserManagementPanel } from './components/UserManagementPanel.js';
+import { renderUserProfileModal } from './components/UserProfileModal.js';
+import { renderSettingsPanel } from './components/SettingsPanel.js';
 
-let state = {
+// Stato Globale dell'Applicazione
+const state = {
   currentUser: db.getCurrentUser(),
-  activeTab: 'dashboard',
+  activeTab: 'dashboard', // dashboard, clients, machines, deconto_boards, adr_visits, client_diy, simulator, user_mgmt, settings
+  editingId: null, // ID dell'elemento in modifica (cliente, macchina o deconto)
+  editingStaffUserId: null, // ID dell'utente dipendente in modifica
   showProfileModal: false,
-  editingStaffUserId: null,
-  editingId: null,
+  dashSearchQuery: '',
+  dashSearchCategory: 'ALL', // ALL, CODE, CLIENT, MODEL
+  dashSortColumn: 'shortCode',
+  dashSortDirection: 'DESC', // ASC or DESC
   viewingDecontoCode: null,
   viewingEmailId: null,
-  selectedSimBoardCode: '9901',
-
-  dashSearchQuery: '',
-  dashSearchCategory: 'ALL',
-  dashSortColumn: 'shortCode',
-  dashSortDirection: 'DESC',
-
-  viewingKpiModal: null,
-  kpiPeriod: '30DAYS',
-  kpiChartType: 'LINE',
+  viewingKpiModal: null, // kpi_clients, kpi_machines, kpi_extractions, kpi_lowstock
+  kpiPeriod: '30DAYS', // 30DAYS, 90DAYS, 1YEAR, CUSTOM
+  kpiChartType: 'LINE', // LINE, BAR
   kpiCustomStart: '2026-07-01',
   kpiCustomEnd: '2026-08-02'
 };
 
 function renderApp() {
-  const appEl = document.getElementById('app');
+  const appContainer = document.getElementById('app');
 
+  // 1. Se non c'è utente autenticato, mostra lo schermo di Login
   if (!state.currentUser) {
-    appEl.innerHTML = renderLoginScreen();
+    appContainer.innerHTML = renderLoginScreen();
     attachLoginEventListeners();
     return;
   }
 
-  const user = state.currentUser;
-  let mainContentHtml = '';
-
-  if (state.activeTab === 'settings') {
-    mainContentHtml = renderSettingsPanel();
-  } else if (state.activeTab === 'simulator') {
-    mainContentHtml = renderHardwareSimulator(state.selectedSimBoardCode);
-  } else if (state.activeTab === 'user_management' || state.activeTab === 'permissions_matrix') {
-    mainContentHtml = renderUserManagementPanel(state.activeTab, state.editingStaffUserId, state.viewingEmailId);
-  } else if (user.role === 'ADMIN' || user.role === 'UFFICIO') {
-    if (state.activeTab === 'clients' || state.activeTab === 'machines' || state.activeTab === 'deconto_boards' || state.activeTab === 'qr_generator' || state.activeTab === 'otp_generator' || state.activeTab === 'refills_history') {
-      mainContentHtml = renderOfficePanel(state.activeTab, state.editingId);
-    } else if (state.activeTab === 'adr_visits') {
-      mainContentHtml = renderAdrPanel(state.activeTab);
-    } else {
-      mainContentHtml = renderAdminDashboard(
-        state.activeTab, 
-        state.viewingDecontoCode, 
-        state.dashSearchQuery, 
-        state.dashSearchCategory, 
-        state.dashSortColumn, 
+  // 2. Se l'utente è autenticato, renderizza il Layout Principale
+  let contentHtml = '';
+  switch (state.activeTab) {
+    case 'dashboard':
+      contentHtml = renderAdminDashboard(
+        state.activeTab,
+        state.viewingDecontoCode,
+        state.dashSearchQuery,
+        state.dashSearchCategory,
+        state.dashSortColumn,
         state.dashSortDirection,
         state.viewingKpiModal,
         state.kpiPeriod,
@@ -72,19 +59,41 @@ function renderApp() {
         state.kpiCustomStart,
         state.kpiCustomEnd
       );
-    }
-  } else if (user.role === 'ADR') {
-    mainContentHtml = renderAdrPanel(state.activeTab);
+      break;
+    case 'clients':
+    case 'machines':
+    case 'deconto_boards':
+      contentHtml = renderOfficePanel(state.activeTab, state.editingId);
+      break;
+    case 'adr_visits':
+      contentHtml = renderAdrPanel();
+      break;
+    case 'client_diy':
+      contentHtml = renderClientDiyPanel();
+      break;
+    case 'simulator':
+      contentHtml = renderHardwareSimulator();
+      break;
+    case 'user_mgmt':
+      contentHtml = renderUserManagementPanel(state.editingStaffUserId, state.viewingEmailId);
+      break;
+    case 'settings':
+      contentHtml = renderSettingsPanel();
+      break;
+    default:
+      contentHtml = renderAdminDashboard();
   }
 
-  appEl.innerHTML = `
-    <div class="app-container">
-      ${renderSidebar(user, state.activeTab)}
+  const profileModalHtml = renderUserProfileModal(state.showProfileModal, state.currentUser);
+
+  appContainer.innerHTML = `
+    <div class="app-layout">
+      ${renderSidebar(state.currentUser, state.activeTab)}
       <main class="main-content">
-        ${mainContentHtml}
+        ${contentHtml}
       </main>
     </div>
-    ${state.showProfileModal ? renderUserProfileModal(user) : ''}
+    ${profileModalHtml}
   `;
 
   attachGlobalEventListeners();
@@ -96,7 +105,7 @@ function attachLoginEventListeners() {
     loginForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const username = document.getElementById('login-username').value.trim();
-      const password = document.getElementById('login-password').value;
+      const password = document.getElementById('login-password').value.trim();
 
       try {
         const user = db.login(username, password);
@@ -194,6 +203,284 @@ function attachGlobalEventListeners() {
       db.logout();
       state.currentUser = null;
       state.activeTab = 'dashboard';
+      renderApp();
+    });
+  }
+
+  // --- 🏢 ANAGRAFICA CLIENTl: NUOVO, MODIFICA, ELIMINA ---
+  const btnToggleAddClient = document.getElementById('btn-toggle-add-client');
+  const addClientFormContainer = document.getElementById('add-client-form-container');
+  const btnCancelAddClient = document.getElementById('btn-cancel-add-client');
+  const btnSaveNewClient = document.getElementById('btn-save-new-client');
+
+  if (btnToggleAddClient && addClientFormContainer) {
+    btnToggleAddClient.addEventListener('click', () => {
+      const isHidden = addClientFormContainer.style.display === 'none' || !addClientFormContainer.style.display;
+      addClientFormContainer.style.display = isHidden ? 'block' : 'none';
+    });
+  }
+
+  if (btnCancelAddClient && addClientFormContainer) {
+    btnCancelAddClient.addEventListener('click', () => {
+      addClientFormContainer.style.display = 'none';
+    });
+  }
+
+  if (btnSaveNewClient) {
+    btnSaveNewClient.addEventListener('click', () => {
+      const name = document.getElementById('new-cli-name').value.trim();
+      const refPerson = document.getElementById('new-cli-ref').value.trim();
+      const phone = document.getElementById('new-cli-phone').value.trim();
+      const email = document.getElementById('new-cli-email').value.trim();
+      const city = document.getElementById('new-cli-city').value.trim();
+      const machineId = document.getElementById('new-cli-machine').value;
+
+      if (!name) {
+        alert('Inserisci la Ragione Sociale / Nome Cliente!');
+        return;
+      }
+
+      try {
+        const newClient = db.addClient({ name, refPerson, phone, email, city, machineId });
+        alert(`✅ Cliente "${newClient.name}" registrato con successo!`);
+        renderApp();
+      } catch (err) {
+        alert(`Errore: ${err.message}`);
+      }
+    });
+  }
+
+  document.querySelectorAll('.btn-edit-client-standalone').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.editingId = btn.getAttribute('data-id');
+      renderApp();
+    });
+  });
+
+  document.querySelectorAll('.btn-del-client-standalone').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-id');
+      if (confirm('Sei sicuro di voler eliminare questo cliente?')) {
+        try {
+          db.deleteClient(id);
+          alert('✅ Cliente eliminato dall\'anagrafica!');
+          renderApp();
+        } catch (err) {
+          alert(`Errore: ${err.message}`);
+        }
+      }
+    });
+  });
+
+  const btnCancelEditClient = document.getElementById('btn-cancel-edit-client');
+  if (btnCancelEditClient) btnCancelEditClient.addEventListener('click', () => { state.editingId = null; renderApp(); });
+
+  const formEditClient = document.getElementById('form-edit-client');
+  if (formEditClient) {
+    formEditClient.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const clientId = document.getElementById('edit-client-id').value;
+      const name = document.getElementById('edit-cli-name').value.trim();
+      const refPerson = document.getElementById('edit-cli-ref').value.trim();
+      const phone = document.getElementById('edit-cli-phone').value.trim();
+      const city = document.getElementById('edit-cli-city').value.trim();
+      const address = document.getElementById('edit-cli-address').value.trim();
+      const assignedMachineId = document.getElementById('edit-cli-machine').value;
+
+      try {
+        db.updateClient(clientId, { name, refPerson, phone, city, address, assignedMachineId });
+        state.editingId = null;
+        alert('✅ Scheda Cliente salvata con successo!');
+        renderApp();
+      } catch (err) {
+        alert(`Errore: ${err.message}`);
+      }
+    });
+  }
+
+  // --- ☕ ANAGRAFICA MACCHINE: NUOVA, MODIFICA, ELIMINA ---
+  const btnToggleAddMachine = document.getElementById('btn-toggle-add-machine');
+  const addMachineFormContainer = document.getElementById('add-machine-form-container');
+  const btnCancelAddMachine = document.getElementById('btn-cancel-add-machine');
+  const btnSaveNewMachine = document.getElementById('btn-save-new-machine');
+
+  if (btnToggleAddMachine && addMachineFormContainer) {
+    btnToggleAddMachine.addEventListener('click', () => {
+      const isHidden = addMachineFormContainer.style.display === 'none' || !addMachineFormContainer.style.display;
+      addMachineFormContainer.style.display = isHidden ? 'block' : 'none';
+    });
+  }
+
+  if (btnCancelAddMachine && addMachineFormContainer) {
+    btnCancelAddMachine.addEventListener('click', () => {
+      addMachineFormContainer.style.display = 'none';
+    });
+  }
+
+  if (btnSaveNewMachine) {
+    btnSaveNewMachine.addEventListener('click', () => {
+      const serialNumber = document.getElementById('new-mc-serial').value.trim();
+      const brand = document.getElementById('new-mc-brand').value.trim();
+      const model = document.getElementById('new-mc-model').value.trim();
+      const boardId = document.getElementById('new-mc-board').value;
+      const clientId = document.getElementById('new-mc-client').value;
+
+      if (!serialNumber || !model) {
+        alert('Inserisci Seriale Macchina e Modello!');
+        return;
+      }
+
+      try {
+        const newMachine = db.addMachine({ serialNumber, brand, model, boardId, clientId });
+        alert(`✅ Macchina da caffè SN "${newMachine.serialNumber}" registrata con successo!`);
+        renderApp();
+      } catch (err) {
+        alert(`Errore: ${err.message}`);
+      }
+    });
+  }
+
+  document.querySelectorAll('.btn-edit-machine-standalone').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.editingId = btn.getAttribute('data-id');
+      renderApp();
+    });
+  });
+
+  document.querySelectorAll('.btn-del-machine-standalone').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-id');
+      if (confirm('Sei sicuro di voler eliminare questa macchina da caffè?')) {
+        try {
+          db.deleteMachine(id);
+          alert('✅ Macchina eliminata dal parco macchine!');
+          renderApp();
+        } catch (err) {
+          alert(`Errore: ${err.message}`);
+        }
+      }
+    });
+  });
+
+  const btnCancelEditMc = document.getElementById('btn-cancel-edit-mc');
+  if (btnCancelEditMc) btnCancelEditMc.addEventListener('click', () => { state.editingId = null; renderApp(); });
+
+  const formEditMachine = document.getElementById('form-edit-machine');
+  if (formEditMachine) {
+    formEditMachine.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const machineId = document.getElementById('edit-mc-id').value;
+      const serialNumber = document.getElementById('edit-mc-serial').value.trim();
+      const brand = document.getElementById('edit-mc-brand').value.trim();
+      const model = document.getElementById('edit-mc-model').value.trim();
+      const boardId = document.getElementById('edit-mc-board').value;
+      const clientId = document.getElementById('edit-mc-client').value;
+
+      try {
+        db.updateMachine(machineId, { serialNumber, brand, model, boardId, clientId });
+        state.editingId = null;
+        alert('✅ Scheda Macchina salvata con successo!');
+        renderApp();
+      } catch (err) {
+        alert(`Errore: ${err.message}`);
+      }
+    });
+  }
+
+  // --- 📟 ANAGRAFICA SCHEDE DECONTO: NUOVA, MODIFICA, ELIMINA ---
+  const btnToggleAddBoard = document.getElementById('btn-toggle-add-board');
+  const addBoardFormContainer = document.getElementById('add-board-form-container');
+  const btnCancelAddBoard = document.getElementById('btn-cancel-add-board');
+  const btnSaveNewBoard = document.getElementById('btn-save-new-board');
+
+  if (btnToggleAddBoard && addBoardFormContainer) {
+    btnToggleAddBoard.addEventListener('click', () => {
+      const isHidden = addBoardFormContainer.style.display === 'none' || !addBoardFormContainer.style.display;
+      addBoardFormContainer.style.display = isHidden ? 'block' : 'none';
+    });
+  }
+
+  if (btnCancelAddBoard && addBoardFormContainer) {
+    btnCancelAddBoard.addEventListener('click', () => {
+      addBoardFormContainer.style.display = 'none';
+    });
+  }
+
+  if (btnSaveNewBoard) {
+    btnSaveNewBoard.addEventListener('click', () => {
+      const shortCode = document.getElementById('new-board-code').value.trim();
+      const hwSerial = document.getElementById('new-board-hwserial').value.trim();
+      const remainingCredits = document.getElementById('new-board-credits').value;
+      const version = document.getElementById('new-board-version').value;
+      const machineId = document.getElementById('new-board-machine').value;
+
+      if (!shortCode) {
+        alert('Inserisci il Codice a 4 cifre del Deconto!');
+        return;
+      }
+
+      try {
+        const newBoard = db.addBoard({ shortCode, hwSerial, remainingCredits, version, machineId });
+        alert(`✅ Scheda Deconto #${newBoard.shortCode} salvata PERMANENTEMENTE nel database!`);
+        renderApp();
+      } catch (err) {
+        alert(`Errore: ${err.message}`);
+      }
+    });
+  }
+
+  document.querySelectorAll('.btn-edit-board-standalone').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.editingId = btn.getAttribute('data-id');
+      renderApp();
+    });
+  });
+
+  document.querySelectorAll('.btn-del-board-standalone').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-id');
+      if (confirm('Sei sicuro di voler eliminare questa scheda Deconto?')) {
+        try {
+          db.deleteBoard(id);
+          alert('✅ Scheda Deconto eliminata!');
+          renderApp();
+        } catch (err) {
+          alert(`Errore: ${err.message}`);
+        }
+      }
+    });
+  });
+
+  const btnCancelEditBoard = document.getElementById('btn-cancel-edit-board');
+  if (btnCancelEditBoard) btnCancelEditBoard.addEventListener('click', () => { state.editingId = null; renderApp(); });
+
+  const formEditBoard = document.getElementById('form-edit-board');
+  if (formEditBoard) {
+    formEditBoard.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const boardId = document.getElementById('edit-board-id').value;
+      const shortCode = document.getElementById('edit-board-shortcode').value.trim();
+      const hwSerial = document.getElementById('edit-board-hwserial').value.trim();
+      const remainingCredits = document.getElementById('edit-board-credits').value;
+      const version = document.getElementById('edit-board-version').value;
+      const machineId = document.getElementById('edit-board-machine').value;
+
+      try {
+        db.updateBoard(boardId, { shortCode, hwSerial, remainingCredits, version, machineId });
+        state.editingId = null;
+        alert('✅ Scheda Deconto salvata con successo!');
+        renderApp();
+      } catch (err) {
+        alert(`Errore: ${err.message}`);
+      }
+    });
+  }
+
+  // Chiusura Modale Modifica (pulsante 'x')
+  const btnCloseEditModal = document.getElementById('btn-close-edit-modal');
+  if (btnCloseEditModal) {
+    btnCloseEditModal.addEventListener('click', () => {
+      state.editingId = null;
       renderApp();
     });
   }
@@ -553,12 +840,12 @@ function attachGlobalEventListeners() {
   const btnExportCsv = document.getElementById('btn-export-csv');
   if (btnExportCsv) {
     btnExportCsv.addEventListener('click', () => {
-      const csvContent = db.exportBoardsToCsv();
+      const csvContent = db.exportCoffeeLogsCSV();
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.setAttribute('href', url);
-      link.setAttribute('download', `deconto_parco_macchine_${new Date().toISOString().slice(0,10)}.csv`);
+      link.setAttribute('download', `deconto_erogazioni_${new Date().toISOString().slice(0,10)}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -571,8 +858,8 @@ function attachGlobalEventListeners() {
       try {
         btnTriggerBackup.disabled = true;
         btnTriggerBackup.innerHTML = '⏳ Backup in Corso...';
-        const res = await githubBackupService.triggerBackup();
-        alert(`✅ Backup Cloud completato!\nEsito: ${res.message}`);
+        const res = db.triggerGitHubBackup();
+        alert(`✅ Backup Cloud completato!\nID: ${res.id}\nCommit: ${res.commitHash}\nRecords: ${res.recordCount}`);
       } catch (err) {
         alert(`❌ Errore Backup GitHub: ${err.message}`);
       } finally {
