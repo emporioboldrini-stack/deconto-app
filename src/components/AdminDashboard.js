@@ -177,7 +177,7 @@ export function renderAdminDashboard(
           <!-- Simulazione Grafico Visuale SVG / CSS -->
           <div style="background: #0f172a; padding: 24px; border-radius: 12px; border: 1px solid var(--border-subtle); margin-bottom: 20px;">
             <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
-              Trend Ergozioni (${kpiPeriod === '30DAYS' ? 'Giornaliero' : 'Settimanale'}) - Modalità: <strong>${kpiChartType}</strong>
+              Trend Erogazioni (${kpiPeriod === '30DAYS' ? 'Giornaliero' : 'Settimanale'}) - Modalità: <strong>${kpiChartType}</strong>
             </div>
 
             <div style="height: 180px; display: flex; align-items: flex-end; gap: 16px; padding-bottom: 10px; border-bottom: 2px solid var(--border-subtle);">
@@ -213,16 +213,95 @@ export function renderAdminDashboard(
       </div>
     `;
   } else if (viewingKpiModal === 'kpi_lowstock') {
+    // Calcolo Percentuali e Ripartizione Grafico a Torta per i 4 Stati
+    const totalBoardsCount = boards.length;
+    let countGreen = 0;
+    let countYellow = 0;
+    let countRed = 0;
+    let countBlack = 0;
+
+    boards.forEach(b => {
+      const st = db.calculateBoardStatus(b);
+      if (st.statusKey === 'ACTIVE_OK') countGreen++;
+      else if (st.statusKey === 'WARNING_LOW') countYellow++;
+      else if (st.statusKey === 'CRITICAL_LOW') countRed++;
+      else if (st.statusKey === 'BLOCKED_ZERO') countBlack++;
+    });
+
+    const pctGreen = totalBoardsCount > 0 ? ((countGreen / totalBoardsCount) * 100).toFixed(1) : '0.0';
+    const pctYellow = totalBoardsCount > 0 ? ((countYellow / totalBoardsCount) * 100).toFixed(1) : '0.0';
+    const pctRed = totalBoardsCount > 0 ? ((countRed / totalBoardsCount) * 100).toFixed(1) : '0.0';
+    const pctBlack = totalBoardsCount > 0 ? ((countBlack / totalBoardsCount) * 100).toFixed(1) : '0.0';
+
+    // Gradi per il Conic Gradient del Grafico a Torta
+    const degBlack = totalBoardsCount > 0 ? (countBlack / totalBoardsCount) * 360 : 0;
+    const degRed = degBlack + (totalBoardsCount > 0 ? (countRed / totalBoardsCount) * 360 : 0);
+    const degYellow = degRed + (totalBoardsCount > 0 ? (countYellow / totalBoardsCount) * 360 : 0);
+
     kpiModalHtml = `
       <div class="modal-overlay" id="kpi-modal">
-        <div class="modal-box" style="max-width: 800px; width: 95%;">
+        <div class="modal-box" style="max-width: 880px; width: 95%;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px;">
             <h2 style="font-size: 1.4rem; font-weight: 800; color: var(--accent-rose); margin: 0;">
-              ⚠️ Dettaglio Macchine in Sottoscorta / Blocco (${lowStockBoards.length})
+              📊 Grafico a Torta & Ripartizione Scorte / Blocchi (${totalBoardsCount} Schede Deconto)
             </h2>
             <button class="btn-close-kpi-modal" style="background: none; border: none; color: var(--text-muted); font-size: 1.6rem; cursor: pointer;">&times;</button>
           </div>
 
+          <!-- SEZIONE GRAFICO A TORTA & TABELLA PERCENTUALI STATO -->
+          <div style="display: grid; grid-template-columns: 200px 1fr; gap: 24px; align-items: center; background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; border: 1px solid var(--border-subtle); margin-bottom: 24px;">
+            
+            <!-- Grafico a Ciambella / Donut Chart Conic Gradient -->
+            <div style="display: flex; flex-direction: column; align-items: center;">
+              <div style="width: 150px; height: 150px; border-radius: 50%; background: conic-gradient(#090d16 0deg ${degBlack}deg, #ef4444 ${degBlack}deg ${degRed}deg, #f59e0b ${degRed}deg ${degYellow}deg, #10b981 ${degYellow}deg 360deg); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(0,0,0,0.5);">
+                <div style="width: 96px; height: 96px; border-radius: 50%; background: #1e293b; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid var(--border-subtle);">
+                  <span style="font-size: 1.6rem; font-weight: 900; color: #fff;">${totalBoardsCount}</span>
+                  <span style="font-size: 0.65rem; color: var(--text-muted); font-weight: 700;">DECONTI TOT.</span>
+                </div>
+              </div>
+              <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px; font-weight: 700;">Ripartizione Perc. %</div>
+            </div>
+
+            <!-- Tabella Riepilogo Numeri e Percentuali -->
+            <div>
+              <h4 style="margin-top: 0; color: #fff; margin-bottom: 12px;">📈 Ripartizione per Categoria di Stato:</h4>
+              <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem;">
+                <thead>
+                  <tr style="border-bottom: 1px solid var(--border-subtle); text-align: left; color: var(--text-muted);">
+                    <th style="padding: 6px 10px;">Stato Hardware</th>
+                    <th style="padding: 6px 10px; text-align: center;">Numero Schede</th>
+                    <th style="padding: 6px 10px; text-align: right;">Percentuale sul Totale</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <td style="padding: 8px 10px;"><span class="badge badge-success">🟢 VERDE (REGOLARE)</span></td>
+                    <td style="padding: 8px 10px; text-align: center;"><strong>${countGreen}</strong></td>
+                    <td style="padding: 8px 10px; text-align: right; color: var(--accent-green); font-weight: 800;">${pctGreen}%</td>
+                  </tr>
+                  <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <td style="padding: 8px 10px;"><span class="badge badge-warning">🟡 GIALLO (SOTTOSCORTA)</span></td>
+                    <td style="padding: 8px 10px; text-align: center;"><strong>${countYellow}</strong></td>
+                    <td style="padding: 8px 10px; text-align: right; color: var(--accent-amber); font-weight: 800;">${pctYellow}%</td>
+                  </tr>
+                  <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <td style="padding: 8px 10px;"><span class="badge badge-danger">🔴 ROSSO (CRITICO)</span></td>
+                    <td style="padding: 8px 10px; text-align: center;"><strong>${countRed}</strong></td>
+                    <td style="padding: 8px 10px; text-align: right; color: var(--accent-rose); font-weight: 800;">${pctRed}%</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 10px;"><span class="badge" style="background: #090d16; color: #fff; border: 1px solid #334155;">⚫ NERO (BLOCCO RELÈ)</span></td>
+                    <td style="padding: 8px 10px; text-align: center;"><strong>${countBlack}</strong></td>
+                    <td style="padding: 8px 10px; text-align: right; color: #fff; font-weight: 800;">${pctBlack}%</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+
+          <!-- ELENCO DETTAGLIATO SCHEDE CHE RICHIEDONO ATTENZIONE -->
+          <h4 style="margin-top: 0; color: var(--accent-rose); margin-bottom: 12px;">⚠️ Schede Deconto in Sottoscorta, Critico o Blocco (${lowStockBoards.length}):</h4>
           <div class="table-container" style="margin-bottom: 20px;">
             <table>
               <thead>
@@ -235,7 +314,7 @@ export function renderAdminDashboard(
                 </tr>
               </thead>
               <tbody>
-                ${lowStockBoards.map(b => {
+                ${lowStockBoards.length > 0 ? lowStockBoards.map(b => {
                   const details = db.getBoardFullDetails(b.id);
                   const clientName = details && details.client ? details.client.name : 'N/D';
                   const statusObj = db.calculateBoardStatus(b);
@@ -252,7 +331,13 @@ export function renderAdminDashboard(
                       </td>
                     </tr>
                   `;
-                }).join('')}
+                }).join('') : `
+                  <tr>
+                    <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">
+                      🟢 Nessuna scheda attualmente in stato di attenzione. Tutte le schede sono regolari!
+                    </td>
+                  </tr>
+                `}
               </tbody>
             </table>
           </div>
