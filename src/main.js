@@ -155,7 +155,174 @@ function attachMainEventListeners() {
     });
   });
 
-  // --- 🛠️ IMPOSTAZIONI: LOGO DA PC, TESTO INTOLAZIONE BRAND & BREVO API ---
+  // --- 👥 GESTIONE PERSONALE EVENTI ---
+  const btnToggleAddUser = document.getElementById('btn-toggle-add-user');
+  const addUserFormContainer = document.getElementById('add-user-form-container');
+  if (btnToggleAddUser && addUserFormContainer) {
+    btnToggleAddUser.addEventListener('click', () => {
+      addUserFormContainer.style.display = addUserFormContainer.style.display === 'none' ? 'block' : 'none';
+    });
+  }
+
+  const btnCancelAddUser = document.getElementById('btn-cancel-add-user');
+  if (btnCancelAddUser && addUserFormContainer) {
+    btnCancelAddUser.addEventListener('click', () => {
+      addUserFormContainer.style.display = 'none';
+    });
+  }
+
+  const btnSaveNewUser = document.getElementById('btn-save-new-user');
+  if (btnSaveNewUser) {
+    btnSaveNewUser.addEventListener('click', async () => {
+      const username = document.getElementById('new-user-username').value.trim();
+      const password = document.getElementById('new-user-password').value.trim();
+      const name = document.getElementById('new-user-name').value.trim();
+      const role = document.getElementById('new-user-role').value;
+      const email = document.getElementById('new-user-email').value.trim();
+      const phone = document.getElementById('new-user-phone').value.trim();
+
+      if (!username || !password || !name) {
+        alert('Compila i campi obbligatori: Codice Utente, Password e Nome!');
+        return;
+      }
+
+      try {
+        const newUser = db.addUser({ username, password, name, role, email, phone });
+        alert(`✅ Utente dipendente "${name}" (Codice ${username}) salvato PERMANENTEMENTE nel database!`);
+        renderApp();
+      } catch (err) {
+        alert(`Errore: ${err.message}`);
+      }
+    });
+  }
+
+  document.querySelectorAll('.btn-edit-staff-user').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-id');
+      state.editingStaffUserId = id;
+      renderApp();
+    });
+  });
+
+  const btnCloseEditStaff = document.getElementById('btn-close-edit-staff-modal');
+  const btnCancelEditStaff = document.getElementById('btn-cancel-edit-staff');
+  if (btnCloseEditStaff) btnCloseEditStaff.addEventListener('click', () => { state.editingStaffUserId = null; renderApp(); });
+  if (btnCancelEditStaff) btnCancelEditStaff.addEventListener('click', () => { state.editingStaffUserId = null; renderApp(); });
+
+  const editStaffForm = document.getElementById('edit-staff-form');
+  if (editStaffForm) {
+    editStaffForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const userId = document.getElementById('edit-staff-id').value;
+      const username = document.getElementById('edit-staff-username') ? document.getElementById('edit-staff-username').value : undefined;
+      const name = document.getElementById('edit-staff-name').value;
+      const role = document.getElementById('edit-staff-role') ? document.getElementById('edit-staff-role').value : undefined;
+      const email = document.getElementById('edit-staff-email').value;
+      const phone = document.getElementById('edit-staff-phone').value;
+      const password = document.getElementById('edit-staff-password').value;
+
+      try {
+        const updatedUser = db.updateUser(userId, {
+          username,
+          name,
+          role,
+          email,
+          phone,
+          password: password ? password.trim() : undefined
+        });
+
+        state.editingStaffUserId = null;
+        alert(`✅ Scheda Utente "${updatedUser.name}" salvata PERMANENTEMENTE!`);
+        renderApp();
+      } catch (err) {
+        alert(`Errore: ${err.message}`);
+      }
+    });
+  }
+
+  document.querySelectorAll('.btn-toggle-user-status').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-id');
+      const currentStatus = btn.getAttribute('data-status');
+      const newStatus = currentStatus === 'ACTIVE' ? 'DISABLED' : 'ACTIVE';
+      db.updateUser(id, { status: newStatus });
+      renderApp();
+    });
+  });
+
+  document.querySelectorAll('.btn-delete-user').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-id');
+      if (confirm('Sei sicuro di voler eliminare questo utente dipendente?')) {
+        try {
+          db.deleteUser(id);
+          renderApp();
+        } catch (err) {
+          alert(`Errore: ${err.message}`);
+        }
+      }
+    });
+  });
+
+  const btnOpenEmailLogs = document.getElementById('btn-open-email-logs');
+  if (btnOpenEmailLogs) {
+    btnOpenEmailLogs.addEventListener('click', () => {
+      const logs = db.getEmailLogs();
+      if (logs.length > 0) {
+        state.viewingEmailId = logs[0].id;
+        renderApp();
+      } else {
+        alert('Nessuna email spedita di recente nel registro.');
+      }
+    });
+  }
+
+  const btnCloseEmailPreview = document.getElementById('btn-close-email-preview');
+  const btnCloseEmailPreviewFooter = document.getElementById('btn-close-email-preview-footer');
+  if (btnCloseEmailPreview) btnCloseEmailPreview.addEventListener('click', () => { state.viewingEmailId = null; renderApp(); });
+  if (btnCloseEmailPreviewFooter) btnCloseEmailPreviewFooter.addEventListener('click', () => { state.viewingEmailId = null; renderApp(); });
+
+  // --- ⚙️ MATRICE PERMESSI EVENTI ---
+  const renameRoleForm = document.getElementById('rename-role-labels-form');
+  if (renameRoleForm) {
+    renameRoleForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const uff = document.getElementById('role_label_UFFICIO').value.trim();
+      const adr = document.getElementById('role_label_ADR').value.trim();
+
+      db.updateRoleLabel('UFFICIO', uff);
+      db.updateRoleLabel('ADR', adr);
+
+      alert('✅ Nomi delle Categorie Utente aggiornati con successo!');
+      renderApp();
+    });
+  }
+
+  const matrixForm = document.getElementById('permissions-matrix-form');
+  if (matrixForm) {
+    matrixForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const roles = ['UFFICIO', 'ADR'];
+      const fields = ['canViewClients', 'canCreateClients', 'canEditClients', 'canDeleteClients', 'canGenerateQr', 'canGenerateOtp', 'canBleRefill', 'canUseSimulator'];
+      const newPerms = { UFFICIO: {}, ADR: {} };
+
+      roles.forEach(role => {
+        fields.forEach(field => {
+          const el = document.getElementById(`perm_${role}_${field}`);
+          if (el) {
+            newPerms[role][field] = el.checked;
+          }
+        });
+      });
+
+      db.updatePermissions(newPerms);
+      alert('✅ Matrice dei Permessi aggiornata con successo per tutti gli utenti!');
+      renderApp();
+    });
+  }
+
+  // --- 🛠️ IMPOSTAZIONI: LOGO DA PC, BRAND & BREVO API ---
   const logoFileInput = document.getElementById('setting-logo-file');
   if (logoFileInput) {
     logoFileInput.addEventListener('change', (e) => {

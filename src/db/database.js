@@ -1,9 +1,9 @@
 import { emailService } from '../services/emailService.js';
 
 /**
- * DECONTO IoT System - Master Database Engine v13
+ * DECONTO IoT System - Master Database Engine v14
  * Dual Persistence: LocalStorage + IndexedDB Vault.
- * Rimossa completamente l'integrazione con Google Apps Script (GAS), conservata l'API Brevo.com.
+ * Gestione Completa Utenti Dipendenti & Matrice Permessi.
  */
 
 const MASTER_STORAGE_KEY = 'DECONTO_MASTER_STORE_PERSISTENT';
@@ -77,7 +77,7 @@ const initialData = {
       canDeleteClients: true,
       canGenerateQr: true,
       canGenerateOtp: true,
-      canViewRefillHistory: true,
+      canBleRefill: true,
       canUseSimulator: true
     },
     ADR: {
@@ -87,9 +87,8 @@ const initialData = {
       canDeleteClients: false,
       canGenerateQr: false,
       canGenerateOtp: false,
-      canViewRefillHistory: true,
-      canUseSimulator: true,
-      canBleRefill: true
+      canBleRefill: true,
+      canUseSimulator: true
     }
   },
 
@@ -322,7 +321,23 @@ class DecontoDatabase {
   }
 
   getRoleLabels() { return this.data.roleLabels || initialData.roleLabels; }
-  updateRoleLabel(roleKey, newLabel) { if (!this.data.roleLabels) this.data.roleLabels = { ...initialData.roleLabels }; this.data.roleLabels[roleKey] = newLabel.trim(); this.saveData(); }
+  updateRoleLabel(roleKey, newLabel) { 
+    if (!this.data.roleLabels) this.data.roleLabels = { ...initialData.roleLabels }; 
+    this.data.roleLabels[roleKey] = newLabel.trim(); 
+    this.saveData(); 
+  }
+
+  getPermissions() {
+    return this.data.permissions || initialData.permissions;
+  }
+
+  updatePermissions(newPermissions) {
+    this.data.permissions = {
+      ...this.getPermissions(),
+      ...newPermissions
+    };
+    this.saveData();
+  }
 
   loadSession() {
     try {
@@ -369,6 +384,83 @@ class DecontoDatabase {
   getCurrentUser() { return this.currentUser; }
 
   getUsers() { return this.data.users; }
+
+  addUser(data) {
+    const username = String(data.username || '').trim();
+    if (!username) throw new Error('Inserisci il Codice Utente.');
+
+    const existing = this.data.users.find(u => u.username === username);
+    if (existing) throw new Error(`Il codice utente "${username}" è già esistente.`);
+
+    const role = data.role || 'UFFICIO';
+    const avatar = role === 'ADMIN' ? '👨‍💼' : (role === 'UFFICIO' ? '👩‍💻' : '🚚');
+
+    const newUser = {
+      id: 'usr_' + Date.now(),
+      username,
+      password: data.password ? data.password.trim() : '123456',
+      name: data.name ? data.name.trim() : username,
+      email: data.email ? data.email.trim() : '',
+      phone: data.phone ? data.phone.trim() : '',
+      role,
+      status: 'ACTIVE',
+      avatar,
+      createdAt: new Date().toISOString().split('T')[0]
+    };
+
+    this.data.users.push(newUser);
+    this.saveData();
+
+    if (newUser.email) {
+      emailService.sendWelcomeEmail(newUser);
+    }
+
+    return newUser;
+  }
+
+  updateUser(userId, data) {
+    const user = this.data.users.find(u => u.id === userId);
+    if (!user) throw new Error('Utente non trovato.');
+
+    const oldRole = user.role;
+
+    if (data.username !== undefined && user.username !== '001') {
+      const clean = String(data.username).trim();
+      const duplicate = this.data.users.find(u => u.username === clean && u.id !== user.id);
+      if (duplicate) throw new Error(`Il codice utente "${clean}" è già in uso.`);
+      user.username = clean;
+    }
+
+    if (data.name !== undefined) user.name = data.name.trim();
+    if (data.email !== undefined) user.email = data.email.trim();
+    if (data.phone !== undefined) user.phone = data.phone.trim();
+    if (data.status !== undefined && user.username !== '001') user.status = data.status;
+
+    if (data.password) {
+      user.password = data.password.trim();
+    }
+
+    if (data.role && user.username !== '001') {
+      user.role = data.role;
+      user.avatar = user.role === 'ADMIN' ? '👨‍💼' : (user.role === 'UFFICIO' ? '👩‍💻' : '🚚');
+      if (oldRole !== user.role && user.email) {
+        emailService.sendRoleUpdateEmail(user, oldRole, user.role);
+      }
+    }
+
+    this.saveData();
+    return user;
+  }
+
+  deleteUser(userId) {
+    const user = this.data.users.find(u => u.id === userId);
+    if (!user) throw new Error('Utente non trovato.');
+    if (user.username === '001') throw new Error('Impossibile eliminare l\'amministratore principale.');
+
+    this.data.users = this.data.users.filter(u => u.id !== userId);
+    this.saveData();
+  }
+
   getClients() { return this.data.clients; }
   getMachines() { return this.data.machines; }
   getBoards() { return this.data.decontoBoards; }

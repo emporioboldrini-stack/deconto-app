@@ -55,6 +55,14 @@ export function renderSidebar(currentUser, activeTab) {
             <span class="nav-icon">📊</span>
             <span>Dashboard IoT & KPI</span>
           </a>
+          <a class="nav-item ${activeTab === 'user_management' ? 'active' : ''}" data-tab="user_management">
+            <span class="nav-icon">👥</span>
+            <span>Gestione Personale</span>
+          </a>
+          <a class="nav-item ${activeTab === 'permissions_matrix' ? 'active' : ''}" data-tab="permissions_matrix">
+            <span class="nav-icon">⚙️</span>
+            <span>Matrice Permessi</span>
+          </a>
         ` : ''}
 
         <div class="nav-section-title">ANAGRAFICHE DI SISTEMA</div>
@@ -105,14 +113,6 @@ export function renderSidebar(currentUser, activeTab) {
         </a>
 
         ${isAdmin ? `
-          <a class="nav-item ${activeTab === 'user_management' ? 'active' : ''}" data-tab="user_management">
-            <span class="nav-icon">👥</span>
-            <span>Gestione Personale</span>
-          </a>
-          <a class="nav-item ${activeTab === 'permissions_matrix' ? 'active' : ''}" data-tab="permissions_matrix">
-            <span class="nav-icon">⚙️</span>
-            <span>Matrice Permessi</span>
-          </a>
           <a class="nav-item ${activeTab === 'settings' ? 'active' : ''}" data-tab="settings">
             <span class="nav-icon">🛠️</span>
             <span>Impostazioni Brand</span>
