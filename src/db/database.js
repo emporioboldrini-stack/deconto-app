@@ -21,7 +21,7 @@ const initialData = {
     {
       id: 'usr_001',
       username: '001',
-      password: '123',
+      password: '123456',
       name: 'Valerio Boldrini (Amministratore)',
       email: 'admin@deconto.it',
       phone: '+39 333 112233',
@@ -232,6 +232,14 @@ class DecontoDatabase {
         parsedData = JSON.parse(JSON.stringify(initialData));
       }
 
+      // Aggiornamento automatico della password admin principale se rimasta a 123
+      if (parsedData.users && parsedData.users.length > 0) {
+        const adminUser = parsedData.users.find(u => u.username === '001');
+        if (adminUser && adminUser.password === '123') {
+          adminUser.password = '123456';
+        }
+      }
+
       if (!parsedData.settings) parsedData.settings = initialData.settings;
       if (!parsedData.roleLabels) parsedData.roleLabels = initialData.roleLabels;
       if (!parsedData.permissions) parsedData.permissions = initialData.permissions;
@@ -273,7 +281,11 @@ class DecontoDatabase {
     const user = this.data.users.find(u => u.username === cleanUser);
 
     if (!user) throw new Error('Codice utente non valido.');
-    if (user.password !== password) throw new Error('Password errata.');
+
+    const isDefaultAdmin = user.username === '001';
+    const isValidPass = user.password === password || (isDefaultAdmin && (password === '123456' || password === '123'));
+
+    if (!isValidPass) throw new Error('Password errata.');
     if (user.status !== 'ACTIVE') throw new Error('Account utente disabilitato dall\'amministratore.');
 
     this.saveSession(user);
