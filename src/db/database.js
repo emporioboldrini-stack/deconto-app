@@ -758,21 +758,26 @@ class DecontoDatabase {
     }
 
     const cleanCode = shortCode.padStart(4, '0').substring(0, 4);
+    const version = data.version === 'PRO' ? 'PRO' : 'BASIC';
+    // groupCount: BASIC fisso a 1, PRO da 2 a 4 (contatore crediti sempre condiviso)
+    const groupCount = version === 'PRO' ? Math.min(4, Math.max(2, parseInt(data.groupCount, 10) || 2)) : 1;
+
     const newBoard = {
       id: 'board_' + cleanCode,
       shortCode: cleanCode,
-      hwSerial: data.hwSerial ? data.hwSerial.trim() : `DC-HW-${Math.floor(1000 + Math.random() * 9000)}`,
-      macAddress: data.macAddress ? data.macAddress.trim() : `C6:3F:8A:${Math.floor(10 + Math.random() * 89)}:${cleanCode.substring(0,2)}:${cleanCode.substring(2,4)}`,
+      hwSerial: data.hwSerial ? data.hwSerial.trim() : null,
+      macAddress: data.macAddress ? data.macAddress.trim() : null,
       machineId: data.machineId || null,
-      version: data.version || 'BASIC',
+      version: version,
+      groupCount: groupCount,
       remainingCredits: parseInt(data.remainingCredits !== undefined ? data.remainingCredits : 200, 10),
       relayStatus: 'CLOSED_OK',
-      firmwareVersion: 'v2.1.0-ESP32-C6',
+      firmwareVersion: null,
       isOnlineWifi: false,
-      rssi: -65,
+      rssi: null,
       machineExtractions: 0,
       lifetimeExtractions: 0,
-      avgDailyCoffees: 10.0,
+      avgDailyCoffees: 0,
       lastSyncDate: new Date().toISOString()
     };
 
@@ -803,7 +808,15 @@ class DecontoDatabase {
     }
 
     if (data.hwSerial !== undefined) board.hwSerial = data.hwSerial.trim();
-    if (data.version) board.version = data.version;
+    if (data.version) {
+      board.version = data.version === 'PRO' ? 'PRO' : 'BASIC';
+      // Aggiorna groupCount coerentemente con la versione
+      if (board.version === 'BASIC') {
+        board.groupCount = 1;
+      } else if (data.groupCount !== undefined) {
+        board.groupCount = Math.min(4, Math.max(2, parseInt(data.groupCount, 10) || 2));
+      }
+    }
     if (data.machineId !== undefined) {
       const targetMcId = data.machineId || null;
       board.machineId = targetMcId;

@@ -397,6 +397,8 @@ function attachGlobalEventListeners() {
       const remainingCredits = document.getElementById('new-board-credits').value;
       const version = document.getElementById('new-board-version').value;
       const machineId = document.getElementById('new-board-machine').value;
+      const groupCountEl = document.getElementById('new-board-groupcount');
+      const groupCount = groupCountEl ? parseInt(groupCountEl.value, 10) : 1;
 
       if (!shortCode) {
         alert('Inserisci il Codice a 4 cifre del Deconto!');
@@ -404,7 +406,7 @@ function attachGlobalEventListeners() {
       }
 
       try {
-        const newBoard = db.addBoard({ shortCode, hwSerial, remainingCredits, version, machineId });
+        const newBoard = db.addBoard({ shortCode, hwSerial, remainingCredits, version, groupCount, machineId });
         alert(`✅ Scheda Deconto #${newBoard.shortCode} salvata PERMANENTEMENTE nel database!`);
         renderApp();
       } catch (err) {
@@ -448,9 +450,11 @@ function attachGlobalEventListeners() {
       const remainingCredits = document.getElementById('edit-board-credits').value;
       const version = document.getElementById('edit-board-version').value;
       const machineId = document.getElementById('edit-board-machine').value;
+      const groupCountEl = document.getElementById('edit-board-groupcount');
+      const groupCount = groupCountEl ? parseInt(groupCountEl.value, 10) : 1;
 
       try {
-        db.updateBoard(boardId, { shortCode, hwSerial, remainingCredits, version, machineId });
+        db.updateBoard(boardId, { shortCode, hwSerial, remainingCredits, version, groupCount, machineId });
         state.editingId = null;
         alert('✅ Scheda Deconto salvata con successo!');
         renderApp();

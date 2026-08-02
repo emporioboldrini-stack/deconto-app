@@ -161,11 +161,20 @@ export function renderOfficePanel(activeTab = 'clients', editingId = null) {
                 </div>
                 <div>
                   <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Versione Board:</label>
-                  <select id="edit-board-version" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700;">
-                    <option value="BASIC" ${b.version === 'BASIC' ? 'selected' : ''}>BASIC</option>
-                    <option value="PRO" ${b.version === 'PRO' ? 'selected' : ''}>PRO</option>
+                  <select id="edit-board-version" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700;" onchange="const gcRow = document.getElementById('edit-board-groupcount-row'); gcRow.style.display = this.value === 'PRO' ? 'block' : 'none';">
+                    <option value="BASIC" ${b.version === 'BASIC' ? 'selected' : ''}>🟢 BASIC — Monogruppo</option>
+                    <option value="PRO" ${b.version === 'PRO' ? 'selected' : ''}>🔵 PRO — Multigruppo</option>
                   </select>
                 </div>
+              </div>
+              <div id="edit-board-groupcount-row" style="display: ${b.version === 'PRO' ? 'block' : 'none'}; margin-bottom: 16px; background: rgba(129,140,248,0.1); padding: 12px 16px; border-radius: 8px; border: 1px solid var(--accent-purple);">
+                <label style="font-size: 0.8rem; color: var(--accent-purple); font-weight: 700; display: block; margin-bottom: 6px;">🔵 PRO — Numero Bracci/Gruppi (2-4):</label>
+                <select id="edit-board-groupcount" style="width: 100%; padding: 10px; background: var(--bg-primary); color: var(--accent-purple); border: 1px solid var(--accent-purple); border-radius: 6px; font-weight: 800;">
+                  <option value="2" ${(b.groupCount || 2) === 2 ? 'selected' : ''}>2 Gruppi</option>
+                  <option value="3" ${(b.groupCount || 2) === 3 ? 'selected' : ''}>3 Gruppi</option>
+                  <option value="4" ${(b.groupCount || 2) === 4 ? 'selected' : ''}>4 Gruppi (Max)</option>
+                </select>
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 6px;">⚠️ Contatore crediti unico condiviso per tutti i gruppi.</div>
               </div>
 
               <div style="margin-bottom: 20px;">
@@ -450,11 +459,22 @@ export function renderOfficePanel(activeTab = 'clients', editingId = null) {
           </div>
           <div>
             <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Versione Hardware:</label>
-            <select id="new-board-version" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700;">
-              <option value="BASIC">BASIC (Relè + BLE)</option>
-              <option value="PRO">PRO (Wi-Fi 6 + Telemetria)</option>
+            <select id="new-board-version" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700;" onchange="document.getElementById('new-board-groupcount-row').style.display = this.value === 'PRO' ? 'block' : 'none'">
+              <option value="BASIC">🟢 BASIC — Monogruppo (1 tasto erogazione)</option>
+              <option value="PRO">🔵 PRO — Multigruppo (2-4 bracci, contatore condiviso)</option>
             </select>
           </div>
+        </div>
+
+        <!-- Riga Gruppi PRO (nascosta di default) -->
+        <div id="new-board-groupcount-row" style="display: none; margin-bottom: 16px; background: rgba(129,140,248,0.1); padding: 12px 16px; border-radius: 8px; border: 1px solid var(--accent-purple);">
+          <label style="font-size: 0.8rem; color: var(--accent-purple); font-weight: 700; display: block; margin-bottom: 6px;">🔵 PRO — Numero di Bracci/Gruppi Erogazione (2-4):</label>
+          <select id="new-board-groupcount" style="width: 100%; padding: 10px; background: var(--bg-primary); color: var(--accent-purple); border: 1px solid var(--accent-purple); border-radius: 6px; font-weight: 800;">
+            <option value="2">2 Gruppi</option>
+            <option value="3">3 Gruppi</option>
+            <option value="4">4 Gruppi (Max)</option>
+          </select>
+          <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 6px;">⚠️ Il contatore crediti è unico e condiviso per tutti i gruppi.</div>
         </div>
 
         <div style="margin-bottom: 20px; background: rgba(56, 189, 248, 0.1); padding: 14px; border-radius: 8px; border: 1px solid var(--accent-cyan);">
@@ -482,6 +502,7 @@ export function renderOfficePanel(activeTab = 'clients', editingId = null) {
           <thead>
             <tr>
               <th>Codice 4 Cifre</th>
+              <th>Versione</th>
               <th>Seriale HW & MAC</th>
               <th>Credito Residuo</th>
               <th>Macchina Collegata</th>
@@ -501,6 +522,12 @@ export function renderOfficePanel(activeTab = 'clients', editingId = null) {
                     <button class="btn btn-secondary btn-deconto-detail" data-code="${b.shortCode}" style="padding: 6px 12px; font-size: 1rem; font-weight: 900; color: var(--accent-cyan); font-family: monospace;">
                       📟 #${b.shortCode}
                     </button>
+                  </td>
+                  <td>
+                    ${ b.version === 'PRO'
+                      ? `<span class="badge" style="background: rgba(129,140,248,0.2); color: var(--accent-purple); border: 1px solid var(--accent-purple); font-weight: 800;">🔵 PRO</span><br><small style="color: var(--text-muted);">${b.groupCount || 2} Gruppi · Contatore Condiviso</small>`
+                      : `<span class="badge" style="background: rgba(52,211,153,0.15); color: var(--accent-green); border: 1px solid var(--accent-green); font-weight: 800;">🟢 BASIC</span><br><small style="color: var(--text-muted);">1 Gruppo Monogruppo</small>`
+                    }
                   </td>
                   <td><strong>${b.hwSerial || 'DC-HW-DEF'}</strong><br><small style="color: var(--text-muted); font-family: monospace;">${b.macAddress || ''}</small></td>
                   <td><strong style="font-size: 1.1rem; color: ${b.remainingCredits <= 0 ? 'var(--accent-rose)' : 'var(--accent-green)'};">${b.remainingCredits} cialde</strong></td>
