@@ -9,6 +9,7 @@ import { renderOfficePanel } from './components/OfficePanel.js';
 import { renderAdrPanel } from './components/AdrPanel.js';
 import { renderClientDiyPanel } from './components/ClientDiyPanel.js';
 import { renderOtpGeneratorPanel } from './components/OtpGeneratorPanel.js';
+import { renderRefillsHistoryPanel } from './components/RefillsHistoryPanel.js';
 import { renderHardwareSimulator } from './components/HardwareSimulator.js';
 import { renderUserManagementPanel } from './components/UserManagementPanel.js';
 import { renderUserProfileModal } from './components/UserProfileModal.js';
@@ -34,7 +35,8 @@ const state = {
   kpiCustomEnd: '2026-08-02',
   generatedOtpUrl: null,
   generatedOtpToken: null,
-  diyParams: null
+  diyParams: null,
+  refillsFilter: { boardCode: '', clientName: '', date: '' }
 };
 
 function renderApp() {
@@ -90,14 +92,7 @@ function renderApp() {
       `;
       break;
     case 'refills_history':
-      contentHtml = `
-        <div class="stat-card" style="padding: 32px; text-align: center; max-width: 600px; margin: 40px auto; border: 1px solid var(--border-subtle);">
-          <div style="font-size: 3rem; margin-bottom: 16px;">📜</div>
-          <h2 style="color: #fff; font-weight: 800; margin-bottom: 8px;">Storico & Registro Ricariche Parco Macchine</h2>
-          <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 24px;">Registro completo di tutte le ricariche crediti effettuate sia dagli agenti ADR sul posto che dai clienti tramite OTP.</p>
-          <span class="badge badge-warning" style="padding: 8px 16px; font-weight: 800; letter-spacing: 0.05em;">PROSSIMAMENTE DISPONIBILE IN V2.0</span>
-        </div>
-      `;
+      contentHtml = renderRefillsHistoryPanel(state.refillsFilter);
       break;
     case 'simulator':
       contentHtml = renderHardwareSimulator();
@@ -1145,6 +1140,50 @@ function attachGlobalEventListeners() {
       state.generatedOtpUrl = null;
       state.generatedOtpToken = null;
       state.activeTab = 'otp_generator';
+      renderApp();
+    });
+  }
+
+  // --- GESTORE FILTRI STORICO RICARICHE ---
+  const filterRefillBoard = document.getElementById('filter-refill-board');
+  const filterRefillClient = document.getElementById('filter-refill-client');
+  const filterRefillDate = document.getElementById('filter-refill-date');
+  const btnResetRefillFilters = document.getElementById('btn-reset-refill-filters');
+
+  if (filterRefillBoard) {
+    filterRefillBoard.addEventListener('input', () => {
+      state.refillsFilter.boardCode = filterRefillBoard.value;
+      renderApp();
+      const input = document.getElementById('filter-refill-board');
+      if (input) {
+        input.focus();
+        input.setSelectionRange(input.value.length, input.value.length);
+      }
+    });
+  }
+
+  if (filterRefillClient) {
+    filterRefillClient.addEventListener('input', () => {
+      state.refillsFilter.clientName = filterRefillClient.value;
+      renderApp();
+      const input = document.getElementById('filter-refill-client');
+      if (input) {
+        input.focus();
+        input.setSelectionRange(input.value.length, input.value.length);
+      }
+    });
+  }
+
+  if (filterRefillDate) {
+    filterRefillDate.addEventListener('change', () => {
+      state.refillsFilter.date = filterRefillDate.value;
+      renderApp();
+    });
+  }
+
+  if (btnResetRefillFilters) {
+    btnResetRefillFilters.addEventListener('click', () => {
+      state.refillsFilter = { boardCode: '', clientName: '', date: '' };
       renderApp();
     });
   }

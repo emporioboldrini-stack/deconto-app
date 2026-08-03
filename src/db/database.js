@@ -250,7 +250,52 @@ const initialData = {
       lastSyncDate: new Date().toISOString()
     }
   ],
-  refillLogs: [],
+  refillLogs: [
+    {
+      id: 'ref_1',
+      boardId: 'board_3467',
+      shortCode: '3467',
+      creditsAdded: 150,
+      tokenOtp: '',
+      operatorType: 'OFFICE',
+      operatorId: 'usr_001',
+      timestamp: '2026-07-15T09:30:00.000Z',
+      method: 'CLOUD_DIRECT'
+    },
+    {
+      id: 'ref_2',
+      boardId: 'board_1099',
+      shortCode: '1099',
+      creditsAdded: 500,
+      tokenOtp: '',
+      operatorType: 'ADR',
+      operatorId: 'usr_002',
+      timestamp: '2026-07-20T14:45:00.000Z',
+      method: 'ADR_BLE_PHYSICAL'
+    },
+    {
+      id: 'ref_3',
+      boardId: 'board_4021',
+      shortCode: '4021',
+      creditsAdded: 200,
+      tokenOtp: 'OTP-4021-X99AB',
+      operatorType: 'CLIENT_DIY',
+      operatorId: 'cli_8',
+      timestamp: '2026-07-25T11:15:00.000Z',
+      method: 'WHATSAPP_OTP_BLE'
+    },
+    {
+      id: 'ref_4',
+      boardId: 'board_8820',
+      shortCode: '8820',
+      creditsAdded: -50,
+      tokenOtp: '',
+      operatorType: 'OFFICE',
+      operatorId: 'usr_001',
+      timestamp: '2026-08-01T16:20:00.000Z',
+      method: 'CLOUD_DIRECT'
+    }
+  ],
   coffeeLogs: [],
   emailLogs: [],
   backupLogs: []
@@ -393,6 +438,14 @@ class DecontoDatabase {
         });
       }
       masterData.schemaVersion = 4;
+    }
+
+    // === MIGRAZIONE SCHEMA v5: popola refillLogs iniziale se vuoto ===
+    if (!masterData.schemaVersion || masterData.schemaVersion < 5) {
+      if (!masterData.refillLogs || masterData.refillLogs.length === 0) {
+        masterData.refillLogs = [...initialData.refillLogs];
+      }
+      masterData.schemaVersion = 5;
     }
 
     // Rimuovi log orfani di schede Deconto cancellate
