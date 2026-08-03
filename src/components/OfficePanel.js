@@ -26,8 +26,8 @@ function clientTypeSelect(id, selectedValue) {
   </select>`;
 }
 
-const MACHINE_MODELS = ["Ciao", "Jessica", "Frog", "Slot Plast", "Aroma", "Terry", "Pinocchio", "Altro"];
-const PRODUCTION_YEARS = ["2020", "2021", "2022", "2023", "2024", "2025", "2026"];
+const MACHINE_MODELS = ["Ciao", "Jessica", "Altro"];
+const PRODUCTION_YEARS = Array.from({ length: 21 }, (_, i) => String(2020 + i)); // Genera da 2020 a 2040
 
 function machineModelSelect(id, selectedValue) {
   return `<select id="${id}" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700;">

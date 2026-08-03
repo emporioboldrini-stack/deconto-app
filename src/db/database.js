@@ -99,12 +99,12 @@ const initialData = {
   ],
   machines: [
     { id: 'mc_1', serialNumber: 'SN-MC-2026-9912', brand: 'Spinel', model: 'Ciao', productionYear: '2024', clientId: 'cli_1', installDate: '2025-11-10' },
-    { id: 'mc_2', serialNumber: 'SN-MC-2026-8843', brand: 'Faber', model: 'Slot Plast', productionYear: '2025', clientId: 'cli_2', installDate: '2026-01-15' },
-    { id: 'mc_3', serialNumber: 'SN-MC-2026-1099', brand: 'Saeco', model: 'Aroma', productionYear: '2025', clientId: 'cli_3', installDate: '2026-02-01' },
+    { id: 'mc_2', serialNumber: 'SN-MC-2026-8843', brand: 'Faber', model: 'Altro', productionYear: '2025', clientId: 'cli_2', installDate: '2026-01-15' },
+    { id: 'mc_3', serialNumber: 'SN-MC-2026-1099', brand: 'Saeco', model: 'Altro', productionYear: '2025', clientId: 'cli_3', installDate: '2026-02-01' },
     { id: 'mc_4', serialNumber: 'SN-MC-2026-4021', brand: 'Spinel', model: 'Jessica', productionYear: '2026', clientId: 'cli_4', installDate: '2026-02-10' },
-    { id: 'mc_5', serialNumber: 'SN-MC-2026-7700', brand: 'Grimac', model: 'Terry', productionYear: '2024', clientId: 'cli_5', installDate: '2026-02-20' },
-    { id: 'mc_6', serialNumber: 'SN-MC-2026-5432', brand: 'Didiesse', model: 'Frog', productionYear: '2025', clientId: 'cli_6', installDate: '2026-03-01' },
-    { id: 'mc_7', serialNumber: 'SN-MC-2026-4409', brand: 'Spinel', model: 'Pinocchio', productionYear: '2026', clientId: 'cli_7', installDate: '2026-03-05' },
+    { id: 'mc_5', serialNumber: 'SN-MC-2026-7700', brand: 'Grimac', model: 'Altro', productionYear: '2024', clientId: 'cli_5', installDate: '2026-02-20' },
+    { id: 'mc_6', serialNumber: 'SN-MC-2026-5432', brand: 'Didiesse', model: 'Altro', productionYear: '2025', clientId: 'cli_6', installDate: '2026-03-01' },
+    { id: 'mc_7', serialNumber: 'SN-MC-2026-4409', brand: 'Spinel', model: 'Altro', productionYear: '2026', clientId: 'cli_7', installDate: '2026-03-05' },
     { id: 'mc_8', serialNumber: 'SN-MC-2026-8820', brand: 'Bialetti', model: 'Ciao', productionYear: '2026', clientId: 'cli_8', installDate: '2026-03-15' }
   ],
   decontoBoards: [
@@ -367,19 +367,32 @@ class DecontoDatabase {
       if (masterData.machines && Array.isArray(masterData.machines)) {
         masterData.machines.forEach(m => {
           m.productionYear = m.productionYear || '2026';
-          // Standardizzazione modelli
+          // Standardizzazione modelli a soli "Ciao", "Jessica", "Altro"
           const mod = String(m.model).toLowerCase();
           if (mod.includes('ciao')) m.model = 'Ciao';
           else if (mod.includes('jessica')) m.model = 'Jessica';
-          else if (mod.includes('frog')) m.model = 'Frog';
-          else if (mod.includes('slot')) m.model = 'Slot Plast';
-          else if (mod.includes('aroma')) m.model = 'Aroma';
-          else if (mod.includes('terry')) m.model = 'Terry';
-          else if (mod.includes('pinocchio')) m.model = 'Pinocchio';
           else m.model = 'Altro';
         });
       }
       masterData.schemaVersion = 3;
+    }
+
+    // === MIGRAZIONE SCHEMA v4: forza pulizia modelli non-standard alle sole 3 opzioni richieste ===
+    if (!masterData.schemaVersion || masterData.schemaVersion < 4) {
+      if (masterData.machines && Array.isArray(masterData.machines)) {
+        masterData.machines.forEach(m => {
+          const mod = String(m.model).trim();
+          if (mod !== 'Ciao' && mod !== 'Jessica') {
+            m.model = 'Altro';
+          }
+          // Forza anno nel range 2020-2040
+          const yr = parseInt(m.productionYear, 10);
+          if (isNaN(yr) || yr < 2020 || yr > 2040) {
+            m.productionYear = '2026';
+          }
+        });
+      }
+      masterData.schemaVersion = 4;
     }
 
     // Rimuovi log orfani di schede Deconto cancellate
