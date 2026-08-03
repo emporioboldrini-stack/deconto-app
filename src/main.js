@@ -8,6 +8,7 @@ import { renderAdminDashboard } from './components/AdminDashboard.js';
 import { renderOfficePanel } from './components/OfficePanel.js';
 import { renderAdrPanel } from './components/AdrPanel.js';
 import { renderClientDiyPanel } from './components/ClientDiyPanel.js';
+import { renderOtpGeneratorPanel } from './components/OtpGeneratorPanel.js';
 import { renderHardwareSimulator } from './components/HardwareSimulator.js';
 import { renderUserManagementPanel } from './components/UserManagementPanel.js';
 import { renderUserProfileModal } from './components/UserProfileModal.js';
@@ -30,7 +31,10 @@ const state = {
   kpiPeriod: '30DAYS', // 30DAYS, 90DAYS, 1YEAR, CUSTOM
   kpiChartType: 'LINE', // LINE, BAR
   kpiCustomStart: '2026-07-01',
-  kpiCustomEnd: '2026-08-02'
+  kpiCustomEnd: '2026-08-02',
+  generatedOtpUrl: null,
+  generatedOtpToken: null,
+  diyParams: null
 };
 
 function renderApp() {
@@ -69,11 +73,31 @@ function renderApp() {
     case 'adr_visits':
       contentHtml = renderAdrPanel();
       break;
-    case 'client_diy':
     case 'otp_generator':
+      contentHtml = renderOtpGeneratorPanel(state.generatedOtpUrl, state.generatedOtpToken);
+      break;
+    case 'client_diy':
+      contentHtml = renderClientDiyPanel(state.diyParams);
+      break;
     case 'qr_generator':
+      contentHtml = `
+        <div class="stat-card" style="padding: 32px; text-align: center; max-width: 600px; margin: 40px auto; border: 1px solid var(--border-subtle);">
+          <div style="font-size: 3rem; margin-bottom: 16px;">🖨️</div>
+          <h2 style="color: #fff; font-weight: 800; margin-bottom: 8px;">Stampa Etichette Termiche QR Code</h2>
+          <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 24px;">Configurazione e stampa di etichette fisiche adesive con QR code univoco per l'associazione Deconto.</p>
+          <span class="badge badge-warning" style="padding: 8px 16px; font-weight: 800; letter-spacing: 0.05em;">PROSSIMAMENTE DISPONIBILE IN V2.0</span>
+        </div>
+      `;
+      break;
     case 'refills_history':
-      contentHtml = renderClientDiyPanel();
+      contentHtml = `
+        <div class="stat-card" style="padding: 32px; text-align: center; max-width: 600px; margin: 40px auto; border: 1px solid var(--border-subtle);">
+          <div style="font-size: 3rem; margin-bottom: 16px;">📜</div>
+          <h2 style="color: #fff; font-weight: 800; margin-bottom: 8px;">Storico & Registro Ricariche Parco Macchine</h2>
+          <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 24px;">Registro completo di tutte le ricariche crediti effettuate sia dagli agenti ADR sul posto che dai clienti tramite OTP.</p>
+          <span class="badge badge-warning" style="padding: 8px 16px; font-weight: 800; letter-spacing: 0.05em;">PROSSIMAMENTE DISPONIBILE IN V2.0</span>
+        </div>
+      `;
       break;
     case 'simulator':
       contentHtml = renderHardwareSimulator();
@@ -855,7 +879,167 @@ function attachGlobalEventListeners() {
       }
     });
   }
+
+  // --- GESTORE OTP GENERATOR & CLIENT DIY REFILL ---
+  
+  // 1. Genera Link & Token OTP
+  const btnGenerateOtpLink = document.getElementById('btn-generate-otp-link');
+  if (btnGenerateOtpLink) {
+    btnGenerateOtpLink.addEventListener('click', () => {
+      const clientId = document.getElementById('otp-client-select').value;
+      const boardShortCode = document.getElementById('otp-board-select').value;
+      const credits = document.getElementById('otp-credits-input').value;
+      let expiry = document.getElementById('otp-expiry-input').value;
+
+      if (!clientId || !boardShortCode) {
+        alert('Seleziona sia il Cliente che la Scheda Deconto!');
+        return;
+      }
+
+      const client = db.getClients().find(c => c.id === clientId);
+      const clientName = client ? client.name : 'Cliente';
+
+      // Imposta data di scadenza (Default 1 mese)
+      if (!expiry) {
+        const d = new Date();
+        d.setMonth(d.getMonth() + 1);
+        expiry = d.toISOString().split('T')[0];
+      }
+
+      // Genera un token OTP casuale
+      const randomPart = Math.random().toString(36).substring(2, 7).toUpperCase();
+      const otpToken = `OTP-${Math.floor(1000 + Math.random() * 9000)}-${randomPart}`;
+
+      // Crea l'URL con window.location.origin
+      const baseUrl = window.location.origin + window.location.pathname;
+      const generatedUrl = `${baseUrl}?tab=client_diy&clientName=${encodeURIComponent(clientName)}&board=${boardShortCode}&otp=${otpToken}&credits=${credits}`;
+
+      // Aggiorna lo stato e ri-renderizza
+      state.generatedOtpUrl = generatedUrl;
+      state.generatedOtpToken = otpToken;
+      
+      renderApp();
+      
+      // Focus sull'area di risultato
+      setTimeout(() => {
+        const resContainer = document.getElementById('otp-result-container');
+        if (resContainer) resContainer.scrollIntoView({ behavior: 'smooth' });
+      }, 50);
+    });
+  }
+
+  // 2. Copia Link OTP
+  const btnCopyOtpLink = document.getElementById('btn-copy-otp-link');
+  if (btnCopyOtpLink) {
+    btnCopyOtpLink.addEventListener('click', () => {
+      const urlTextarea = document.getElementById('generated-otp-url');
+      if (urlTextarea) {
+        urlTextarea.select();
+        document.execCommand('copy');
+        alert('📋 Link di ricarica copiato negli appunti!');
+      }
+    });
+  }
+
+  // 3. Invia via WhatsApp (imposta il href dinamico all'avvio o al click)
+  const btnWhatsappOtpSend = document.getElementById('btn-whatsapp-otp-send');
+  if (btnWhatsappOtpSend && state.generatedOtpUrl) {
+    const boardShortCode = document.getElementById('otp-board-select')?.value || 'Deconto';
+    const credits = document.getElementById('otp-credits-input')?.value || '200';
+    const message = `Ciao! Ecco il link per ricaricare +${credits} caffè sulla tua macchina Deconto #${boardShortCode}: ${state.generatedOtpUrl}`;
+    btnWhatsappOtpSend.setAttribute('href', `https://wa.me/?text=${encodeURIComponent(message)}`);
+  }
+
+  // 4. Test Link (Simula Cliente)
+  const btnTestOtpLink = document.getElementById('btn-test-otp-link');
+  if (btnTestOtpLink && state.generatedOtpUrl) {
+    btnTestOtpLink.addEventListener('click', () => {
+      const params = new URLSearchParams(state.generatedOtpUrl.split('?')[1]);
+      state.diyParams = {
+        clientName: params.get('clientName'),
+        boardShortCode: params.get('board'),
+        tokenOtp: params.get('otp'),
+        credits: parseInt(params.get('credits'), 10),
+        success: false
+      };
+      state.activeTab = 'client_diy';
+      renderApp();
+    });
+  }
+
+  // 5. Click su Accredita Caffè (Lato Cliente)
+  const btnClientDiyRefill = document.getElementById('btn-client-diy-refill');
+  if (btnClientDiyRefill) {
+    btnClientDiyRefill.addEventListener('click', () => {
+      const boardShortCode = btnClientDiyRefill.getAttribute('data-board');
+      const credits = parseInt(btnClientDiyRefill.getAttribute('data-credits'), 10);
+      const otpToken = btnClientDiyRefill.getAttribute('data-otp');
+
+      const statusMsg = document.getElementById('diy-status-msg');
+      if (statusMsg) {
+        statusMsg.innerHTML = '<span style="color: var(--accent-cyan); font-weight: 700;">📡 Connessione Bluetooth in corso... Sincronizzazione relè...</span>';
+      }
+
+      // Simula ritardo sincronizzazione BLE (1.2 secondi)
+      btnClientDiyRefill.disabled = true;
+      setTimeout(() => {
+        try {
+          // Esegue la ricarica reale nel database!
+          db.performRefill({
+            boardShortCode,
+            credits,
+            method: 'WHATSAPP_OTP_BLE',
+            tokenOtp: otpToken
+          });
+
+          // Mostra successo
+          if (state.diyParams) {
+            state.diyParams.success = true;
+          } else {
+            state.diyParams = { success: true, clientName: 'Studio Legale Brambilla', boardShortCode, tokenOtp, credits };
+          }
+          renderApp();
+        } catch (err) {
+          alert(`Errore durante l'accredito: ${err.message}`);
+          if (statusMsg) {
+            statusMsg.innerHTML = `<span style="color: var(--accent-rose); font-weight: 700;">❌ Errore BLE: ${err.message}</span>`;
+          }
+          btnClientDiyRefill.disabled = false;
+        }
+      }, 1200);
+    });
+  }
+
+  // 6. Torna alla Dashboard da Client DIY
+  const btnBackToOffice = document.getElementById('btn-back-to-office-from-diy');
+  if (btnBackToOffice) {
+    btnBackToOffice.addEventListener('click', () => {
+      state.diyParams = null;
+      state.generatedOtpUrl = null;
+      state.generatedOtpToken = null;
+      state.activeTab = 'otp_generator';
+      renderApp();
+    });
+  }
 }
 
 // Inizializzazione Applicazione
+function parseUrlParams() {
+  const params = new URLSearchParams(window.location.search);
+  const tab = params.get('tab');
+  if (tab === 'client_diy') {
+    state.activeTab = 'client_diy';
+    state.diyParams = {
+      clientName: params.get('clientName') || 'Studio Legale Brambilla',
+      boardShortCode: params.get('board') || '3467',
+      tokenOtp: params.get('otp') || 'OTP-9981-X79K2',
+      credits: parseInt(params.get('credits'), 10) || 200,
+      success: false
+    };
+    // Pulisci i parametri dall'indirizzo per evitare loop o refresh strani
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+}
+
+parseUrlParams();
 renderApp();

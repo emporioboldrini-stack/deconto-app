@@ -88,7 +88,7 @@ export function renderSidebar(currentUser, activeTab) {
 
         ${isUfficio ? `
           <div class="nav-section-title">STRUMENTI OPERATIVI</div>
-          <a class="nav-item ${(activeTab === 'client_diy' || activeTab === 'otp_generator') ? 'active' : ''}" data-tab="client_diy">
+          <a class="nav-item ${activeTab === 'otp_generator' ? 'active' : ''}" data-tab="otp_generator">
             <span class="nav-icon">🔑</span>
             <span>Generatore OTP WhatsApp</span>
           </a>
