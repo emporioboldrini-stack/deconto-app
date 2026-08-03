@@ -344,27 +344,17 @@
             <!-- 2. TIPOLOGIA DI DECONTO (BASIC VS PRO) -->
             <div style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 12px; border: 1px solid var(--border-subtle);">
               <h4 style="margin-top:0; color: var(--accent-purple); margin-bottom: 16px;">📟 Tipologia di Deconto Installati:</h4>
-              ${(()=>{let e=m.length;if(e===0)return`<div style="color:var(--text-muted);font-size:0.85rem;">Nessuna scheda Deconto registrata.</div>`;let t=m.filter(e=>e.version===`BASIC`).length,n=m.filter(e=>e.version===`PRO`).length,r=Math.round(t/e*100)||0,i=Math.round(n/e*100)||0;return`
+              ${(()=>{let e=m.length;if(e===0)return`<div style="color:var(--text-muted);font-size:0.85rem;">Nessuna scheda Deconto registrata.</div>`;let t=m.filter(e=>e.version===`BASIC`).length,n=m.filter(e=>e.version===`PRO`).length;return[{label:`🟢 Schede Deconto BASIC (Monogruppo)`,count:t,pct:Math.round(t/e*100)||0,color:`var(--accent-green)`},{label:`🔵 Schede Deconto PRO (Multigruppo)`,count:n,pct:Math.round(n/e*100)||0,color:`var(--accent-purple)`}].sort((e,t)=>t.count-e.count).map(t=>`
                   <div style="margin-bottom: 16px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.85rem;">
-                      <span style="font-weight: 700; color: #fff;">🟢 Schede Deconto BASIC (Monogruppo)</span>
-                      <span style="color: var(--accent-green); font-weight: 800;">${t}/${e} &nbsp;<small style="color:var(--text-muted);">(${r}%)</small></span>
+                      <span style="font-weight: 700; color: #fff;">${t.label}</span>
+                      <span style="color: ${t.color}; font-weight: 800;">${t.count}/${e} &nbsp;<small style="color:var(--text-muted);">(${t.pct}%)</small></span>
                     </div>
                     <div style="background: rgba(255,255,255,0.06); border-radius: 4px; height: 8px; width: 100%;">
-                      <div style="background: var(--accent-green); height: 8px; border-radius: 4px; width: ${r}%;"></div>
+                      <div style="background: ${t.color}; height: 8px; border-radius: 4px; width: ${t.pct}%;"></div>
                     </div>
                   </div>
-
-                  <div style="margin-bottom: 16px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.85rem;">
-                      <span style="font-weight: 700; color: #fff;">🔵 Schede Deconto PRO (Multigruppo)</span>
-                      <span style="color: var(--accent-purple); font-weight: 800;">${n}/${e} &nbsp;<small style="color:var(--text-muted);">(${i}%)</small></span>
-                    </div>
-                    <div style="background: rgba(255,255,255,0.06); border-radius: 4px; height: 8px; width: 100%;">
-                      <div style="background: var(--accent-purple); height: 8px; border-radius: 4px; width: ${i}%;"></div>
-                    </div>
-                  </div>
-                  
+                `).join(``)+`
                   <div style="font-size: 0.75rem; color: var(--text-muted); background: rgba(255,255,255,0.03); padding: 10px; border-radius: 6px; border: 1px solid var(--border-subtle); margin-top: 24px;">
                     💡 <strong>BASIC:</strong> Modello ultra-compatto con Bluetooth e 1 relè.<br>
                     💡 <strong>PRO:</strong> Modello Wi-Fi 6 con telemetria multi-gruppo (fino a 4 bracci).
@@ -375,7 +365,7 @@
             <!-- 3. ANNO DI PRODUZIONE -->
             <div style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 12px; border: 1px solid var(--border-subtle);">
               <h4 style="margin-top:0; color: var(--accent-amber); margin-bottom: 16px;">📅 Anno di Produzione Macchine:</h4>
-              ${(()=>{let e={};p.forEach(t=>{let n=t.productionYear||`2026`;e[n]=(e[n]||0)+1});let t=Object.entries(e).sort((e,t)=>t[0].localeCompare(e[0])),n=t.length>0?Math.max(...t.map(e=>e[1])):1;return t.length===0?`<div style="color:var(--text-muted);font-size:0.85rem;">Nessuna macchina registrata.</div>`:t.map(([e,t])=>{let r=Math.round(t/_*100),i=Math.round(t/n*100);return`
+              ${(()=>{let e={};p.forEach(t=>{let n=t.productionYear||`2026`;e[n]=(e[n]||0)+1});let t=Object.entries(e).sort((e,t)=>t[1]-e[1]),n=t.length>0?t[0][1]:1;return t.length===0?`<div style="color:var(--text-muted);font-size:0.85rem;">Nessuna macchina registrata.</div>`:t.map(([e,t])=>{let r=Math.round(t/_*100),i=Math.round(t/n*100);return`
                     <div style="margin-bottom: 12px;">
                       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-size: 0.85rem;">
                         <span style="font-weight: 700; color: #fff;">📅 Anno ${e}</span>
@@ -391,27 +381,17 @@
             <!-- 4. MACCHINE DECONTATE (TASSO COPERTURA) -->
             <div style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 12px; border: 1px solid var(--border-subtle);">
               <h4 style="margin-top:0; color: var(--accent-green); margin-bottom: 16px;">🔌 Tasso di Copertura Deconto:</h4>
-              ${(()=>{if(_===0)return`<div style="color:var(--text-muted);font-size:0.85rem;">Nessuna macchina registrata.</div>`;let e=p.filter(e=>m.some(t=>t.machineId===e.id)).length,t=_-e,n=Math.round(e/_*100)||0,r=Math.round(t/_*100)||0;return`
+              ${(()=>{if(_===0)return`<div style="color:var(--text-muted);font-size:0.85rem;">Nessuna macchina registrata.</div>`;let e=p.filter(e=>m.some(t=>t.machineId===e.id)).length,t=_-e,n=Math.round(e/_*100)||0,r=Math.round(t/_*100)||0;return[{label:`🔌 Macchine Connesse a Deconto`,count:e,pct:n,color:`var(--accent-green)`},{label:`❌ Macchine Libere (Senza Deconto)`,count:t,pct:r,color:`var(--text-muted)`}].sort((e,t)=>t.count-e.count).map(e=>`
                   <div style="margin-bottom: 16px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.85rem;">
-                      <span style="font-weight: 700; color: #fff;">🔌 Macchine Connesse a Deconto</span>
-                      <span style="color: var(--accent-green); font-weight: 800;">${e}/${_} &nbsp;<small style="color:var(--text-muted);">(${n}%)</small></span>
+                      <span style="font-weight: 700; color: #fff;">${e.label}</span>
+                      <span style="color: ${e.color}; font-weight: 800;">${e.count}/${_} &nbsp;<small style="color:var(--text-muted);">(${e.pct}%)</small></span>
                     </div>
                     <div style="background: rgba(255,255,255,0.06); border-radius: 4px; height: 8px; width: 100%;">
-                      <div style="background: var(--accent-green); height: 8px; border-radius: 4px; width: ${n}%;"></div>
+                      <div style="background: ${e.color}; height: 8px; border-radius: 4px; width: ${e.pct}%;"></div>
                     </div>
                   </div>
-
-                  <div style="margin-bottom: 16px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.85rem;">
-                      <span style="font-weight: 700; color: #fff;">❌ Macchine Libere (Senza Deconto)</span>
-                      <span style="color: var(--text-muted); font-weight: 800;">${t}/${_} &nbsp;<small style="color:var(--text-muted);">(${r}%)</small></span>
-                    </div>
-                    <div style="background: rgba(255,255,255,0.06); border-radius: 4px; height: 8px; width: 100%;">
-                      <div style="background: var(--text-muted); height: 8px; border-radius: 4px; width: ${r}%;"></div>
-                    </div>
-                  </div>
-                  
+                `).join(``)+`
                   <div style="display: flex; align-items: center; justify-content: center; background: rgba(34, 197, 94, 0.05); padding: 14px; border-radius: 8px; border: 1px solid rgba(34, 197, 94, 0.2); margin-top: 24px; text-align: center;">
                     <div>
                       <div style="font-size: 1.8rem; font-weight: 900; color: var(--accent-green);">${n}%</div>
@@ -420,7 +400,6 @@
                   </div>
                 `})()}
             </div>
-
           </div>
 
           <div style="display: flex; justify-content: flex-end;">

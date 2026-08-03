@@ -228,30 +228,22 @@ export function renderAdminDashboard(
                 const basicCount = boards.filter(b => b.version === 'BASIC').length;
                 const proCount = boards.filter(b => b.version === 'PRO').length;
 
-                const basicPct = Math.round((basicCount / totalBoards) * 100) || 0;
-                const proPct = Math.round((proCount / totalBoards) * 100) || 0;
+                const items = [
+                  { label: '🟢 Schede Deconto BASIC (Monogruppo)', count: basicCount, pct: Math.round((basicCount / totalBoards) * 100) || 0, color: 'var(--accent-green)' },
+                  { label: '🔵 Schede Deconto PRO (Multigruppo)', count: proCount, pct: Math.round((proCount / totalBoards) * 100) || 0, color: 'var(--accent-purple)' }
+                ].sort((a, b) => b.count - a.count); // Ordine decrescente
 
-                return `
+                return items.map(item => `
                   <div style="margin-bottom: 16px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.85rem;">
-                      <span style="font-weight: 700; color: #fff;">🟢 Schede Deconto BASIC (Monogruppo)</span>
-                      <span style="color: var(--accent-green); font-weight: 800;">${basicCount}/${totalBoards} &nbsp;<small style="color:var(--text-muted);">(${basicPct}%)</small></span>
+                      <span style="font-weight: 700; color: #fff;">${item.label}</span>
+                      <span style="color: ${item.color}; font-weight: 800;">${item.count}/${totalBoards} &nbsp;<small style="color:var(--text-muted);">(${item.pct}%)</small></span>
                     </div>
                     <div style="background: rgba(255,255,255,0.06); border-radius: 4px; height: 8px; width: 100%;">
-                      <div style="background: var(--accent-green); height: 8px; border-radius: 4px; width: ${basicPct}%;"></div>
+                      <div style="background: ${item.color}; height: 8px; border-radius: 4px; width: ${item.pct}%;"></div>
                     </div>
                   </div>
-
-                  <div style="margin-bottom: 16px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.85rem;">
-                      <span style="font-weight: 700; color: #fff;">🔵 Schede Deconto PRO (Multigruppo)</span>
-                      <span style="color: var(--accent-purple); font-weight: 800;">${proCount}/${totalBoards} &nbsp;<small style="color:var(--text-muted);">(${proPct}%)</small></span>
-                    </div>
-                    <div style="background: rgba(255,255,255,0.06); border-radius: 4px; height: 8px; width: 100%;">
-                      <div style="background: var(--accent-purple); height: 8px; border-radius: 4px; width: ${proPct}%;"></div>
-                    </div>
-                  </div>
-                  
+                `).join('') + `
                   <div style="font-size: 0.75rem; color: var(--text-muted); background: rgba(255,255,255,0.03); padding: 10px; border-radius: 6px; border: 1px solid var(--border-subtle); margin-top: 24px;">
                     💡 <strong>BASIC:</strong> Modello ultra-compatto con Bluetooth e 1 relè.<br>
                     💡 <strong>PRO:</strong> Modello Wi-Fi 6 con telemetria multi-gruppo (fino a 4 bracci).
@@ -269,8 +261,8 @@ export function renderAdminDashboard(
                   const year = m.productionYear || '2026';
                   yearMap[year] = (yearMap[year] || 0) + 1;
                 });
-                const sorted = Object.entries(yearMap).sort((a, b) => b[0].localeCompare(a[0])); // Ordina dal più recente
-                const max = sorted.length > 0 ? Math.max(...sorted.map(x => x[1])) : 1;
+                const sorted = Object.entries(yearMap).sort((a, b) => b[1] - a[1]); // Ordina decrescente per numero di macchine
+                const max = sorted.length > 0 ? sorted[0][1] : 1;
                 if (sorted.length === 0) return '<div style="color:var(--text-muted);font-size:0.85rem;">Nessuna macchina registrata.</div>';
                 return sorted.map(([year, count]) => {
                   const pct = Math.round((count / totalMachines) * 100);
@@ -295,34 +287,28 @@ export function renderAdminDashboard(
               <h4 style="margin-top:0; color: var(--accent-green); margin-bottom: 16px;">🔌 Tasso di Copertura Deconto:</h4>
               ${(() => {
                 if (totalMachines === 0) return '<div style="color:var(--text-muted);font-size:0.85rem;">Nessuna macchina registrata.</div>';
-                // Conta quante macchine hanno un deconto collegato (ovvero c'è un board associato a m.id)
                 const decontateCount = machines.filter(m => boards.some(b => b.machineId === m.id)).length;
                 const nonDecontateCount = totalMachines - decontateCount;
 
                 const decontatePct = Math.round((decontateCount / totalMachines) * 100) || 0;
                 const nonDecontatePct = Math.round((nonDecontateCount / totalMachines) * 100) || 0;
 
-                return `
-                  <div style="margin-bottom: 16px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.85rem;">
-                      <span style="font-weight: 700; color: #fff;">🔌 Macchine Connesse a Deconto</span>
-                      <span style="color: var(--accent-green); font-weight: 800;">${decontateCount}/${totalMachines} &nbsp;<small style="color:var(--text-muted);">(${decontatePct}%)</small></span>
-                    </div>
-                    <div style="background: rgba(255,255,255,0.06); border-radius: 4px; height: 8px; width: 100%;">
-                      <div style="background: var(--accent-green); height: 8px; border-radius: 4px; width: ${decontatePct}%;"></div>
-                    </div>
-                  </div>
+                const items = [
+                  { label: '🔌 Macchine Connesse a Deconto', count: decontateCount, pct: decontatePct, color: 'var(--accent-green)' },
+                  { label: '❌ Macchine Libere (Senza Deconto)', count: nonDecontateCount, pct: nonDecontatePct, color: 'var(--text-muted)' }
+                ].sort((a, b) => b.count - a.count); // Ordina decrescente
 
+                return items.map(item => `
                   <div style="margin-bottom: 16px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.85rem;">
-                      <span style="font-weight: 700; color: #fff;">❌ Macchine Libere (Senza Deconto)</span>
-                      <span style="color: var(--text-muted); font-weight: 800;">${nonDecontateCount}/${totalMachines} &nbsp;<small style="color:var(--text-muted);">(${nonDecontatePct}%)</small></span>
+                      <span style="font-weight: 700; color: #fff;">${item.label}</span>
+                      <span style="color: ${item.color}; font-weight: 800;">${item.count}/${totalMachines} &nbsp;<small style="color:var(--text-muted);">(${item.pct}%)</small></span>
                     </div>
                     <div style="background: rgba(255,255,255,0.06); border-radius: 4px; height: 8px; width: 100%;">
-                      <div style="background: var(--text-muted); height: 8px; border-radius: 4px; width: ${nonDecontatePct}%;"></div>
+                      <div style="background: ${item.color}; height: 8px; border-radius: 4px; width: ${item.pct}%;"></div>
                     </div>
                   </div>
-                  
+                `).join('') + `
                   <div style="display: flex; align-items: center; justify-content: center; background: rgba(34, 197, 94, 0.05); padding: 14px; border-radius: 8px; border: 1px solid rgba(34, 197, 94, 0.2); margin-top: 24px; text-align: center;">
                     <div>
                       <div style="font-size: 1.8rem; font-weight: 900; color: var(--accent-green);">${decontatePct}%</div>
@@ -332,7 +318,6 @@ export function renderAdminDashboard(
                 `;
               })()}
             </div>
-
           </div>
 
           <div style="display: flex; justify-content: flex-end;">
