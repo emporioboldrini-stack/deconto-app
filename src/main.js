@@ -213,6 +213,7 @@ function attachGlobalEventListeners() {
   if (btnSaveNewClient) {
     btnSaveNewClient.addEventListener('click', () => {
       const name = document.getElementById('new-cli-name').value.trim();
+      const clientType = document.getElementById('new-cli-type').value;
       const refPerson = document.getElementById('new-cli-ref').value.trim();
       const phone = document.getElementById('new-cli-phone').value.trim();
       const email = document.getElementById('new-cli-email').value.trim();
@@ -225,7 +226,7 @@ function attachGlobalEventListeners() {
       }
 
       try {
-        const newClient = db.addClient({ name, refPerson, phone, email, city, machineId });
+        const newClient = db.addClient({ name, clientType, refPerson, phone, email, city, machineId });
         alert(`✅ Cliente "${newClient.name}" registrato con successo!`);
         renderApp();
       } catch (err) {
@@ -265,6 +266,7 @@ function attachGlobalEventListeners() {
       e.preventDefault();
       const clientId = document.getElementById('edit-client-id').value;
       const name = document.getElementById('edit-cli-name').value.trim();
+      const clientType = document.getElementById('edit-cli-type').value;
       const refPerson = document.getElementById('edit-cli-ref').value.trim();
       const phone = document.getElementById('edit-cli-phone').value.trim();
       const city = document.getElementById('edit-cli-city').value.trim();
@@ -272,7 +274,7 @@ function attachGlobalEventListeners() {
       const assignedMachineId = document.getElementById('edit-cli-machine').value;
 
       try {
-        db.updateClient(clientId, { name, refPerson, phone, city, address, assignedMachineId });
+        db.updateClient(clientId, { name, clientType, refPerson, phone, city, address, assignedMachineId });
         state.editingId = null;
         alert('✅ Scheda Cliente salvata con successo!');
         renderApp();

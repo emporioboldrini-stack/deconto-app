@@ -887,6 +887,7 @@ class DecontoDatabase {
     const newClient = {
       id: 'cli_' + Date.now(),
       name: data.name.trim(),
+      clientType: data.clientType ? data.clientType.trim() : 'Altro',
       refPerson: data.refPerson ? data.refPerson.trim() : 'Referente',
       phone: data.phone ? data.phone.trim() : '+39 ',
       email: data.email ? data.email.trim() : '',
@@ -912,6 +913,7 @@ class DecontoDatabase {
     if (!client) throw new Error('Cliente non trovato.');
 
     if (data.name) client.name = data.name.trim();
+    if (data.clientType !== undefined) client.clientType = data.clientType.trim();
     if (data.refPerson !== undefined) client.refPerson = data.refPerson.trim();
     if (data.phone !== undefined) client.phone = data.phone.trim();
     if (data.email !== undefined) client.email = data.email.trim();

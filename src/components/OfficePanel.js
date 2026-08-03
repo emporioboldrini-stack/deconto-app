@@ -1,6 +1,30 @@
 import { db } from '../db/database.js';
 import { ITALIAN_CITIES } from '../data/italianCities.js';
 
+// Tipologie cliente standard
+const CLIENT_TYPES = [
+  { value: 'Bar',                   label: '☕ Bar',                      color: '#f59e0b' },
+  { value: 'Ristorante',            label: '🍽️ Ristorante',              color: '#ef4444' },
+  { value: 'Hotel',                 label: '🏨 Hotel',                   color: '#8b5cf6' },
+  { value: 'Azienda/Ufficio',       label: '🏢 Azienda / Ufficio',       color: '#38bdf8' },
+  { value: 'Palestra/Sport',        label: '💪 Palestra / Sport',        color: '#22c55e' },
+  { value: 'Negozio/Retail',        label: '🛍️ Negozio / Retail',       color: '#f97316' },
+  { value: 'Struttura Sanitaria',   label: '🏥 Struttura Sanitaria',     color: '#06b6d4' },
+  { value: 'Scuola/Università',     label: '🎓 Scuola / Università',     color: '#a78bfa' },
+  { value: 'Altro',                 label: '📌 Altro',                   color: '#6b7280' },
+];
+
+function clientTypeBadge(type) {
+  const t = CLIENT_TYPES.find(x => x.value === type) || CLIENT_TYPES.find(x => x.value === 'Altro');
+  return `<span class="badge" style="background: ${t.color}22; color: ${t.color}; border: 1px solid ${t.color}55; font-weight: 700; white-space: nowrap;">${t.label}</span>`;
+}
+
+function clientTypeSelect(id, selectedValue) {
+  return `<select id="${id}" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700;">
+    ${CLIENT_TYPES.map(t => `<option value="${t.value}" ${selectedValue === t.value ? 'selected' : ''}>${t.label}</option>`).join('')}
+  </select>`;
+}
+
 export function renderOfficePanel(activeTab = 'clients', editingId = null) {
   const clients = db.getClients();
   const machines = db.getMachines();
@@ -26,6 +50,10 @@ export function renderOfficePanel(activeTab = 'clients', editingId = null) {
               <div style="margin-bottom: 16px;">
                 <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Ragione Sociale / Nome:*</label>
                 <input type="text" id="edit-cli-name" value="${c.name}" required style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700;">
+              </div>
+              <div style="margin-bottom: 16px;">
+                <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">🏷️ Tipologia Cliente:</label>
+                ${clientTypeSelect('edit-cli-type', c.clientType || 'Altro')}
               </div>
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
                 <div>
@@ -229,9 +257,17 @@ export function renderOfficePanel(activeTab = 'clients', editingId = null) {
               <input type="text" id="new-cli-name" placeholder="Es. Bar Centrale Srl" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700;">
             </div>
             <div>
+              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">🏷️ Tipologia Cliente:</label>
+              ${clientTypeSelect('new-cli-type', 'Bar')}
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+            <div>
               <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Nome Referente:</label>
               <input type="text" id="new-cli-ref" placeholder="Es. Mario Rossi" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
             </div>
+            <div></div>
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px;">
@@ -281,6 +317,7 @@ export function renderOfficePanel(activeTab = 'clients', editingId = null) {
               <tr>
                 <th>ID Cliente</th>
                 <th>Ragione Sociale / Nome</th>
+                <th>Tipologia</th>
                 <th>Referente & Contatti</th>
                 <th>Città / Indirizzo</th>
                 <th>Macchine & Deconti Installati</th>
@@ -296,6 +333,7 @@ export function renderOfficePanel(activeTab = 'clients', editingId = null) {
                   <tr>
                     <td><strong style="font-family: monospace; color: var(--accent-cyan);">${c.id}</strong></td>
                     <td><strong>${c.name}</strong></td>
+                    <td>${clientTypeBadge(c.clientType || 'Altro')}</td>
                     <td>${c.refPerson}<br><small style="color: var(--text-muted);">${c.phone}</small></td>
                     <td>${c.city || 'N/D'}<br><small style="color: var(--text-muted);">${c.address || ''}</small></td>
                     <td>
