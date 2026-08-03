@@ -85,13 +85,33 @@ export function renderAdminDashboard(
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
             <div style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 12px; border: 1px solid var(--border-subtle);">
-              <h4 style="margin-top:0; color: var(--accent-purple);">📍 Ripartizione per Città:</h4>
-              ${clients.map(c => `
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.85rem;">
-                  <span>🏢 ${c.name} (${c.city || 'N/D'})</span>
-                  <span class="badge badge-info">ATTIVO</span>
-                </div>
-              `).join('')}
+              <h4 style="margin-top:0; color: var(--accent-purple);">📍 Classifica Clienti per Città:</h4>
+              ${(() => {
+                // Aggrega per città e conta
+                const cityMap = {};
+                clients.forEach(c => {
+                  const city = (c.city || 'N/D').trim();
+                  cityMap[city] = (cityMap[city] || 0) + 1;
+                });
+                const sorted = Object.entries(cityMap).sort((a, b) => b[1] - a[1]);
+                const max = sorted.length > 0 ? sorted[0][1] : 1;
+                if (sorted.length === 0) return '<div style="color:var(--text-muted);font-size:0.85rem;">Nessun cliente registrato.</div>';
+                return sorted.map(([city, count]) => {
+                  const pct = Math.round((count / totalClients) * 100);
+                  const barW = Math.round((count / max) * 100);
+                  return `
+                    <div style="margin-bottom: 12px;">
+                      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-size: 0.85rem;">
+                        <span style="font-weight: 700; color: #fff;">📍 ${city}</span>
+                        <span style="color: var(--accent-purple); font-weight: 800;">${count} client${count === 1 ? 'e' : 'i'} &nbsp;<small style="color:var(--text-muted);">(${pct}%)</small></span>
+                      </div>
+                      <div style="background: rgba(255,255,255,0.06); border-radius: 4px; height: 6px; width: 100%;">
+                        <div style="background: var(--accent-purple); height: 6px; border-radius: 4px; width: ${barW}%; transition: width 0.4s;"></div>
+                      </div>
+                    </div>
+                  `;
+                }).join('');
+              })()}
             </div>
 
             <div style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 12px; border: 1px solid var(--border-subtle);">
