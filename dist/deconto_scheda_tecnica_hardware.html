@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scheda Tecnica Hardware - Deconto BASIC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #0b0f19;
+      --card-bg: #151c2e;
+      --card-border: #232d47;
+      --accent-blue: #38bdf8;
+      --accent-purple: #818cf8;
+      --accent-green: #34d399;
+      --accent-orange: #fbbf24;
+      --accent-rose: #f87171;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      line-height: 1.6;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--card-border);
+      position: relative;
+    }
+    .badge-pill {
+      display: inline-block;
+      padding: 6px 16px;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(129, 140, 248, 0.15));
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: var(--accent-blue);
+      border-radius: 9999px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 15px;
+    }
+    h1 {
+      font-size: 2.4rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ffffff, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+    }
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+    }
+    .card h2 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--accent-blue);
+      margin-bottom: 18px;
+      border-left: 4px solid var(--accent-blue);
+      padding-left: 12px;
+    }
+    .img-container {
+      width: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+      margin-top: 15px;
+      margin-bottom: 20px;
+      background: #000;
+      text-align: center;
+    }
+    .img-container img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      font-size: 0.95rem;
+      margin-bottom: 15px;
+    }
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--card-border);
+    }
+    th {
+      background-color: rgba(255, 255, 255, 0.03);
+      color: var(--accent-blue);
+      font-weight: 600;
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+    ul {
+      list-style-type: none;
+      padding-left: 0;
+    }
+    li {
+      position: relative;
+      padding-left: 24px;
+      margin-bottom: 12px;
+    }
+    li::before {
+      content: "⚡";
+      position: absolute;
+      left: 0;
+      color: var(--accent-orange);
+    }
+    .wire-red { color: #f87171; font-weight: 700; }
+    .wire-blue { color: #38bdf8; font-weight: 700; }
+    .wire-brown { color: #fbbf24; font-weight: 700; }
+    .wire-black { color: #9ca3af; font-weight: 700; }
+    
+    .btn-print {
+      position: absolute;
+      top: 0;
+      right: 0;
+      padding: 10px 20px;
+      background: var(--accent-blue);
+      color: #0b0f19;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: opacity 0.2s;
+    }
+    .btn-print:hover {
+      opacity: 0.9;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 50px;
+      padding-top: 20px;
+      border-top: 1px solid var(--card-border);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    @media print {
+      body {
+        background-color: #fff;
+        color: #000;
+        padding: 0;
+      }
+      .container {
+        max-width: 100%;
+      }
+      .card {
+        background: #fff;
+        border: 1px solid #ddd;
+        box-shadow: none;
+        color: #000;
+        page-break-inside: avoid;
+      }
+      .card h2 {
+        color: #000;
+        border-left-color: #000;
+      }
+      th {
+        background: #eee;
+        color: #000;
+      }
+      td, th {
+        border-bottom: 1px solid #ddd;
+      }
+      .btn-print {
+        display: none;
+      }
+      .badge-pill {
+        border-color: #000;
+        color: #000;
+      }
+      h1 {
+        background: none;
+        -webkit-text-fill-color: initial;
+        color: #000;
+      }
+      .wire-red, .wire-blue, .wire-brown, .wire-black {
+        color: #000;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <button class="btn-print" onclick="window.print()">🖨️ Stampa / Salva PDF</button>
+      <span class="badge-pill">Specifiche Prodotto</span>
+      <h1>DECONTO BASIC</h1>
+      <p class="subtitle">Scheda Tecnica Hardware, Cablaggi & Schema Elettrico Interno</p>
+    </header>
+
+    <!-- SEZIONE 1: CONCEPT FISICO -->
+    <div class="card">
+      <h2>1. Concept & Dimensioni Modulo</h2>
+      <p>Modulo hardware ultra-compatto stagno (grado di protezione IP67) resinato per isolamento completo da umidità, vapore e alte temperature interne del corpo macchina da caffè a cialde.</p>
+      
+      <div class="img-container">
+        <img src="./images/deconto_product_labels.jpg" alt="Deconto BASIC Concept Fisico ed Etichette">
+      </div>
+
+      <p><strong>Dati etichetta superiore:</strong></p>
+      <table>
+        <thead>
+          <tr>
+            <th>Parametro</th>
+            <th>Specifiche</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Dimensioni Involucro</strong></td>
+            <td>~ 50 mm × 35 mm × 15 mm (ingombro minimo per alloggiamento interno)</td>
+          </tr>
+          <tr>
+            <td><strong>Pairing Code Bluetooth</strong></td>
+            <td>QR Code stampato per associazione immediata via Web BLE</td>
+          </tr>
+          <tr>
+            <td><strong>Microcontrollore</strong></td>
+            <td>ESP32-C6 (Modulo integrato con antenna PCB)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SEZIONE 2: CABLAGGIO ESTERNO -->
+    <div class="card">
+      <h2>2. Cablaggio Esterno a 4 Fili</h2>
+      <p>Il tecnico installatore collega il modulo a ponte sulla linea di alimentazione della pompa a vibrazione a 230V AC:</p>
+      
+      <div class="img-container">
+        <img src="./images/deconto_wiring_diagram.jpg" alt="Schema di Cablaggio Esterno Deconto">
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Colore Cavo</th>
+            <th>Funzione Cablaggio</th>
+            <th>Collegamento Fisico Macchina</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="wire-red">🔴 Rosso</td>
+            <td>Alimentazione 230V Fase (L)</td>
+            <td>Uscita Interruttore Generale ON/OFF</td>
+          </tr>
+          <tr>
+            <td class="wire-blue">🔵 Blu</td>
+            <td>Alimentazione 230V Neutro (N)</td>
+            <td>Linea Neutro comune della macchina</td>
+          </tr>
+          <tr>
+            <td class="wire-brown">🟤 Marrone</td>
+            <td>Sense In (Rilevazione 230V)</td>
+            <td>Uscita Tasto START erogazione caffè</td>
+          </tr>
+          <tr>
+            <td class="wire-black">⬛ Nero</td>
+            <td>Relè Out (Consenso Pompa)</td>
+            <td>Ingresso polo positivo Pompa dell'acqua</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SEZIONE 3: SCHEMA INTERNO -->
+    <div class="card">
+      <h2>3. Schema Elettrico del Circuito Interno (PCB)</h2>
+      <p>Schema di principio sbrogliato con i componenti elettronici principali per la realizzazione del circuito stampato:</p>
+      
+      <div class="img-container">
+        <img src="./images/deconto_schematic.jpg" alt="Schema Elettrico Interno Deconto">
+      </div>
+    </div>
+
+    <!-- SEZIONE 4: DISTINTA BASE (BOM) -->
+    <div class="card">
+      <h2>4. Distinta Componenti (BOM)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Designatore</th>
+            <th>Componente</th>
+            <th>Valore / Package</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>U1</strong></td>
+            <td>Modulo Alimentatore AC-DC isolato</td>
+            <td>HLK-PM01 (230VAC -> 5VDC @ 3W)</td>
+          </tr>
+          <tr>
+            <td><strong>U2</strong></td>
+            <td>Regolatore Lineare LDO 3.3V</td>
+            <td>AMS1117-3.3 (SOT-223)</td>
+          </tr>
+          <tr>
+            <td><strong>U3</strong></td>
+            <td>Optoisolatore di rilevamento AC</td>
+            <td>PC817 (DIP-4 o SMD)</td>
+          </tr>
+          <tr>
+            <td><strong>K1</strong></td>
+            <td>Relè di potenza a 5VDC bobina</td>
+            <td>Finder 36.11.9.005.4011 (10A 250VAC)</td>
+          </tr>
+          <tr>
+            <td><strong>Q1, Q2</strong></td>
+            <td>Transistor NPN pilotaggio relè/buzzer</td>
+            <td>BC817 (SOT-23 o TO-92)</td>
+          </tr>
+          <tr>
+            <td><strong>D1, D2</strong></td>
+            <td>Diodi (Raddrizzatore / Flyback)</td>
+            <td>1N4007 / 1N4148</td>
+          </tr>
+          <tr>
+            <td><strong>R1, R2</strong></td>
+            <td>Resistenze di caduta in serie</td>
+            <td>47kΩ / 1W (film metallico)</td>
+          </tr>
+          <tr>
+            <td><strong>R4, R5</strong></td>
+            <td>Resistenze limitazione base transistor</td>
+            <td>1kΩ (0805 o 1/4W)</td>
+          </tr>
+          <tr>
+            <td><strong>MOV1</strong></td>
+            <td>Varistore protezione AC</td>
+            <td>7D471K</td>
+          </tr>
+          <tr>
+            <td><strong>LS1</strong></td>
+            <td>Buzzer piezoelettrico passivo</td>
+            <td>3.3V piezo</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SEZIONE 5: LOGICA E FUNZIONAMENTO -->
+    <div class="card">
+      <h2>5. Logica di Funzionamento Elettronico</h2>
+      <ul>
+        <li><strong>Rilevamento Erogazione</strong>: Il tasto START manda 230V sul filo marrone. Questo segnale passa dalle resistenze R1/R2, viene raddrizzato da D1 e accende il LED del PC817 (U3), portando il GPIO dell'ESP32 a 0V (LOW).</li>
+        <li><strong>Attuazione Relè</strong>: Se il credito in memoria è > 0, l'ESP32 manda a HIGH il GPIO di Q1, eccitando la bobina di K1 che fa transitare i 230V dal filo marrone (Sense In) al filo nero (Relè Out), avviando la pompa. Se il credito è 0, il relè non si eccita e l'erogazione è bloccata.</li>
+        <li><strong>Salvataggio NVS</strong>: Ad erogazione finita, l'ESP32 decrementa di 1 credito la memoria interna non volatile (NVS), a prova di spegnimento della macchina.</li>
+        <li><strong>Buzzer Sottoscorta</strong>: Se i crediti scendono sotto i 20, l'ESP32 attiva LS1 con avviso acustico ad impulsi.</li>
+      </ul>
+    </div>
+
+    <div class="footer">
+      <p>Modulo Hardware DECONTO BASIC &copy; 2026 - Piattaforma Deconto Vending</p>
+    </div>
+  </div>
+
+</body>
+</html>
