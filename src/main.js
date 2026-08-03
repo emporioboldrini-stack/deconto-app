@@ -36,7 +36,8 @@ const state = {
   generatedOtpUrl: null,
   generatedOtpToken: null,
   diyParams: null,
-  refillsFilter: { boardCode: '', clientName: '', date: '' }
+  refillsFilter: { boardCode: '', clientName: '', date: '' },
+  simulatingBoardCode: null
 };
 
 function renderApp() {
@@ -95,7 +96,7 @@ function renderApp() {
       contentHtml = renderRefillsHistoryPanel(state.refillsFilter);
       break;
     case 'simulator':
-      contentHtml = renderHardwareSimulator();
+      contentHtml = renderHardwareSimulator(state.simulatingBoardCode);
       break;
     case 'user_mgmt':
     case 'user_management':
@@ -1237,6 +1238,91 @@ function attachGlobalEventListeners() {
         renderApp();
       } catch (err) {
         alert(`❌ Errore durante la ricarica: ${err.message}`);
+      }
+    });
+  }
+  // --- GESTORE BANCO PROVA HARDWARE SIMULATORE ---
+  const simBoardSelect = document.getElementById('sim-board-select');
+  const btnSimBrew = document.getElementById('btn-sim-brew');
+  const btnSimReset = document.getElementById('btn-sim-reset');
+
+  if (simBoardSelect) {
+    simBoardSelect.addEventListener('change', () => {
+      state.simulatingBoardCode = simBoardSelect.value;
+      renderApp();
+    });
+  }
+
+  if (btnSimBrew) {
+    btnSimBrew.addEventListener('click', () => {
+      const boardShortCode = state.simulatingBoardCode || (db.getBoards()[0] ? db.getBoards()[0].shortCode : null);
+      if (!boardShortCode) return;
+
+      const board = db.getBoards().find(b => b.shortCode === boardShortCode);
+      if (!board || board.remainingCredits <= 0) return;
+
+      // Disabilita pulsanti durante l'erogazione simulata
+      btnSimBrew.disabled = true;
+      btnSimBrew.innerText = '☕ EROGAZIONE IN CORSO (230V SENSE IN)...';
+      if (btnSimReset) btnSimReset.disabled = true;
+
+      // Aggiorna fili elettrici a schermo per simulare il passaggio di corrente
+      const signalSenseVolts = document.getElementById('signal-sense-volts');
+      const signalSenseBadge = document.getElementById('signal-sense-badge');
+      const simConsoleLog = document.getElementById('sim-console-log');
+
+      if (signalSenseVolts) signalSenseVolts.innerText = '230V AC';
+      if (signalSenseBadge) {
+        signalSenseBadge.innerText = '⚡ SENSE ATTIVO';
+        signalSenseBadge.className = 'badge badge-success';
+      }
+      if (simConsoleLog) {
+        simConsoleLog.innerHTML += `<br>[INPUT]: Rilevata tensione 230V AC su Sense-In (Filo Marrone).<br>[FIRMWARE]: Conteggio tempo di erogazione avviato...`;
+        simConsoleLog.scrollTop = simConsoleLog.scrollHeight;
+      }
+
+      // Esegui l'erogazione dopo 1.5 secondi
+      setTimeout(() => {
+        try {
+          const res = db.registerCoffeeExtraction(boardShortCode, 22, 1);
+          if (res && res.success === false) {
+            alert(`Impossibile erogare: ${res.reason}`);
+          } else {
+            if (simConsoleLog) {
+              simConsoleLog.innerHTML += `<br>[FIRMWARE]: Erogazione terminata (22s simulati).<br>[MEMORY]: Credito scalato. Nuovo saldo: ${board.remainingCredits} caffè.<br>[HARDWARE]: Relè di blocco: ${board.relayStatus === 'CLOSED_OK' ? 'CONNESSO/ABILITATO' : 'APERTO/BLOCCATO'}`;
+            }
+          }
+        } catch (err) {
+          console.error(err);
+        }
+
+        // Ripristina e aggiorna l'app
+        renderApp();
+      }, 1500);
+    });
+  }
+
+  if (btnSimReset) {
+    btnSimReset.addEventListener('click', () => {
+      const boardShortCode = state.simulatingBoardCode || (db.getBoards()[0] ? db.getBoards()[0].shortCode : null);
+      if (!boardShortCode) return;
+
+      try {
+        db.performRefill({
+          boardShortCode,
+          credits: 200,
+          method: 'CLOUD_DIRECT',
+          operatorId: state.currentUser ? state.currentUser.id : 'usr_001'
+        });
+        
+        const simConsoleLog = document.getElementById('sim-console-log');
+        if (simConsoleLog) {
+          simConsoleLog.innerHTML += `<br>[CLOUDLINK]: Comando Ricarica remota +200 ricevuto via Wi-Fi.<br>[MEMORY]: Crediti aggiornati. Relè sbloccato.`;
+        }
+
+        renderApp();
+      } catch (err) {
+        alert(`Errore: ${err.message}`);
       }
     });
   }
