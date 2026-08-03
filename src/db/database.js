@@ -355,6 +355,13 @@ class DecontoDatabase {
     if (!masterData.emailLogs) masterData.emailLogs = [];
     if (!masterData.backupLogs) masterData.backupLogs = [];
 
+    // === MIGRAZIONE SCHEMA v2: rimuovi coffeeLogs generati automaticamente dal vecchio seeder ===
+    // Il vecchio seeder generava migliaia di log fittizi. Schema v2 garantisce solo log reali.
+    if (!masterData.schemaVersion || masterData.schemaVersion < 2) {
+      masterData.coffeeLogs = [];
+      masterData.schemaVersion = 2;
+    }
+
     // Rimuovi log orfani di schede Deconto cancellate
     const activeBoardIds = new Set(masterData.decontoBoards.map(b => b.id));
     masterData.coffeeLogs = masterData.coffeeLogs.filter(log => activeBoardIds.has(log.boardId));
@@ -619,55 +626,14 @@ class DecontoDatabase {
   getBackupLogs() { return this.data.backupLogs; }
 
   seedCoffeeLogs() {
-    if (this.data.coffeeLogs && this.data.coffeeLogs.length > 50) {
-      return this.data.coffeeLogs;
-    }
-
-    const logs = [];
-    const now = Date.now();
-    const boards = this.data.decontoBoards ? this.data.decontoBoards.filter(b => b.machineId) : [];
-
-    // Se non ci sono schede registrate o collegate, non generare log di test
-    if (boards.length === 0) {
-      this.data.coffeeLogs = [];
-      this.saveData();
-      return [];
-    }
-
-    // Generiamo erogazioni distribuite negli ultimi 365 giorni solo se ci sono schede attive
-    for (let day = 0; day < 365; day++) {
-      const dayTime = now - day * 86400000;
-      const dayOfWeek = new Date(dayTime).getDay();
-      const baseCount = (dayOfWeek === 0 || dayOfWeek === 6) ? 2 : 6;
-
-      boards.forEach(board => {
-        const countToday = Math.floor(baseCount + Math.random() * (board.avgDailyCoffees || 8));
-        for (let i = 0; i < countToday; i++) {
-          const randomTime = dayTime - Math.floor(Math.random() * 86400000);
-          logs.push({
-            id: 'log_' + randomTime + '_' + Math.floor(Math.random() * 1000),
-            boardId: board.id,
-            timestamp: new Date(randomTime).toISOString(),
-            durationSeconds: Math.floor(18 + Math.random() * 8),
-            groupId: Math.random() > 0.5 ? 1 : 2
-          });
-        }
-      });
-    }
-
-    logs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-    this.data.coffeeLogs = logs;
-    this.saveData();
-    return logs;
+    // NON genera dati fittizi - solo dati reali da ESP32-C6
+    // Mantenuta per compatibilità ma non genera nulla
+    return this.data.coffeeLogs || [];
   }
 
   getExtractionsAnalytics(periodKey = '30DAYS', customStartStr = null, customEndStr = null) {
-    let logs = this.data.coffeeLogs || [];
-    
-    // Genera log fittizi solo per demo se ci sono schede registrate ma nessun log reale
-    if (logs.length === 0 && this.data.decontoBoards && this.data.decontoBoards.length > 0) {
-      logs = this.seedCoffeeLogs();
-    }
+    const logs = this.data.coffeeLogs || [];
+    // Solo dati reali - nessun seed automatico
 
     const now = new Date();
     let startDate, endDate;
