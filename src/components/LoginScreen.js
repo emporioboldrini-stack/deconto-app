@@ -4,8 +4,9 @@ export function renderLoginScreen() {
   const settings = db.getSettings();
 
   return `
-    <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at top right, #1f2937, #090d16); padding: 20px;">
+    <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at top right, #1f2937, #090d16); padding: 20px; flex-wrap: wrap; gap: 30px;">
       
+      <!-- Card Login -->
       <div style="max-width: 440px; width: 100%; background: rgba(31, 41, 55, 0.7); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; padding: 40px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);">
         
         <div style="text-align: center; margin-bottom: 32px;">
@@ -49,6 +50,24 @@ export function renderLoginScreen() {
           </button>
         </form>
 
+      </div>
+
+      <!-- Card Documentazione Tecnica (Provvisoria a lato) -->
+      <div style="max-width: 440px; width: 100%; background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 24px; padding: 40px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7); min-height: 422px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+        <div style="margin-bottom: 28px;">
+          <span style="font-size: 2.5rem; display: block; margin-bottom: 12px;">🛠️</span>
+          <h2 style="font-size: 1.4rem; font-weight: 800; color: #fff; margin-bottom: 8px;">Documentazione Hardware</h2>
+          <p style="font-size: 0.85rem; color: var(--text-muted); max-width: 300px; margin: 0 auto;">Specifiche di cablaggio e report di progettazione elettronica del modulo Deconto BASIC.</p>
+        </div>
+
+        <div style="width: 100%; display: flex; flex-direction: column; gap: 16px;">
+          <a href="./deconto_scheda_tecnica_hardware.html" target="_blank" style="display: block; width: 100%; padding: 14px; font-size: 0.95rem; font-weight: 800; border-radius: 10px; background: rgba(56, 189, 248, 0.1); border: 1px solid var(--accent-blue); color: var(--accent-blue); text-decoration: none; transition: background 0.2s;">
+            📑 SCHEDA TECNICA HARDWARE
+          </a>
+          <a href="./pcb_design_report.html" target="_blank" style="display: block; width: 100%; padding: 14px; font-size: 0.95rem; font-weight: 800; border-radius: 10px; background: rgba(52, 211, 153, 0.1); border: 1px solid var(--accent-green); color: var(--accent-green); text-decoration: none; transition: background 0.2s;">
+            🔬 REPORT PROGETTAZIONE PCB
+          </a>
+        </div>
       </div>
 
     </div>
