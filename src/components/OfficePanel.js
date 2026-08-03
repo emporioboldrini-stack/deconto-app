@@ -1,4 +1,5 @@
 import { db } from '../db/database.js';
+import { ITALIAN_CITIES } from '../data/italianCities.js';
 
 export function renderOfficePanel(activeTab = 'clients', editingId = null) {
   const clients = db.getClients();
@@ -38,8 +39,14 @@ export function renderOfficePanel(activeTab = 'clients', editingId = null) {
               </div>
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
                 <div>
-                  <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Città:</label>
-                  <input type="text" id="edit-cli-city" value="${c.city || ''}" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+                  <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">📍 Città:</label>
+                  <input type="text" id="edit-cli-city" value="${c.city || ''}" list="cities-list-edit"
+                    placeholder="Digita per cercare... (es. Fir)"
+                    style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;"
+                    autocomplete="off">
+                  <datalist id="cities-list-edit">
+                    ${ITALIAN_CITIES.map(city => `<option value="${city}">`).join('')}
+                  </datalist>
                 </div>
                 <div>
                   <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Indirizzo:</label>
@@ -237,8 +244,14 @@ export function renderOfficePanel(activeTab = 'clients', editingId = null) {
               <input type="email" id="new-cli-email" placeholder="info@barcentrale.it" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
             </div>
             <div>
-              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Città:</label>
-              <input type="text" id="new-cli-city" placeholder="Es. Milano" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">📍 Città:</label>
+              <input type="text" id="new-cli-city" list="cities-list-new"
+                placeholder="Digita per cercare... (es. Mil)"
+                style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;"
+                autocomplete="off">
+              <datalist id="cities-list-new">
+                ${ITALIAN_CITIES.map(city => `<option value="${city}">`).join('')}
+              </datalist>
             </div>
           </div>
 
