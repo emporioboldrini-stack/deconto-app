@@ -212,7 +212,8 @@ export function renderOfficePanel(activeTab = 'clients', editingId = null) {
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
                 <div>
                   <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Credito Caffè Residuo:</label>
-                  <input type="number" id="edit-board-credits" value="${b.remainingCredits}" required style="width: 100%; padding: 10px; background: var(--bg-primary); color: var(--accent-green); border: 1px solid var(--border-color); border-radius: 6px; font-weight: 900;">
+                  <input type="number" id="edit-board-credits" value="${b.remainingCredits}" readonly style="width: 100%; padding: 10px; background: rgba(0,0,0,0.25); color: var(--text-dim); border: 1px solid var(--border-subtle); border-radius: 6px; font-weight: 900; opacity: 0.75; cursor: not-allowed;" title="Modificabile solo tramite ricarica rapida nella modale o tramite OTP">
+                  <div style="font-size: 0.72rem; color: var(--accent-amber); margin-top: 4px; font-weight: 700;">🔒 Sola lettura. Per ricaricare usa la modale dettagli.</div>
                 </div>
                 <div>
                   <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Versione Board:</label>
@@ -532,7 +533,8 @@ export function renderOfficePanel(activeTab = 'clients', editingId = null) {
           </div>
           <div>
             <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Crediti Cialde Iniziali:*</label>
-            <input type="number" id="new-board-credits" value="200" style="width: 100%; padding: 10px; background: var(--bg-primary); color: var(--accent-green); border: 1px solid var(--border-color); border-radius: 6px; font-weight: 800;">
+            <input type="number" id="new-board-credits" value="0" readonly style="width: 100%; padding: 10px; background: rgba(0,0,0,0.25); color: var(--text-dim); border: 1px solid var(--border-subtle); border-radius: 6px; font-weight: 800; opacity: 0.75; cursor: not-allowed;">
+            <div style="font-size: 0.72rem; color: var(--accent-amber); margin-top: 4px; font-weight: 700;">🔒 Sola lettura (0 cr iniziali).</div>
           </div>
           <div>
             <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Versione Hardware:</label>
