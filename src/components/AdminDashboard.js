@@ -118,9 +118,17 @@ export function renderAdminDashboard(
               ${(() => {
                 const typeColors = {
                   'Bar': '#f59e0b', 'Ristorante': '#ef4444', 'Hotel': '#8b5cf6',
-                  'Azienda/Ufficio': '#38bdf8', 'Palestra/Sport': '#22c55e',
-                  'Negozio/Retail': '#f97316', 'Struttura Sanitaria': '#06b6d4',
-                  'Scuola/Università': '#a78bfa', 'Altro': '#6b7280'
+                  'Azienda/Ufficio': '#38bdf8', 'Fabbrica/SitoProduttivo': '#10b981',
+                  'Palestra/Sport': '#22c55e', 'Negozio/Retail': '#f97316',
+                  'Struttura Sanitaria': '#06b6d4', 'Scuola/Università': '#a78bfa',
+                  'Altro': '#6b7280'
+                };
+                const typeLabels = {
+                  'Bar': '☕ Bar', 'Ristorante': '🍽️ Ristorante', 'Hotel': '🏨 Hotel',
+                  'Azienda/Ufficio': '🏢 Azienda / Ufficio', 'Fabbrica/SitoProduttivo': '🏭 Fabbrica / Sito prod.',
+                  'Palestra/Sport': '💪 Palestra / Sport', 'Negozio/Retail': '🛍️ Negozio / Retail',
+                  'Struttura Sanitaria': '🏥 Struttura Sanitaria', 'Scuola/Università': '🎓 Scuola / Università',
+                  'Altro': '📌 Altro'
                 };
                 const typeMap = {};
                 clients.forEach(c => {
@@ -134,10 +142,11 @@ export function renderAdminDashboard(
                   const pct = Math.round((count / totalClients) * 100);
                   const barW = Math.round((count / max) * 100);
                   const color = typeColors[type] || '#6b7280';
+                  const label = typeLabels[type] || type;
                   return `
                     <div style="margin-bottom: 12px;">
                       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-size: 0.85rem;">
-                        <span style="font-weight: 700; color: #fff;">${type}</span>
+                        <span style="font-weight: 700; color: #fff;">${label}</span>
                         <span style="color: ${color}; font-weight: 800;">${count} client${count === 1 ? 'e' : 'i'} &nbsp;<small style="color:var(--text-muted);">(${pct}%)</small></span>
                       </div>
                       <div style="background: rgba(255,255,255,0.06); border-radius: 4px; height: 6px; width: 100%;">

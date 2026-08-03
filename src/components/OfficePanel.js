@@ -7,6 +7,7 @@ const CLIENT_TYPES = [
   { value: 'Ristorante',            label: '🍽️ Ristorante',              color: '#ef4444' },
   { value: 'Hotel',                 label: '🏨 Hotel',                   color: '#8b5cf6' },
   { value: 'Azienda/Ufficio',       label: '🏢 Azienda / Ufficio',       color: '#38bdf8' },
+  { value: 'Fabbrica/SitoProduttivo', label: '🏭 Fabbrica / Sito produttivo', color: '#10b981' },
   { value: 'Palestra/Sport',        label: '💪 Palestra / Sport',        color: '#22c55e' },
   { value: 'Negozio/Retail',        label: '🛍️ Negozio / Retail',       color: '#f97316' },
   { value: 'Struttura Sanitaria',   label: '🏥 Struttura Sanitaria',     color: '#06b6d4' },
