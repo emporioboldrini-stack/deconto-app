@@ -3,9 +3,19 @@ import { db } from '../db/database.js';
 export function renderOtpGeneratorPanel(generatedLink = null, generatedOtp = null) {
   const clients = db.getClients();
   const boards = db.getBoards();
+  const machines = db.getMachines();
 
-  // Trova le schede associate a macchine installate per facilitare l'associazione
-  const activeBoards = boards.filter(b => b.machineId);
+  // Calcola scadenza consigliata (+1 mese da oggi)
+  const today = new Date();
+  const suggestedDate = new Date();
+  suggestedDate.setMonth(suggestedDate.getMonth() + 1);
+  
+  const suggestedDateISO = suggestedDate.toISOString().split('T')[0];
+  const suggestedDateFormatted = suggestedDate.toLocaleDateString('it-IT', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
 
   return `
     <div style="max-width: 800px; margin: 0 auto;">
@@ -17,29 +27,42 @@ export function renderOtpGeneratorPanel(generatedLink = null, generatedOtp = nul
       <div class="stat-card" style="padding: 28px; border: 1px solid var(--border-subtle); margin-bottom: 32px; background: rgba(0,0,0,0.2);">
         <h3 style="margin-top: 0; color: var(--accent-cyan); margin-bottom: 20px; font-weight: 800;">⚙️ Configura Ricarica Fai-da-Te</h3>
         
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+        <!-- Triplice Associazione Collegata (Cliente, Macchina, Deconto) -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px;">
           <div>
-            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 6px; font-weight: 700;">🏢 Seleziona Cliente:*</label>
+            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 6px; font-weight: 700;">🏢 1. Cliente:*</label>
             <select id="otp-client-select" style="width: 100%; padding: 12px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 8px; font-weight: 700;">
-              <option value="">-- Scegli un Cliente --</option>
+              <option value="">-- Scegli Cliente --</option>
               ${clients.map(c => `<option value="${c.id}">${c.name} (${c.city})</option>`).join('')}
             </select>
           </div>
 
           <div>
-            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 6px; font-weight: 700;">📟 Seleziona Scheda Deconto:*</label>
+            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 6px; font-weight: 700;">☕ 2. Macchina da Caffè:*</label>
+            <select id="otp-machine-select" style="width: 100%; padding: 12px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 8px; font-weight: 700;">
+              <option value="">-- Scegli Macchina --</option>
+              ${machines.map(m => {
+                const owner = clients.find(c => c.id === m.clientId);
+                return `<option value="${m.id}">${m.serialNumber} - ${m.model} ${owner ? `(${owner.name})` : '(Libera)'}</option>`;
+              }).join('')}
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 6px; font-weight: 700;">📟 3. Scheda Deconto:*</label>
             <select id="otp-board-select" style="width: 100%; padding: 12px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 8px; font-weight: 700;">
-              <option value="">-- Scegli una Scheda --</option>
-              ${activeBoards.map(b => {
-                const mc = db.getMachines().find(m => m.id === b.machineId);
+              <option value="">-- Scegli Deconto --</option>
+              ${boards.map(b => {
+                const mc = machines.find(m => m.id === b.machineId);
                 const owner = mc ? clients.find(c => c.id === mc.clientId) : null;
-                return `<option value="${b.shortCode}">📟 Deconto #${b.shortCode} ${owner ? `(${owner.name})` : ''}</option>`;
+                return `<option value="${b.shortCode}">Deconto #${b.shortCode} (${b.remainingCredits} cr) ${owner ? `[${owner.name}]` : ''}</option>`;
               }).join('')}
             </select>
           </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+        <!-- Selezione Crediti & Scadenza -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
           <div>
             <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 6px; font-weight: 700;">☕ Quantità Caffè da Ricaricare:*</label>
             <select id="otp-credits-input" style="width: 100%; padding: 12px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 8px; font-weight: 700;">
@@ -48,16 +71,26 @@ export function renderOtpGeneratorPanel(generatedLink = null, generatedOtp = nul
               <option value="200" selected>+200 Caffè</option>
               <option value="500">+500 Caffè</option>
               <option value="1000">+1000 Caffè</option>
+              <option value="CUSTOM">🖋️ Personalizza (Ricarica o Decremento)...</option>
             </select>
+
+            <!-- Box di input per crediti personalizzati (nascosto di default, mostrato via JS) -->
+            <div id="otp-custom-credits-wrapper" style="display: none; margin-top: 12px;">
+              <label style="font-size: 0.75rem; color: var(--accent-amber); display: block; margin-bottom: 4px; font-weight: 700;">Inserisci Valore Manuale (Usa + per ricarica, - per decremento):</label>
+              <input type="number" id="otp-custom-credits-value" placeholder="Es. +127 o -843" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--accent-amber); border-radius: 8px; font-weight: 700;">
+            </div>
           </div>
 
           <div>
-            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 6px; font-weight: 700;">⏳ Scadenza Link OTP (Default 1 mese):</label>
-            <input type="date" id="otp-expiry-input" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 8px; font-weight: 700;">
+            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 6px; font-weight: 700;">⏳ Imposta Scadenza OTP:</label>
+            <input type="date" id="otp-expiry-input" value="${suggestedDateISO}" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 8px; font-weight: 700; margin-bottom: 8px;">
+            <div style="font-size: 0.78rem; color: var(--accent-green); font-weight: 700; display: flex; align-items: center; gap: 4px;">
+              <span>📅</span> Scadenza consigliata: <strong>${suggestedDateFormatted}</strong> (1 mese)
+            </div>
           </div>
         </div>
 
-        <div style="display: flex; justify-content: flex-end;">
+        <div style="display: flex; justify-content: flex-end; margin-top: 24px; border-top: 1px solid var(--border-subtle); padding-top: 20px;">
           <button id="btn-generate-otp-link" class="btn btn-primary" style="padding: 14px 28px; font-size: 1rem; font-weight: 800; border-radius: 10px;">
             ⚡ Genera Token & Link WhatsApp
           </button>

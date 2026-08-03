@@ -882,18 +882,118 @@ function attachGlobalEventListeners() {
 
   // --- GESTORE OTP GENERATOR & CLIENT DIY REFILL ---
   
+  const otpClientSelect = document.getElementById('otp-client-select');
+  const otpMachineSelect = document.getElementById('otp-machine-select');
+  const otpBoardSelect = document.getElementById('otp-board-select');
+  const otpCreditsInput = document.getElementById('otp-credits-input');
+  const otpCustomCreditsWrapper = document.getElementById('otp-custom-credits-wrapper');
+
+  // Gestione visibilità crediti personalizzati
+  if (otpCreditsInput && otpCustomCreditsWrapper) {
+    otpCreditsInput.addEventListener('change', () => {
+      if (otpCreditsInput.value === 'CUSTOM') {
+        otpCustomCreditsWrapper.style.display = 'block';
+      } else {
+        otpCustomCreditsWrapper.style.display = 'none';
+      }
+    });
+  }
+
+  // Cascata 1: Seleziona Cliente -> Aggiorna Macchina e Deconto
+  if (otpClientSelect && otpMachineSelect && otpBoardSelect) {
+    otpClientSelect.addEventListener('change', () => {
+      const clientId = otpClientSelect.value;
+      if (!clientId) {
+        otpMachineSelect.value = '';
+        otpBoardSelect.value = '';
+        return;
+      }
+      // Trova macchina associata
+      const mc = db.getMachines().find(m => m.clientId === clientId);
+      if (mc) {
+        otpMachineSelect.value = mc.id;
+        // Trova deconto associato alla macchina
+        const board = db.getBoards().find(b => b.machineId === mc.id);
+        if (board) {
+          otpBoardSelect.value = board.shortCode;
+        } else {
+          otpBoardSelect.value = '';
+        }
+      } else {
+        otpMachineSelect.value = '';
+        otpBoardSelect.value = '';
+      }
+    });
+
+    // Cascata 2: Seleziona Macchina -> Aggiorna Cliente e Deconto
+    otpMachineSelect.addEventListener('change', () => {
+      const mcId = otpMachineSelect.value;
+      if (!mcId) {
+        otpClientSelect.value = '';
+        otpBoardSelect.value = '';
+        return;
+      }
+      const mc = db.getMachines().find(m => m.id === mcId);
+      if (mc) {
+        otpClientSelect.value = mc.clientId || '';
+        // Trova deconto associato alla macchina
+        const board = db.getBoards().find(b => b.machineId === mc.id);
+        if (board) {
+          otpBoardSelect.value = board.shortCode;
+        } else {
+          otpBoardSelect.value = '';
+        }
+      }
+    });
+
+    // Cascata 3: Seleziona Deconto -> Aggiorna Macchina e Cliente
+    otpBoardSelect.addEventListener('change', () => {
+      const shortCode = otpBoardSelect.value;
+      if (!shortCode) {
+        otpMachineSelect.value = '';
+        otpClientSelect.value = '';
+        return;
+      }
+      const board = db.getBoards().find(b => b.shortCode === shortCode);
+      if (board && board.machineId) {
+        otpMachineSelect.value = board.machineId;
+        const mc = db.getMachines().find(m => m.id === board.machineId);
+        if (mc) {
+          otpClientSelect.value = mc.clientId || '';
+        } else {
+          otpClientSelect.value = '';
+        }
+      } else {
+        otpMachineSelect.value = '';
+        otpClientSelect.value = '';
+      }
+    });
+  }
+
   // 1. Genera Link & Token OTP
   const btnGenerateOtpLink = document.getElementById('btn-generate-otp-link');
   if (btnGenerateOtpLink) {
     btnGenerateOtpLink.addEventListener('click', () => {
       const clientId = document.getElementById('otp-client-select').value;
       const boardShortCode = document.getElementById('otp-board-select').value;
-      const credits = document.getElementById('otp-credits-input').value;
+      const creditsType = document.getElementById('otp-credits-input').value;
       let expiry = document.getElementById('otp-expiry-input').value;
 
       if (!clientId || !boardShortCode) {
         alert('Seleziona sia il Cliente che la Scheda Deconto!');
         return;
+      }
+
+      let credits = 200;
+      if (creditsType === 'CUSTOM') {
+        const manualVal = parseInt(document.getElementById('otp-custom-credits-value').value, 10);
+        if (isNaN(manualVal)) {
+          alert('Inserisci un valore numerico valido (positivo o negativo) per i crediti personalizzati!');
+          return;
+        }
+        credits = manualVal;
+      } else {
+        credits = parseInt(creditsType, 10);
       }
 
       const client = db.getClients().find(c => c.id === clientId);
@@ -918,7 +1018,34 @@ function attachGlobalEventListeners() {
       state.generatedOtpUrl = generatedUrl;
       state.generatedOtpToken = otpToken;
       
+      // Manteniamo temporaneamente selezionati i valori nei campi per visualizzazione post-rendering
+      state.selectedClientTemp = clientId;
+      state.selectedMachineTemp = document.getElementById('otp-machine-select').value;
+      state.selectedBoardTemp = boardShortCode;
+      state.selectedCreditsTemp = creditsType;
+      state.selectedCustomCreditsTemp = creditsType === 'CUSTOM' ? credits : '';
+      state.selectedExpiryTemp = expiry;
+      
       renderApp();
+
+      // Ripristiniamo i valori nei campi nel DOM dopo il rendering
+      const restoreClient = document.getElementById('otp-client-select');
+      const restoreMachine = document.getElementById('otp-machine-select');
+      const restoreBoard = document.getElementById('otp-board-select');
+      const restoreCredits = document.getElementById('otp-credits-input');
+      const restoreCustomWrap = document.getElementById('otp-custom-credits-wrapper');
+      const restoreCustomVal = document.getElementById('otp-custom-credits-value');
+      const restoreExpiry = document.getElementById('otp-expiry-input');
+
+      if (restoreClient) restoreClient.value = state.selectedClientTemp;
+      if (restoreMachine) restoreMachine.value = state.selectedMachineTemp;
+      if (restoreBoard) restoreBoard.value = state.selectedBoardTemp;
+      if (restoreCredits) restoreCredits.value = state.selectedCreditsTemp;
+      if (restoreCredits && restoreCredits.value === 'CUSTOM' && restoreCustomWrap) {
+        restoreCustomWrap.style.display = 'block';
+        if (restoreCustomVal) restoreCustomVal.value = state.selectedCustomCreditsTemp;
+      }
+      if (restoreExpiry) restoreExpiry.value = state.selectedExpiryTemp;
       
       // Focus sull'area di risultato
       setTimeout(() => {
@@ -941,7 +1068,7 @@ function attachGlobalEventListeners() {
     });
   }
 
-  // 3. Invia via WhatsApp (imposta il href dinamico all'avvio o al click)
+  // 3. Invia via WhatsApp
   const btnWhatsappOtpSend = document.getElementById('btn-whatsapp-otp-send');
   if (btnWhatsappOtpSend && state.generatedOtpUrl) {
     const boardShortCode = document.getElementById('otp-board-select')?.value || 'Deconto';

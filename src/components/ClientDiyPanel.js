@@ -47,7 +47,7 @@ export function renderClientDiyPanel(params = null) {
           </div>
           <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border-subtle); padding-top: 8px; margin-top: 8px;">
             <span style="color: var(--text-muted); font-size: 0.9rem;">Caffè da Ricaricare:</span>
-            <strong style="color: var(--accent-green); font-size: 1.2rem;">+ ${credits} CAFFÈ</strong>
+            <strong style="color: ${credits >= 0 ? 'var(--accent-green)' : 'var(--accent-rose)'}; font-size: 1.2rem;">${credits >= 0 ? '+' : ''}${credits} CAFFÈ</strong>
           </div>
         </div>
 
@@ -64,8 +64,8 @@ export function renderClientDiyPanel(params = null) {
             data-board="${boardShortCode}" 
             data-credits="${credits}" 
             data-otp="${tokenOtp}" 
-            class="btn btn-primary" style="width: 100%; padding: 18px; font-size: 1.2rem; font-weight: 800; border-radius: 14px; background: linear-gradient(135deg, var(--accent-green), #059669); box-shadow: 0 8px 20px rgba(52, 211, 153, 0.4);">
-            ✨ ACCREDITA ${credits} CAFFÈ ORA
+            class="btn btn-primary" style="width: 100%; padding: 18px; font-size: 1.2rem; font-weight: 800; border-radius: 14px; background: linear-gradient(135deg, ${credits >= 0 ? 'var(--accent-green)' : 'var(--accent-rose)'}, ${credits >= 0 ? '#059669' : '#b91c1c'}); box-shadow: 0 8px 20px ${credits >= 0 ? 'rgba(52, 211, 153, 0.4)' : 'rgba(239, 68, 68, 0.4)'};">
+            ✨ ${credits >= 0 ? 'ACCREDITA' : 'DECREMENTA'} ${Math.abs(credits)} CAFFÈ ORA
           </button>
 
           <div id="diy-status-msg" style="margin-top: 20px; font-size: 0.9rem; min-height: 40px; display: flex; align-items: center; justify-content: center;">
