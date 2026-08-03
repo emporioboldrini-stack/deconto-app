@@ -308,6 +308,7 @@ function attachGlobalEventListeners() {
       const serialNumber = document.getElementById('new-mc-serial').value.trim();
       const brand = document.getElementById('new-mc-brand').value.trim();
       const model = document.getElementById('new-mc-model').value.trim();
+      const productionYear = document.getElementById('new-mc-year').value.trim();
       const boardId = document.getElementById('new-mc-board').value;
       const clientId = document.getElementById('new-mc-client').value;
 
@@ -317,7 +318,7 @@ function attachGlobalEventListeners() {
       }
 
       try {
-        const newMachine = db.addMachine({ serialNumber, brand, model, boardId, clientId });
+        const newMachine = db.addMachine({ serialNumber, brand, model, productionYear, boardId, clientId });
         alert(`✅ Macchina da caffè SN "${newMachine.serialNumber}" registrata con successo!`);
         renderApp();
       } catch (err) {
@@ -359,11 +360,12 @@ function attachGlobalEventListeners() {
       const serialNumber = document.getElementById('edit-mc-serial').value.trim();
       const brand = document.getElementById('edit-mc-brand').value.trim();
       const model = document.getElementById('edit-mc-model').value.trim();
+      const productionYear = document.getElementById('edit-mc-year').value.trim();
       const boardId = document.getElementById('edit-mc-board').value;
       const clientId = document.getElementById('edit-mc-client').value;
 
       try {
-        db.updateMachine(machineId, { serialNumber, brand, model, boardId, clientId });
+        db.updateMachine(machineId, { serialNumber, brand, model, productionYear, boardId, clientId });
         state.editingId = null;
         alert('✅ Scheda Macchina salvata con successo!');
         renderApp();

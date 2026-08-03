@@ -181,32 +181,158 @@ export function renderAdminDashboard(
         <div class="modal-box" style="max-width: 1240px; width: 96%; min-height: 80vh; max-height: 90vh; overflow-y: auto;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px;">
             <h2 style="font-size: 1.4rem; font-weight: 800; color: var(--accent-purple); margin: 0;">
-              ☕ Telemetria & Ripartizione Parco Macchine (${totalMachines})
+              ☕ Telemetria & Analytics Parco Macchine & Deconti (${totalMachines} macchine)
             </h2>
             <button class="btn-close-kpi-modal" style="background: none; border: none; color: var(--text-muted); font-size: 1.6rem; cursor: pointer;">&times;</button>
           </div>
 
+          <!-- Griglia 2x2 per le statistiche richieste -->
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+            
+            <!-- 1. MODELLI MACCHINA -->
             <div style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 12px; border: 1px solid var(--border-subtle);">
-              <h4 style="margin-top:0; color: var(--accent-cyan);">📡 Stato Connettività Hardware:</h4>
-              <div style="margin-bottom: 12px; font-size: 0.85rem;">
-                • <strong>Schede Wi-Fi 6 Cloud (PRO):</strong> ${boards.filter(b => b.isOnlineWifi).length} Online<br>
-                • <strong>Schede Bluetooth (BASIC):</strong> ${boards.filter(b => !b.isOnlineWifi).length} Local Only
-              </div>
-              <div style="font-size: 0.75rem; color: var(--text-muted);">
-                Le schede Bluetooth sincronizzano i log automaticamente al passaggio dell'Agente ADR.
-              </div>
+              <h4 style="margin-top:0; color: var(--accent-cyan); margin-bottom: 16px;">☕ Classifica Modelli Macchina:</h4>
+              ${(() => {
+                const modelMap = {};
+                machines.forEach(m => {
+                  const modelName = m.model || 'Altro';
+                  modelMap[modelName] = (modelMap[modelName] || 0) + 1;
+                });
+                const sorted = Object.entries(modelMap).sort((a, b) => b[1] - a[1]);
+                const max = sorted.length > 0 ? sorted[0][1] : 1;
+                if (sorted.length === 0) return '<div style="color:var(--text-muted);font-size:0.85rem;">Nessuna macchina registrata.</div>';
+                return sorted.map(([model, count]) => {
+                  const pct = Math.round((count / totalMachines) * 100);
+                  const barW = Math.round((count / max) * 100);
+                  return `
+                    <div style="margin-bottom: 12px;">
+                      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-size: 0.85rem;">
+                        <span style="font-weight: 700; color: #fff;">☕ ${model}</span>
+                        <span style="color: var(--accent-cyan); font-weight: 800;">${count} macchin${count === 1 ? 'a' : 'e'} &nbsp;<small style="color:var(--text-muted);">(${pct}%)</small></span>
+                      </div>
+                      <div style="background: rgba(255,255,255,0.06); border-radius: 4px; height: 6px; width: 100%;">
+                        <div style="background: var(--accent-cyan); height: 6px; border-radius: 4px; width: ${barW}%; transition: width 0.4s;"></div>
+                      </div>
+                    </div>
+                  `;
+                }).join('');
+              })()}
             </div>
 
+            <!-- 2. TIPOLOGIA DI DECONTO (BASIC VS PRO) -->
             <div style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 12px; border: 1px solid var(--border-subtle);">
-              <h4 style="margin-top:0; color: var(--accent-amber);">🛠️ Modelli Macchina più Diffusi:</h4>
-              ${machines.map(m => `
-                <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.85rem;">
-                  <span>☕ ${m.brand} - ${m.model}</span>
-                  <code>${m.serialNumber}</code>
-                </div>
-              `).join('')}
+              <h4 style="margin-top:0; color: var(--accent-purple); margin-bottom: 16px;">📟 Tipologia di Deconto Installati:</h4>
+              ${(() => {
+                const totalBoards = boards.length;
+                if (totalBoards === 0) return '<div style="color:var(--text-muted);font-size:0.85rem;">Nessuna scheda Deconto registrata.</div>';
+                const basicCount = boards.filter(b => b.version === 'BASIC').length;
+                const proCount = boards.filter(b => b.version === 'PRO').length;
+
+                const basicPct = Math.round((basicCount / totalBoards) * 100) || 0;
+                const proPct = Math.round((proCount / totalBoards) * 100) || 0;
+
+                return `
+                  <div style="margin-bottom: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.85rem;">
+                      <span style="font-weight: 700; color: #fff;">🟢 Schede Deconto BASIC (Monogruppo)</span>
+                      <span style="color: var(--accent-green); font-weight: 800;">${basicCount}/${totalBoards} &nbsp;<small style="color:var(--text-muted);">(${basicPct}%)</small></span>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.06); border-radius: 4px; height: 8px; width: 100%;">
+                      <div style="background: var(--accent-green); height: 8px; border-radius: 4px; width: ${basicPct}%;"></div>
+                    </div>
+                  </div>
+
+                  <div style="margin-bottom: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.85rem;">
+                      <span style="font-weight: 700; color: #fff;">🔵 Schede Deconto PRO (Multigruppo)</span>
+                      <span style="color: var(--accent-purple); font-weight: 800;">${proCount}/${totalBoards} &nbsp;<small style="color:var(--text-muted);">(${proPct}%)</small></span>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.06); border-radius: 4px; height: 8px; width: 100%;">
+                      <div style="background: var(--accent-purple); height: 8px; border-radius: 4px; width: ${proPct}%;"></div>
+                    </div>
+                  </div>
+                  
+                  <div style="font-size: 0.75rem; color: var(--text-muted); background: rgba(255,255,255,0.03); padding: 10px; border-radius: 6px; border: 1px solid var(--border-subtle); margin-top: 24px;">
+                    💡 <strong>BASIC:</strong> Modello ultra-compatto con Bluetooth e 1 relè.<br>
+                    💡 <strong>PRO:</strong> Modello Wi-Fi 6 con telemetria multi-gruppo (fino a 4 bracci).
+                  </div>
+                `;
+              })()}
             </div>
+
+            <!-- 3. ANNO DI PRODUZIONE -->
+            <div style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 12px; border: 1px solid var(--border-subtle);">
+              <h4 style="margin-top:0; color: var(--accent-amber); margin-bottom: 16px;">📅 Anno di Produzione Macchine:</h4>
+              ${(() => {
+                const yearMap = {};
+                machines.forEach(m => {
+                  const year = m.productionYear || '2026';
+                  yearMap[year] = (yearMap[year] || 0) + 1;
+                });
+                const sorted = Object.entries(yearMap).sort((a, b) => b[0].localeCompare(a[0])); // Ordina dal più recente
+                const max = sorted.length > 0 ? Math.max(...sorted.map(x => x[1])) : 1;
+                if (sorted.length === 0) return '<div style="color:var(--text-muted);font-size:0.85rem;">Nessuna macchina registrata.</div>';
+                return sorted.map(([year, count]) => {
+                  const pct = Math.round((count / totalMachines) * 100);
+                  const barW = Math.round((count / max) * 100);
+                  return `
+                    <div style="margin-bottom: 12px;">
+                      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-size: 0.85rem;">
+                        <span style="font-weight: 700; color: #fff;">📅 Anno ${year}</span>
+                        <span style="color: var(--accent-amber); font-weight: 800;">${count} macchin${count === 1 ? 'a' : 'e'} &nbsp;<small style="color:var(--text-muted);">(${pct}%)</small></span>
+                      </div>
+                      <div style="background: rgba(255,255,255,0.06); border-radius: 4px; height: 6px; width: 100%;">
+                        <div style="background: var(--accent-amber); height: 6px; border-radius: 4px; width: ${barW}%; transition: width 0.4s;"></div>
+                      </div>
+                    </div>
+                  `;
+                }).join('');
+              })()}
+            </div>
+
+            <!-- 4. MACCHINE DECONTATE (TASSO COPERTURA) -->
+            <div style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 12px; border: 1px solid var(--border-subtle);">
+              <h4 style="margin-top:0; color: var(--accent-green); margin-bottom: 16px;">🔌 Tasso di Copertura Deconto:</h4>
+              ${(() => {
+                if (totalMachines === 0) return '<div style="color:var(--text-muted);font-size:0.85rem;">Nessuna macchina registrata.</div>';
+                // Conta quante macchine hanno un deconto collegato (ovvero c'è un board associato a m.id)
+                const decontateCount = machines.filter(m => boards.some(b => b.machineId === m.id)).length;
+                const nonDecontateCount = totalMachines - decontateCount;
+
+                const decontatePct = Math.round((decontateCount / totalMachines) * 100) || 0;
+                const nonDecontatePct = Math.round((nonDecontateCount / totalMachines) * 100) || 0;
+
+                return `
+                  <div style="margin-bottom: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.85rem;">
+                      <span style="font-weight: 700; color: #fff;">🔌 Macchine Connesse a Deconto</span>
+                      <span style="color: var(--accent-green); font-weight: 800;">${decontateCount}/${totalMachines} &nbsp;<small style="color:var(--text-muted);">(${decontatePct}%)</small></span>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.06); border-radius: 4px; height: 8px; width: 100%;">
+                      <div style="background: var(--accent-green); height: 8px; border-radius: 4px; width: ${decontatePct}%;"></div>
+                    </div>
+                  </div>
+
+                  <div style="margin-bottom: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.85rem;">
+                      <span style="font-weight: 700; color: #fff;">❌ Macchine Libere (Senza Deconto)</span>
+                      <span style="color: var(--text-muted); font-weight: 800;">${nonDecontateCount}/${totalMachines} &nbsp;<small style="color:var(--text-muted);">(${nonDecontatePct}%)</small></span>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.06); border-radius: 4px; height: 8px; width: 100%;">
+                      <div style="background: var(--text-muted); height: 8px; border-radius: 4px; width: ${nonDecontatePct}%;"></div>
+                    </div>
+                  </div>
+                  
+                  <div style="display: flex; align-items: center; justify-content: center; background: rgba(34, 197, 94, 0.05); padding: 14px; border-radius: 8px; border: 1px solid rgba(34, 197, 94, 0.2); margin-top: 24px; text-align: center;">
+                    <div>
+                      <div style="font-size: 1.8rem; font-weight: 900; color: var(--accent-green);">${decontatePct}%</div>
+                      <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px;">Tasso di Controllo Parco</div>
+                    </div>
+                  </div>
+                `;
+              })()}
+            </div>
+
           </div>
 
           <div style="display: flex; justify-content: flex-end;">

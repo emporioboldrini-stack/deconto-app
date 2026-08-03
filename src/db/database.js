@@ -98,14 +98,14 @@ const initialData = {
     { id: 'cli_8', name: 'Pasticceria Giotto', refPerson: 'Marco Giotto', phone: '+39 049 887766', address: 'Via Dante 14, Padova', city: 'Padova' }
   ],
   machines: [
-    { id: 'mc_1', serialNumber: 'SN-MC-2026-9912', brand: 'DeLonghi', model: 'DeLonghi Pod Professional 1G', clientId: 'cli_1', installDate: '2025-11-10' },
-    { id: 'mc_2', serialNumber: 'SN-MC-2026-8843', brand: 'Faber', model: 'Faber Slot Plast Single', clientId: 'cli_2', installDate: '2026-01-15' },
-    { id: 'mc_3', serialNumber: 'SN-MC-2026-1099', brand: 'Saeco', model: 'Saeco Aroma SE Compact', clientId: 'cli_3', installDate: '2026-02-01' },
-    { id: 'mc_4', serialNumber: 'SN-MC-2026-4021', brand: 'Lelit', model: 'Lelit Giulietta Dual Group', clientId: 'cli_4', installDate: '2026-02-10' },
-    { id: 'mc_5', serialNumber: 'SN-MC-2026-7700', brand: 'Grimac', model: 'Grimac Terry Opus 1', clientId: 'cli_5', installDate: '2026-02-20' },
-    { id: 'mc_6', serialNumber: 'SN-MC-2026-5432', brand: 'Gaggia', model: 'Gaggia Ruby 1G Professional', clientId: 'cli_6', installDate: '2026-03-01' },
-    { id: 'mc_7', serialNumber: 'SN-MC-2026-4409', brand: 'Spinel', model: 'Spinel Pinocchio Professional', clientId: 'cli_7', installDate: '2026-03-05' },
-    { id: 'mc_8', serialNumber: 'SN-MC-2026-8820', brand: 'Bialetti', model: 'Bialetti Mokona Pro Vending', clientId: 'cli_8', installDate: '2026-03-15' }
+    { id: 'mc_1', serialNumber: 'SN-MC-2026-9912', brand: 'Spinel', model: 'Ciao', productionYear: '2024', clientId: 'cli_1', installDate: '2025-11-10' },
+    { id: 'mc_2', serialNumber: 'SN-MC-2026-8843', brand: 'Faber', model: 'Slot Plast', productionYear: '2025', clientId: 'cli_2', installDate: '2026-01-15' },
+    { id: 'mc_3', serialNumber: 'SN-MC-2026-1099', brand: 'Saeco', model: 'Aroma', productionYear: '2025', clientId: 'cli_3', installDate: '2026-02-01' },
+    { id: 'mc_4', serialNumber: 'SN-MC-2026-4021', brand: 'Spinel', model: 'Jessica', productionYear: '2026', clientId: 'cli_4', installDate: '2026-02-10' },
+    { id: 'mc_5', serialNumber: 'SN-MC-2026-7700', brand: 'Grimac', model: 'Terry', productionYear: '2024', clientId: 'cli_5', installDate: '2026-02-20' },
+    { id: 'mc_6', serialNumber: 'SN-MC-2026-5432', brand: 'Didiesse', model: 'Frog', productionYear: '2025', clientId: 'cli_6', installDate: '2026-03-01' },
+    { id: 'mc_7', serialNumber: 'SN-MC-2026-4409', brand: 'Spinel', model: 'Pinocchio', productionYear: '2026', clientId: 'cli_7', installDate: '2026-03-05' },
+    { id: 'mc_8', serialNumber: 'SN-MC-2026-8820', brand: 'Bialetti', model: 'Ciao', productionYear: '2026', clientId: 'cli_8', installDate: '2026-03-15' }
   ],
   decontoBoards: [
     // 🟢 VERDI (5 Schede > 20 cialde)
@@ -360,6 +360,26 @@ class DecontoDatabase {
     if (!masterData.schemaVersion || masterData.schemaVersion < 2) {
       masterData.coffeeLogs = [];
       masterData.schemaVersion = 2;
+    }
+
+    // === MIGRAZIONE SCHEMA v3: aggiungi productionYear e pulisci modelli macchine ===
+    if (masterData.schemaVersion < 3) {
+      if (masterData.machines && Array.isArray(masterData.machines)) {
+        masterData.machines.forEach(m => {
+          m.productionYear = m.productionYear || '2026';
+          // Standardizzazione modelli
+          const mod = String(m.model).toLowerCase();
+          if (mod.includes('ciao')) m.model = 'Ciao';
+          else if (mod.includes('jessica')) m.model = 'Jessica';
+          else if (mod.includes('frog')) m.model = 'Frog';
+          else if (mod.includes('slot')) m.model = 'Slot Plast';
+          else if (mod.includes('aroma')) m.model = 'Aroma';
+          else if (mod.includes('terry')) m.model = 'Terry';
+          else if (mod.includes('pinocchio')) m.model = 'Pinocchio';
+          else m.model = 'Altro';
+        });
+      }
+      masterData.schemaVersion = 3;
     }
 
     // Rimuovi log orfani di schede Deconto cancellate
@@ -823,8 +843,9 @@ class DecontoDatabase {
     const newMachine = {
       id: 'mc_' + Date.now(),
       serialNumber,
-      brand: data.brand ? data.brand.trim() : 'DeLonghi',
-      model: data.model ? data.model.trim() : 'Pod Professional',
+      brand: data.brand ? data.brand.trim() : 'Spinel',
+      model: data.model ? data.model.trim() : 'Ciao',
+      productionYear: data.productionYear ? String(data.productionYear).trim() : '2026',
       clientId: data.clientId || null,
       installDate: data.clientId ? new Date().toISOString().split('T')[0] : null
     };
@@ -852,6 +873,7 @@ class DecontoDatabase {
     if (data.serialNumber) machine.serialNumber = data.serialNumber.trim();
     if (data.brand !== undefined) machine.brand = data.brand.trim();
     if (data.model) machine.model = data.model.trim();
+    if (data.productionYear !== undefined) machine.productionYear = String(data.productionYear).trim();
 
     if (data.clientId !== undefined) {
       machine.clientId = data.clientId || null;

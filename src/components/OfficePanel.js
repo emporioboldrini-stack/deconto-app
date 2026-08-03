@@ -26,6 +26,21 @@ function clientTypeSelect(id, selectedValue) {
   </select>`;
 }
 
+const MACHINE_MODELS = ["Ciao", "Jessica", "Frog", "Slot Plast", "Aroma", "Terry", "Pinocchio", "Altro"];
+const PRODUCTION_YEARS = ["2020", "2021", "2022", "2023", "2024", "2025", "2026"];
+
+function machineModelSelect(id, selectedValue) {
+  return `<select id="${id}" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700;">
+    ${MACHINE_MODELS.map(m => `<option value="${m}" ${selectedValue === m ? 'selected' : ''}>${m}</option>`).join('')}
+  </select>`;
+}
+
+function productionYearSelect(id, selectedValue) {
+  return `<select id="${id}" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700;">
+    ${PRODUCTION_YEARS.map(y => `<option value="${y}" ${selectedValue === y ? 'selected' : ''}>${y}</option>`).join('')}
+  </select>`;
+}
+
 export function renderOfficePanel(activeTab = 'clients', editingId = null) {
   const clients = db.getClients();
   const machines = db.getMachines();
@@ -126,14 +141,18 @@ export function renderOfficePanel(activeTab = 'clients', editingId = null) {
                 <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Seriale Macchina (SN):*</label>
                 <input type="text" id="edit-mc-serial" value="${mc.serialNumber}" required style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 800; font-family: monospace;">
               </div>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px;">
                 <div>
-                  <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Marca:</label>
+                  <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Marca / Produttore:</label>
                   <input type="text" id="edit-mc-brand" value="${mc.brand || ''}" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
                 </div>
                 <div>
-                  <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Modello:*</label>
-                  <input type="text" id="edit-mc-model" value="${mc.model}" required style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700;">
+                  <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Modello Macchina:*</label>
+                  ${machineModelSelect('edit-mc-model', mc.model || 'Ciao')}
+                </div>
+                <div>
+                  <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">📅 Anno Produzione:*</label>
+                  ${productionYearSelect('edit-mc-year', mc.productionYear || '2026')}
                 </div>
               </div>
 
@@ -384,18 +403,22 @@ export function renderOfficePanel(activeTab = 'clients', editingId = null) {
         <!-- Form Nuova Macchina -->
         <div id="add-machine-form-container" class="stat-card" style="display: none; margin-bottom: 32px; padding: 24px; border: 2px solid var(--accent-purple);">
           <h3 style="margin-top: 0; color: var(--accent-purple); margin-bottom: 16px;">➕ Registrazione Nuova Macchina da Caffè:</h3>
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px;">
             <div>
               <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Seriale Macchina (SN):*</label>
               <input type="text" id="new-mc-serial" placeholder="Es. SN-MC-2026-9988" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 800; font-family: monospace;">
             </div>
             <div>
               <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Marca / Produttore:</label>
-              <input type="text" id="new-mc-brand" placeholder="Es. Didiesse / Faber / Spinel" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
+              <input type="text" id="new-mc-brand" placeholder="Es. Spinel / Faber" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px;">
             </div>
             <div>
               <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Modello Macchina:*</label>
-              <input type="text" id="new-mc-model" placeholder="Es. Frog Revolution 1G" style="width: 100%; padding: 10px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700;">
+              ${machineModelSelect('new-mc-model', 'Ciao')}
+            </div>
+            <div>
+              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">📅 Anno Produzione:*</label>
+              ${productionYearSelect('new-mc-year', '2026')}
             </div>
           </div>
 
@@ -432,6 +455,7 @@ export function renderOfficePanel(activeTab = 'clients', editingId = null) {
               <tr>
                 <th>Seriale Macchina</th>
                 <th>Marca & Modello</th>
+                <th>Anno Prod.</th>
                 <th>Scheda Deconto Collegata</th>
                 <th>Cliente Assegnato</th>
                 <th>Stato Operativo</th>
@@ -447,6 +471,7 @@ export function renderOfficePanel(activeTab = 'clients', editingId = null) {
                   <tr>
                     <td><strong style="font-family: monospace; color: var(--accent-cyan);">${m.serialNumber}</strong></td>
                     <td><strong>${m.brand || ''} ${m.model}</strong></td>
+                    <td><span class="badge" style="background: rgba(255,255,255,0.06); color: #fff; border: 1px solid var(--border-subtle);">${m.productionYear || '2026'}</span></td>
                     <td>
                       ${b 
                         ? `<button class="btn btn-secondary btn-deconto-detail" data-code="${b.shortCode}" style="padding: 4px 8px; font-size: 0.8rem; font-weight: 800; color: var(--accent-cyan);">📟 #${b.shortCode} (${b.remainingCredits} cr)</button>`
