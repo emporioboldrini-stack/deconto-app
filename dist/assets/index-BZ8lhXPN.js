@@ -670,7 +670,7 @@
           </div>
         </div>
       </div>
-    `}let C=``;if(t){let e=a.getBoardFullDetails(t);if(e&&e.board){let t=e.board,n=e.machine||{},r=e.client||{},i=e.coffees||[],o=t.avgDailyCoffees||12.4,s=o>0?Math.ceil(t.remainingCredits/o):`N/D`,c=s===`N/D`?`N/D`:new Date(Date.now()+s*864e5).toLocaleDateString(`it-IT`,{day:`2-digit`,month:`long`,year:`numeric`}),l=a.calculateBoardStatus(t);C=`
+    `}let C=``;if(t){let e=a.getBoardFullDetails(t);if(e&&e.board){let t=e.board,n=e.machine||{},r=e.client||{},i=e.coffees||[],o=0;if(n.installDate&&t.machineExtractions>0){let e=new Date(n.installDate).getTime(),r=Math.max(1,Math.ceil((Date.now()-e)/864e5));o=Number((t.machineExtractions/r).toFixed(1))}let s=o>0?o:`N/D`,c=o>0?Math.ceil(t.remainingCredits/o):`N/D`,l=c===`N/D`?`N/D`:new Date(Date.now()+c*864e5).toLocaleDateString(`it-IT`,{day:`2-digit`,month:`long`,year:`numeric`}),u=a.calculateBoardStatus(t);C=`
         <div class="modal-overlay" id="deconto-detail-modal">
           <div class="modal-box" style="max-width: 1020px; width: 95%; max-height: 90vh; overflow-y: auto;">
             
@@ -683,7 +683,7 @@
                     ${t.isOnlineWifi?`📡 Wi-Fi Online (-62 dBm)`:`📶 Bluetooth Local Only`}
                   </span>
                   <span class="badge badge-info">${t.version} VERSION</span>
-                  ${l.badgeHtml}
+                  ${u.badgeHtml}
                 </div>
                 <h2 style="font-size: 1.3rem; font-weight: 800; color: #fff; margin: 4px 0 0 0;">
                   ${r.name?r.name:`Cliente Non Assegnato`}
@@ -751,7 +751,7 @@
                     </div>
                     <div style="text-align: right;">
                       <div style="font-size: 0.75rem; color: var(--text-muted);">Stima Esaurimento:</div>
-                      <div style="font-size: 0.9rem; font-weight: 800; color: var(--accent-amber);">${c}</div>
+                      <div style="font-size: 0.9rem; font-weight: 800; color: var(--accent-amber);">${l}</div>
                     </div>
                   </div>
                 </div>
@@ -770,7 +770,7 @@
 
                   <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px; border: 1px solid var(--border-subtle);">
                     <div style="font-size: 0.75rem; color: var(--text-muted);">Media Consumo:</div>
-                    <div style="font-size: 1.2rem; font-weight: 800; color: var(--accent-green); margin-top: 2px;">${o} <small style="font-size: 0.75rem;">caffè/gg</small></div>
+                    <div style="font-size: 1.2rem; font-weight: 800; color: var(--accent-green); margin-top: 2px;">${s} <small style="font-size: 0.75rem;">caffè/gg</small></div>
                   </div>
 
                   <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px; border: 1px solid var(--border-subtle);">

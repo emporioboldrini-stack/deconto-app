@@ -643,7 +643,16 @@ export function renderAdminDashboard(
       const c = details.client || {};
       const boardCoffees = details.coffees || [];
 
-      const avgDaily = b.avgDailyCoffees || 12.4;
+      // CALCOLO MEDIA REALE
+      let avgDaily = 0;
+      if (m.installDate && b.machineExtractions > 0) {
+        const installTime = new Date(m.installDate).getTime();
+        const nowTime = Date.now();
+        const daysElapsed = Math.max(1, Math.ceil((nowTime - installTime) / (1000 * 3600 * 24)));
+        avgDaily = Number((b.machineExtractions / daysElapsed).toFixed(1));
+      }
+      
+      const avgDailyDisplay = avgDaily > 0 ? avgDaily : 'N/D';
       const daysLeft = avgDaily > 0 ? Math.ceil(b.remainingCredits / avgDaily) : 'N/D';
       const estimatedDepletionDate = daysLeft !== 'N/D' 
         ? new Date(Date.now() + daysLeft * 86400000).toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' })
@@ -751,7 +760,7 @@ export function renderAdminDashboard(
 
                   <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px; border: 1px solid var(--border-subtle);">
                     <div style="font-size: 0.75rem; color: var(--text-muted);">Media Consumo:</div>
-                    <div style="font-size: 1.2rem; font-weight: 800; color: var(--accent-green); margin-top: 2px;">${avgDaily} <small style="font-size: 0.75rem;">caffè/gg</small></div>
+                    <div style="font-size: 1.2rem; font-weight: 800; color: var(--accent-green); margin-top: 2px;">${avgDailyDisplay} <small style="font-size: 0.75rem;">caffè/gg</small></div>
                   </div>
 
                   <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px; border: 1px solid var(--border-subtle);">
