@@ -762,6 +762,34 @@ export function renderAdminDashboard(
                   </div>
                 </div>
 
+                <!-- Ricarica Rapida Operatore Interno -->
+                <div style="background: rgba(16, 185, 129, 0.05); padding: 16px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.2); display: flex; flex-direction: column; gap: 10px; margin-bottom: 4px;">
+                  <div style="font-size: 0.85rem; color: var(--accent-green); font-weight: 700; text-transform: uppercase; display: flex; align-items: center; gap: 6px;">
+                    <span>⚡</span> Ricarica Rapida Operatore
+                  </div>
+                  
+                  <div style="display: flex; gap: 8px;">
+                    <select id="modal-refill-credits-select" style="flex: 1; padding: 8px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700; font-size: 0.85rem;">
+                      <option value="50">+50 Caffè</option>
+                      <option value="100">+100 Caffè</option>
+                      <option value="200" selected>+200 Caffè</option>
+                      <option value="500">+500 Caffè</option>
+                      <option value="CUSTOM">🖋️ Personalizza...</option>
+                    </select>
+                    
+                    <input type="number" id="modal-refill-credits-custom" placeholder="Es. +120 o -50" style="display: none; width: 110px; padding: 8px; background: var(--bg-primary); color: #fff; border: 1px solid var(--accent-amber); border-radius: 6px; font-weight: 700; font-size: 0.85rem;">
+                  </div>
+
+                  <button id="btn-modal-perform-refill" data-board-code="${b.shortCode}" class="btn btn-primary" style="padding: 10px; font-size: 0.85rem; font-weight: 800; width: 100%; border-radius: 6px; background: linear-gradient(135deg, var(--accent-green), #059669);">
+                    ${(() => {
+                      const currUser = db.getCurrentUser();
+                      return currUser && (currUser.role === 'ADMIN' || currUser.role === 'UFFICIO')
+                        ? '🚀 Esegui Ricarica Cloud (Wi-Fi)'
+                        : '📡 Esegui Ricarica Bluetooth (BLE)';
+                    })()}
+                  </button>
+                </div>
+
                 <!-- Scheda Parametri Diagnostici Hardware -->
                 <div style="background: rgba(0,0,0,0.3); padding: 14px; border-radius: 10px; border: 1px solid var(--border-subtle); font-size: 0.8rem; line-height: 1.6;">
                   <div style="font-weight: 800; color: var(--accent-cyan); margin-bottom: 6px;">🔧 Parametri Tecnologici Hardware ESP32-C6:</div>

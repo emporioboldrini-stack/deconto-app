@@ -1187,6 +1187,59 @@ function attachGlobalEventListeners() {
       renderApp();
     });
   }
+
+  // --- GESTORE RICARICA RAPIDA DA MODALE TELEMETRIA ---
+  const modalRefillSelect = document.getElementById('modal-refill-credits-select');
+  const modalRefillCustom = document.getElementById('modal-refill-credits-custom');
+  const btnModalPerformRefill = document.getElementById('btn-modal-perform-refill');
+
+  if (modalRefillSelect && modalRefillCustom) {
+    modalRefillSelect.addEventListener('change', () => {
+      if (modalRefillSelect.value === 'CUSTOM') {
+        modalRefillCustom.style.display = 'block';
+      } else {
+        modalRefillCustom.style.display = 'none';
+      }
+    });
+  }
+
+  if (btnModalPerformRefill) {
+    btnModalPerformRefill.addEventListener('click', () => {
+      const boardShortCode = btnModalPerformRefill.getAttribute('data-board-code');
+      const creditsType = document.getElementById('modal-refill-credits-select').value;
+      let credits = 200;
+
+      if (creditsType === 'CUSTOM') {
+        const val = parseInt(document.getElementById('modal-refill-credits-custom').value, 10);
+        if (isNaN(val)) {
+          alert('Inserisci un valore numerico valido (positivo o negativo) per la ricarica personalizzata!');
+          return;
+        }
+        credits = val;
+      } else {
+        credits = parseInt(creditsType, 10);
+      }
+
+      // Determina il metodo e l'operatore in base al ruolo dell'utente loggato
+      const user = state.currentUser;
+      const isOfficeOrAdmin = user && (user.role === 'ADMIN' || user.role === 'UFFICIO');
+      const method = isOfficeOrAdmin ? 'CLOUD_DIRECT' : 'ADR_BLE_PHYSICAL';
+
+      try {
+        db.performRefill({
+          boardShortCode,
+          credits,
+          method,
+          operatorId: user ? user.id : 'usr_001'
+        });
+
+        alert(`✅ Ricarica di ${credits >= 0 ? '+' : ''}${credits} caffè effettuata con successo!\nCanale: ${isOfficeOrAdmin ? 'Cloud Wi-Fi (Ufficio)' : 'Bluetooth BLE (ADR)'}`);
+        renderApp();
+      } catch (err) {
+        alert(`❌ Errore durante la ricarica: ${err.message}`);
+      }
+    });
+  }
 }
 
 // Inizializzazione Applicazione
