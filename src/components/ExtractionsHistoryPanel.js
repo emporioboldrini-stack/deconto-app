@@ -30,9 +30,9 @@ export function renderExtractionsHistoryPanel(filters = {}) {
       return false;
     }
 
-    // 3. Filtro Data (YYYY-MM-DD)
+    // 3. Filtro Data (YYYY-MM-DD locale)
     if (filterDate) {
-      const logDate = log.timestamp.split('T')[0]; // Ottieni YYYY-MM-DD
+      const logDate = new Date(log.timestamp).toLocaleDateString('sv-SE');
       if (logDate !== filterDate) {
         return false;
       }

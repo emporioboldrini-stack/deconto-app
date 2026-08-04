@@ -1778,7 +1778,7 @@
         </div>
       </div>
     </div>
-  `}function x(e={}){let t=a.getRefillLogs(),n=a.getClients(),r=a.getBoards(),i=a.getMachines(),o=a.getUsers(),s=(e.boardCode||``).trim().toLowerCase(),c=(e.clientName||``).trim().toLowerCase(),l=(e.date||``).trim(),u=t.filter(e=>{if(s&&!e.shortCode.toLowerCase().includes(s))return!1;let t=r.find(t=>t.id===e.boardId||t.shortCode===e.shortCode),a=t&&t.machineId?i.find(e=>e.id===t.machineId):null,o=a&&a.clientId?n.find(e=>e.id===a.clientId):null,u=o?o.name.toLowerCase():`magazzino`;return!(c&&!u.includes(c)||l&&e.timestamp.split(`T`)[0]!==l)});return`
+  `}function x(e={}){let t=a.getRefillLogs(),n=a.getClients(),r=a.getBoards(),i=a.getMachines(),o=a.getUsers(),s=(e.boardCode||``).trim().toLowerCase(),c=(e.clientName||``).trim().toLowerCase(),l=(e.date||``).trim(),u=t.filter(e=>{if(s&&!e.shortCode.toLowerCase().includes(s))return!1;let t=r.find(t=>t.id===e.boardId||t.shortCode===e.shortCode),a=t&&t.machineId?i.find(e=>e.id===t.machineId):null,o=a&&a.clientId?n.find(e=>e.id===a.clientId):null,u=o?o.name.toLowerCase():`magazzino`;return!(c&&!u.includes(c)||l&&new Date(e.timestamp).toLocaleDateString(`sv-SE`)!==l)});return`
     <div>
       <div style="margin-bottom: 24px;">
         <h1 style="font-size: 1.8rem; font-weight: 800; color: #fff; margin: 0 0 8px 0;">📜 Storico Ricariche Deconto</h1>
@@ -1854,7 +1854,7 @@
         </table>
       </div>
     </div>
-  `}function S(e={}){let t=a.getCoffeeLogs(),n=a.getClients(),r=a.getBoards(),i=a.getMachines(),o=(e.boardCode||``).trim().toLowerCase(),s=(e.clientName||``).trim().toLowerCase(),c=(e.date||``).trim(),l=t.filter(e=>{let t=r.find(t=>t.id===e.boardId),a=t?t.shortCode:``;if(o&&!a.toLowerCase().includes(o))return!1;let l=t&&t.machineId?i.find(e=>e.id===t.machineId):null,u=l&&l.clientId?n.find(e=>e.id===l.clientId):null,d=u?u.name.toLowerCase():`magazzino`;return!(s&&!d.includes(s)||c&&e.timestamp.split(`T`)[0]!==c)});return`
+  `}function S(e={}){let t=a.getCoffeeLogs(),n=a.getClients(),r=a.getBoards(),i=a.getMachines(),o=(e.boardCode||``).trim().toLowerCase(),s=(e.clientName||``).trim().toLowerCase(),c=(e.date||``).trim(),l=t.filter(e=>{let t=r.find(t=>t.id===e.boardId),a=t?t.shortCode:``;if(o&&!a.toLowerCase().includes(o))return!1;let l=t&&t.machineId?i.find(e=>e.id===t.machineId):null,u=l&&l.clientId?n.find(e=>e.id===l.clientId):null,d=u?u.name.toLowerCase():`magazzino`;return!(s&&!d.includes(s)||c&&new Date(e.timestamp).toLocaleDateString(`sv-SE`)!==c)});return`
     <div>
       <div style="margin-bottom: 24px;">
         <h1 style="font-size: 1.8rem; font-weight: 800; color: #fff; margin: 0 0 8px 0;">☕ Registro Erogazioni Caffè</h1>
