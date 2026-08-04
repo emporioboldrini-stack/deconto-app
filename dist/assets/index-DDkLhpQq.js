@@ -426,7 +426,7 @@
           </div>
         </div>
       </div>
-    `;else if(s===`kpi_extractions`){let e=a.getExtractionsAnalytics(c,u,d),t=e.chartBuckets,n=Math.max(...t.map(e=>e.count),1),r=``;if(l===`LINE`){let e=t.map((e,t)=>({x:30+t*160,y:150-Math.round(e.count/n*110),count:e.count,label:e.label})),i=`M ${e[0].x},${e[0].y} Q ${e[1].x-40},${e[1].y} ${e[1].x},${e[1].y} T ${e[2].x},${e[2].y} T ${e[3].x},${e[3].y} T ${e[4].x},${e[4].y}`;r=`
+    `;else if(s===`kpi_extractions`){let e=a.getExtractionsAnalytics(c,u,d),t=e.chartBuckets,n=Math.max(...t.map(e=>e.count),1),r=``;if(l===`LINE`){let e=t.map((e,t)=>({x:30+t*160,y:150-Math.round(e.count/n*110),count:e.count,label:e.label})),i=`M ${e[0].x},${e[0].y} C ${e[0].x+50},${e[0].y} ${e[1].x-50},${e[1].y} ${e[1].x},${e[1].y} C ${e[1].x+50},${e[1].y} ${e[2].x-50},${e[2].y} ${e[2].x},${e[2].y} C ${e[2].x+50},${e[2].y} ${e[3].x-50},${e[3].y} ${e[3].x},${e[3].y} C ${e[3].x+50},${e[3].y} ${e[4].x-50},${e[4].y} ${e[4].x},${e[4].y}`;r=`
         <div style="height: 220px; position: relative; padding: 20px 10px 10px 10px; border-bottom: 2px solid var(--border-subtle);">
           <svg viewBox="0 0 700 180" style="width: 100%; height: 100%; overflow: visible;">
             <defs>

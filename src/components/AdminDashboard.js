@@ -342,7 +342,11 @@ export function renderAdminDashboard(
         return { x, y, count: b.count, label: b.label };
       });
 
-      const pathString = `M ${pts[0].x},${pts[0].y} Q ${pts[1].x - 40},${pts[1].y} ${pts[1].x},${pts[1].y} T ${pts[2].x},${pts[2].y} T ${pts[3].x},${pts[3].y} T ${pts[4].x},${pts[4].y}`;
+      const pathString = `M ${pts[0].x},${pts[0].y} ` +
+        `C ${pts[0].x + 50},${pts[0].y} ${pts[1].x - 50},${pts[1].y} ${pts[1].x},${pts[1].y} ` +
+        `C ${pts[1].x + 50},${pts[1].y} ${pts[2].x - 50},${pts[2].y} ${pts[2].x},${pts[2].y} ` +
+        `C ${pts[2].x + 50},${pts[2].y} ${pts[3].x - 50},${pts[3].y} ${pts[3].x},${pts[3].y} ` +
+        `C ${pts[3].x + 50},${pts[3].y} ${pts[4].x - 50},${pts[4].y} ${pts[4].x},${pts[4].y}`;
       const fillString = `${pathString} L ${pts[4].x},170 L ${pts[0].x},170 Z`;
 
       chartVisualHtml = `
