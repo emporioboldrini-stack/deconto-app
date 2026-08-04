@@ -84,31 +84,31 @@ export function renderQrGeneratorPanel(qrParams = {}) {
         
         <div style="display: flex; justify-content: center; margin-bottom: 20px; background: rgba(0,0,0,0.4); padding: 30px; border-radius: 12px; border: 1px solid var(--border-subtle);">
           
-          <!-- L'Etichetta Fisica Reale -->
-          <div id="printable-qr-label" style="width: 50mm; height: 35mm; border: 1px dashed #000; padding: 2mm; display: flex; flex-direction: column; justify-content: space-between; background: #fff; color: #000; box-sizing: border-box; font-family: sans-serif; text-align: center;">
+          <!-- L'Etichetta Fisica Reale (Ottimizzata ad Alto Contrasto per Stampa Termica 50x35mm) -->
+          <div id="printable-qr-label" style="width: 50mm; height: 35mm; border: 1px dashed #000; padding: 2mm; display: flex; flex-direction: column; justify-content: space-between; background: #fff; color: #000; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; text-align: center;">
             
-            <!-- Righe 1 e 2: Intestazione -->
-            <div style="line-height: 1.2;">
-              <div style="font-size: 5pt; font-weight: bold; color: #000; text-transform: uppercase;">Macchina concessa in comodato gratuito da:</div>
-              <div style="font-size: 6.5pt; font-weight: 900; color: #000; letter-spacing: 0.1px; margin-top: 1px;">WWW.EMPORIOBOLDRINI.COM</div>
+            <!-- Righe 1 e 2: Intestazione ad alto contrasto -->
+            <div style="line-height: 1.15;">
+              <div style="font-size: 4.8pt; font-weight: 800; text-transform: uppercase; color: #000; letter-spacing: 0.3px;">Macchina in comodato gratuito da:</div>
+              <div style="font-size: 7.5pt; font-weight: 900; color: #000; letter-spacing: 0.4px; border: 1.5px solid #000; display: inline-block; padding: 1px 6px; margin-top: 2px; text-transform: uppercase;">WWW.EMPORIOBOLDRINI.COM</div>
             </div>
 
-            <!-- Riga 3: QR Code Centrale -->
-            <div style="display: flex; justify-content: center; align-items: center; height: 16mm; margin: 0.5mm 0;">
+            <!-- Riga 3: QR Code Centrale (Ingrandito a 18mm per massima scannabilità) -->
+            <div style="display: flex; justify-content: center; align-items: center; height: 18mm; margin: 0.5mm 0;">
               ${qrCodeUrl 
-                ? `<img src="${qrCodeUrl}" style="width: 15mm; height: 15mm; object-fit: contain;" alt="QR Code">` 
-                : `<div style="width: 15mm; height: 15mm; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; font-size: 5pt;">QR N/D</div>`}
+                ? `<img src="${qrCodeUrl}" style="width: 18mm; height: 18mm; object-fit: contain;" alt="QR Code">` 
+                : `<div style="width: 18mm; height: 18mm; border: 1.5px solid #000; display: flex; align-items: center; justify-content: center; font-size: 6pt; font-weight: bold;">QR N/D</div>`}
             </div>
 
-            <!-- Righe 4 e 5: Seriali Hardware -->
-            <div style="font-size: 5.5pt; text-align: left; border-top: 0.5px solid #ccc; padding-top: 0.8mm; line-height: 1.2; display: flex; flex-direction: column; gap: 0.3mm;">
-              <div style="display: flex; justify-content: space-between; width: 100%;">
-                <span>Seriale macchina:</span>
-                <strong style="font-family: monospace; font-weight: bold;">${machineSerial || 'N/D'}</strong>
+            <!-- Righe 4 e 5: Seriali disposti Side-by-Side per ottimizzare lo spazio -->
+            <div style="font-size: 6pt; border-top: 1.5px solid #000; padding-top: 0.8mm; line-height: 1.2; display: flex; justify-content: space-between; width: 100%;">
+              <div style="text-align: left;">
+                <span style="text-transform: uppercase; font-size: 4.5pt; color: #444; display: block; font-weight: 800; letter-spacing: 0.1px;">Seriale Macchina</span>
+                <strong style="font-family: monospace; font-size: 6.5pt; font-weight: 900; color: #000;">${machineSerial || 'N/D'}</strong>
               </div>
-              <div style="display: flex; justify-content: space-between; width: 100%;">
-                <span>Seriale Deconto:</span>
-                <strong style="font-family: monospace; font-weight: bold;">#${selectedBoardShortCode || 'N/D'}</strong>
+              <div style="text-align: right; border-left: 1px solid #000; padding-left: 2mm;">
+                <span style="text-transform: uppercase; font-size: 4.5pt; color: #444; display: block; font-weight: 800; letter-spacing: 0.1px;">Seriale Deconto</span>
+                <strong style="font-family: monospace; font-size: 7pt; font-weight: 900; color: #000;">#${selectedBoardShortCode || 'N/D'}</strong>
               </div>
             </div>
 
