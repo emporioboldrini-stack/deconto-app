@@ -835,6 +835,7 @@ function attachGlobalEventListeners() {
     btn.addEventListener('click', () => {
       const code = btn.getAttribute('data-code');
       state.viewingDecontoCode = code;
+      state.viewingKpiModal = null; // Chiude in automatico la modale KPI/Scorte
       renderApp();
     });
   });
