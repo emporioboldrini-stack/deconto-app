@@ -120,32 +120,6 @@ export function renderQrGeneratorPanel(qrParams = {}) {
           <code style="font-size: 0.78rem; color: var(--accent-amber); word-break: break-all;">${qrLinkData || ''}</code>
         </div>
       </div>
-      
-      <!-- Stile CSS di stampa iniettato dinamicamente -->
-      <style>
-        @media print {
-          /* Nascondi tutto il layout dell'applicazione */
-          body, html {
-            background: #fff !important;
-            color: #000 !important;
-            margin: 0 !important;
-            padding: 0 !important;
-          }
-          #app, .sidebar, .header, aside, nav, button, select, label, h1, h3, p, .stat-card, #qr-preview-container > h3, #qr-preview-container > div:last-child {
-            display: none !important;
-          }
-          /* Mostra SOLO l'etichetta senza bordi dashed, isolata nell'angolo in alto a sinistra della pagina */
-          #printable-qr-label {
-            display: flex !important;
-            border: none !important;
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
-            margin: 0 !important;
-            box-shadow: none !important;
-          }
-        }
-      </style>
     </div>
   `;
 }

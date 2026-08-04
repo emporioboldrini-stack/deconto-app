@@ -1062,7 +1062,70 @@ function attachGlobalEventListeners() {
   // Tasto STAMPA
   if (btnPrintQrLabel) {
     btnPrintQrLabel.addEventListener('click', () => {
-      window.print();
+      const labelEl = document.getElementById('printable-qr-label');
+      if (!labelEl) return;
+
+      // Crea un iframe temporaneo per isolare il documento da stampare
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = '0';
+      document.body.appendChild(iframe);
+
+      const doc = iframe.contentWindow.document;
+      doc.open();
+      doc.write(`
+        <html>
+          <head>
+            <title>Stampa Etichetta Deconto</title>
+            <style>
+              @page {
+                size: 50mm 35mm;
+                margin: 0;
+              }
+              html, body {
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #fff !important;
+                color: #000 !important;
+                width: 50mm !important;
+                height: 35mm !important;
+                box-sizing: border-box;
+                font-family: sans-serif;
+                overflow: hidden;
+              }
+              #print-box {
+                width: 50mm !important;
+                height: 35mm !important;
+                padding: 2mm !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: space-between !important;
+                box-sizing: border-box !important;
+                text-align: center !important;
+              }
+            </style>
+          </head>
+          <body>
+            <div id="print-box">
+              ${labelEl.innerHTML}
+            </div>
+            <script>
+              // Forza il caricamento prima della stampa
+              window.onload = function() {
+                window.print();
+                setTimeout(() => {
+                  window.parent.document.body.removeChild(window.frameElement);
+                }, 500);
+              };
+            </script>
+          </body>
+        </html>
+      `);
+      doc.close();
     });
   }
 
