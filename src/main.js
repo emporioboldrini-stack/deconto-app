@@ -9,6 +9,7 @@ import { renderOfficePanel } from './components/OfficePanel.js';
 import { renderAdrPanel } from './components/AdrPanel.js';
 import { renderClientDiyPanel } from './components/ClientDiyPanel.js';
 import { renderOtpGeneratorPanel } from './components/OtpGeneratorPanel.js';
+import { renderQrGeneratorPanel } from './components/QrGeneratorPanel.js';
 import { renderRefillsHistoryPanel } from './components/RefillsHistoryPanel.js';
 import { renderExtractionsHistoryPanel } from './components/ExtractionsHistoryPanel.js';
 import { renderHardwareSimulator } from './components/HardwareSimulator.js';
@@ -39,6 +40,7 @@ const state = {
   diyParams: null,
   refillsFilter: { boardCode: '', clientName: '', date: '' },
   extractionsFilter: { boardCode: '', clientName: '', date: '' },
+  qrParams: { clientId: '', machineId: '', boardShortCode: '', isGenerated: false },
   simulatingBoardCode: null
 };
 
@@ -85,14 +87,7 @@ function renderApp() {
       contentHtml = renderClientDiyPanel(state.diyParams);
       break;
     case 'qr_generator':
-      contentHtml = `
-        <div class="stat-card" style="padding: 32px; text-align: center; max-width: 600px; margin: 40px auto; border: 1px solid var(--border-subtle);">
-          <div style="font-size: 3rem; margin-bottom: 16px;">🖨️</div>
-          <h2 style="color: #fff; font-weight: 800; margin-bottom: 8px;">Stampa Etichette Termiche QR Code</h2>
-          <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 24px;">Configurazione e stampa di etichette fisiche adesive con QR code univoco per l'associazione Deconto.</p>
-          <span class="badge badge-warning" style="padding: 8px 16px; font-weight: 800; letter-spacing: 0.05em;">PROSSIMAMENTE DISPONIBILE IN V2.0</span>
-        </div>
-      `;
+      contentHtml = renderQrGeneratorPanel(state.qrParams);
       break;
     case 'refills_history':
       contentHtml = renderRefillsHistoryPanel(state.refillsFilter);
@@ -969,6 +964,105 @@ function attachGlobalEventListeners() {
         otpMachineSelect.value = '';
         otpClientSelect.value = '';
       }
+    });
+  }
+
+  // --- GESTORE QR GENERATOR ---
+  const qrClientSelect = document.getElementById('qr-client-select');
+  const qrMachineSelect = document.getElementById('qr-machine-select');
+  const qrBoardSelect = document.getElementById('qr-board-select');
+  const btnGenerateQrLabel = document.getElementById('btn-generate-qr-label');
+  const btnPrintQrLabel = document.getElementById('btn-print-qr-label');
+
+  if (qrClientSelect && qrMachineSelect && qrBoardSelect) {
+    // Cascata 1: Seleziona Cliente
+    qrClientSelect.addEventListener('change', () => {
+      const clientId = qrClientSelect.value;
+      state.qrParams.clientId = clientId;
+      state.qrParams.isGenerated = false;
+      if (!clientId) {
+        state.qrParams.machineId = '';
+        state.qrParams.boardShortCode = '';
+      } else {
+        const mc = db.getMachines().find(m => m.clientId === clientId);
+        if (mc) {
+          state.qrParams.machineId = mc.id;
+          const board = db.getBoards().find(b => b.machineId === mc.id);
+          state.qrParams.boardShortCode = board ? board.shortCode : '';
+        } else {
+          state.qrParams.machineId = '';
+          state.qrParams.boardShortCode = '';
+        }
+      }
+      renderApp();
+    });
+
+    // Cascata 2: Seleziona Macchina
+    qrMachineSelect.addEventListener('change', () => {
+      const mcId = qrMachineSelect.value;
+      state.qrParams.machineId = mcId;
+      state.qrParams.isGenerated = false;
+      if (!mcId) {
+        state.qrParams.clientId = '';
+        state.qrParams.boardShortCode = '';
+      } else {
+        const mc = db.getMachines().find(m => m.id === mcId);
+        if (mc) {
+          state.qrParams.clientId = mc.clientId || '';
+          const board = db.getBoards().find(b => b.machineId === mc.id);
+          state.qrParams.boardShortCode = board ? board.shortCode : '';
+        }
+      }
+      renderApp();
+    });
+
+    // Cascata 3: Seleziona Deconto
+    qrBoardSelect.addEventListener('change', () => {
+      const shortCode = qrBoardSelect.value;
+      state.qrParams.boardShortCode = shortCode;
+      state.qrParams.isGenerated = false;
+      if (!shortCode) {
+        state.qrParams.machineId = '';
+        state.qrParams.clientId = '';
+      } else {
+        const board = db.getBoards().find(b => b.shortCode === shortCode);
+        if (board && board.machineId) {
+          state.qrParams.machineId = board.machineId;
+          const mc = db.getMachines().find(m => m.id === board.machineId);
+          state.qrParams.clientId = mc ? (mc.clientId || '') : '';
+        } else {
+          state.qrParams.machineId = '';
+          state.qrParams.clientId = '';
+        }
+      }
+      renderApp();
+    });
+  }
+
+  // Tasto GENERA
+  if (btnGenerateQrLabel) {
+    btnGenerateQrLabel.addEventListener('click', () => {
+      const clientId = document.getElementById('qr-client-select').value;
+      const machineId = document.getElementById('qr-machine-select').value;
+      const boardShortCode = document.getElementById('qr-board-select').value;
+
+      if (!clientId || !machineId || !boardShortCode) {
+        alert('Seleziona il Cliente, la Macchina e la Scheda Deconto per procedere!');
+        return;
+      }
+
+      state.qrParams.clientId = clientId;
+      state.qrParams.machineId = machineId;
+      state.qrParams.boardShortCode = boardShortCode;
+      state.qrParams.isGenerated = true;
+      renderApp();
+    });
+  }
+
+  // Tasto STAMPA
+  if (btnPrintQrLabel) {
+    btnPrintQrLabel.addEventListener('click', () => {
+      window.print();
     });
   }
 
