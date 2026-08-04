@@ -100,6 +100,10 @@ export function renderSidebar(currentUser, activeTab) {
             <span class="nav-icon">📜</span>
             <span>Storico Ricariche</span>
           </a>
+          <a class="nav-item ${activeTab === 'extractions_history' ? 'active' : ''}" data-tab="extractions_history">
+            <span class="nav-icon">☕</span>
+            <span>Elenco Erogazioni</span>
+          </a>
         ` : ''}
 
         ${isAdr ? `

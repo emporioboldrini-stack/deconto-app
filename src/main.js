@@ -10,6 +10,7 @@ import { renderAdrPanel } from './components/AdrPanel.js';
 import { renderClientDiyPanel } from './components/ClientDiyPanel.js';
 import { renderOtpGeneratorPanel } from './components/OtpGeneratorPanel.js';
 import { renderRefillsHistoryPanel } from './components/RefillsHistoryPanel.js';
+import { renderExtractionsHistoryPanel } from './components/ExtractionsHistoryPanel.js';
 import { renderHardwareSimulator } from './components/HardwareSimulator.js';
 import { renderUserManagementPanel } from './components/UserManagementPanel.js';
 import { renderUserProfileModal } from './components/UserProfileModal.js';
@@ -37,6 +38,7 @@ const state = {
   generatedOtpToken: null,
   diyParams: null,
   refillsFilter: { boardCode: '', clientName: '', date: '' },
+  extractionsFilter: { boardCode: '', clientName: '', date: '' },
   simulatingBoardCode: null
 };
 
@@ -94,6 +96,9 @@ function renderApp() {
       break;
     case 'refills_history':
       contentHtml = renderRefillsHistoryPanel(state.refillsFilter);
+      break;
+    case 'extractions_history':
+      contentHtml = renderExtractionsHistoryPanel(state.extractionsFilter);
       break;
     case 'simulator':
       contentHtml = renderHardwareSimulator(state.simulatingBoardCode);
@@ -1186,6 +1191,50 @@ function attachGlobalEventListeners() {
   if (btnResetRefillFilters) {
     btnResetRefillFilters.addEventListener('click', () => {
       state.refillsFilter = { boardCode: '', clientName: '', date: '' };
+      renderApp();
+    });
+  }
+
+  // --- GESTORE FILTRI STORICO EROGAZIONI ---
+  const filterExtractionBoard = document.getElementById('filter-extraction-board');
+  const filterExtractionClient = document.getElementById('filter-extraction-client');
+  const filterExtractionDate = document.getElementById('filter-extraction-date');
+  const btnResetExtractionFilters = document.getElementById('btn-reset-extraction-filters');
+
+  if (filterExtractionBoard) {
+    filterExtractionBoard.addEventListener('input', () => {
+      state.extractionsFilter.boardCode = filterExtractionBoard.value;
+      renderApp();
+      const input = document.getElementById('filter-extraction-board');
+      if (input) {
+        input.focus();
+        input.setSelectionRange(input.value.length, input.value.length);
+      }
+    });
+  }
+
+  if (filterExtractionClient) {
+    filterExtractionClient.addEventListener('input', () => {
+      state.extractionsFilter.clientName = filterExtractionClient.value;
+      renderApp();
+      const input = document.getElementById('filter-extraction-client');
+      if (input) {
+        input.focus();
+        input.setSelectionRange(input.value.length, input.value.length);
+      }
+    });
+  }
+
+  if (filterExtractionDate) {
+    filterExtractionDate.addEventListener('change', () => {
+      state.extractionsFilter.date = filterExtractionDate.value;
+      renderApp();
+    });
+  }
+
+  if (btnResetExtractionFilters) {
+    btnResetExtractionFilters.addEventListener('click', () => {
+      state.extractionsFilter = { boardCode: '', clientName: '', date: '' };
       renderApp();
     });
   }
