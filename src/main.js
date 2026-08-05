@@ -1098,6 +1098,8 @@ function attachGlobalEventListeners() {
                 box-sizing: border-box;
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                 overflow: hidden;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
               }
               #printable-qr-label {
                 width: 70mm !important;
@@ -1111,6 +1113,8 @@ function attachGlobalEventListeners() {
                 background: #fff !important;
                 color: #000 !important;
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
               }
             </style>
           </head>

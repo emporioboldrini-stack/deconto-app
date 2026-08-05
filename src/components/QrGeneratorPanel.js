@@ -95,9 +95,9 @@ export function renderQrGeneratorPanel(qrParams = {}) {
 
             <!-- Prima Linea Divisoria: Linea Nera con 2 Pallini ai lati -->
             <div style="display: flex; align-items: center; justify-content: center; width: 100%; margin: 1mm 0;">
-              <div style="width: 3.5px; height: 3.5px; border-radius: 50%; background: #000;"></div>
-              <div style="flex: 1; height: 0.8px; background: #000;"></div>
-              <div style="width: 3.5px; height: 3.5px; border-radius: 50%; background: #000;"></div>
+              <div style="width: 3.5px; height: 3.5px; border-radius: 50%; border: 1.8px solid #000; box-sizing: border-box; background: #000; flex-shrink: 0;"></div>
+              <div style="flex: 1; border-top: 1px solid #000; height: 0;"></div>
+              <div style="width: 3.5px; height: 3.5px; border-radius: 50%; border: 1.8px solid #000; box-sizing: border-box; background: #000; flex-shrink: 0;"></div>
             </div>
 
             <!-- Parte Centrale: 2 Colonne (Dati a sinistra, QR Code a destra) -->
@@ -124,9 +124,9 @@ export function renderQrGeneratorPanel(qrParams = {}) {
 
             <!-- Seconda Linea Divisoria: Linea Nera con 2 Pallini ai lati -->
             <div style="display: flex; align-items: center; justify-content: center; width: 100%; margin: 1mm 0;">
-              <div style="width: 3.5px; height: 3.5px; border-radius: 50%; background: #000;"></div>
-              <div style="flex: 1; height: 0.8px; background: #000;"></div>
-              <div style="width: 3.5px; height: 3.5px; border-radius: 50%; background: #000;"></div>
+              <div style="width: 3.5px; height: 3.5px; border-radius: 50%; border: 1.8px solid #000; box-sizing: border-box; background: #000; flex-shrink: 0;"></div>
+              <div style="flex: 1; border-top: 1px solid #000; height: 0;"></div>
+              <div style="width: 3.5px; height: 3.5px; border-radius: 50%; border: 1.8px solid #000; box-sizing: border-box; background: #000; flex-shrink: 0;"></div>
             </div>
 
             <!-- Parte Inferiore: Testo in Comodato -->
