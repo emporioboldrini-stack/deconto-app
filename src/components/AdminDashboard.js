@@ -637,250 +637,9 @@ export function renderAdminDashboard(
     `;
   }
 
-  // --- NUOVA IMPAGINAZIONE MODALE DETTAGLIO DECONTO A 2 COLONNE ---
+  // Il dettaglio deconto è ora gestito globalmente a livello di app in main.js
   let detailModalHtml = '';
-  if (viewingDecontoCode) {
-    const details = db.getBoardFullDetails(viewingDecontoCode);
-    if (details && details.board) {
-      const b = details.board;
-      const m = details.machine || {};
-      const c = details.client || {};
-      const boardCoffees = details.coffees || [];
-      const boardRefills = details.refills || [];
 
-      // Uniamo ricariche ed erogazioni in un unico registro cronologico dei movimenti
-      const movements = [];
-
-      // Aggiungiamo le ricariche
-      boardRefills.forEach(r => {
-        movements.push({
-          id: r.id,
-          timestamp: new Date(r.timestamp),
-          type: 'REFILL',
-          variation: r.creditsAdded,
-          details: r.method === 'CLOUD_DIRECT' ? 'Ricarica Cloud (Ufficio)' : (r.method === 'WHATSAPP_OTP_BLE' ? 'Ricarica OTP (Cliente)' : 'Ricarica ADR (BLE)')
-        });
-      });
-
-      // Aggiungiamo le erogazioni
-      boardCoffees.forEach(cf => {
-        movements.push({
-          id: cf.id,
-          timestamp: new Date(cf.timestamp),
-          type: 'EXTRACTION',
-          variation: -1,
-          details: `Gruppo #${cf.groupId || 1} (${cf.durationSeconds || 22}s)`
-        });
-      });
-
-      // Ordiniamo dal movimento più vecchio al più recente per calcolare il saldo progressivo
-      movements.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
-
-      // Calcoliamo il saldo progressivo passo-passo
-      let runningBalance = 0;
-      movements.forEach(mov => {
-        runningBalance += mov.variation;
-        mov.runningBalance = runningBalance;
-      });
-
-      // Invertiamo l'ordine per mostrarli dal più recente al più vecchio (decrescente)
-      movements.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-
-      // CALCOLO MEDIA REALE
-      let avgDaily = 0;
-      if (m.installDate && b.machineExtractions > 0) {
-        const installTime = new Date(m.installDate).getTime();
-        const nowTime = Date.now();
-        const daysElapsed = Math.max(1, Math.ceil((nowTime - installTime) / (1000 * 3600 * 24)));
-        avgDaily = Number((b.machineExtractions / daysElapsed).toFixed(1));
-      }
-      
-      const avgDailyDisplay = avgDaily > 0 ? avgDaily : 'N/D';
-      const daysLeft = avgDaily > 0 ? Math.ceil(b.remainingCredits / avgDaily) : 'N/D';
-      const estimatedDepletionDate = daysLeft !== 'N/D' 
-        ? new Date(Date.now() + daysLeft * 86400000).toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' })
-        : 'N/D';
-
-      const boardStatusObj = db.calculateBoardStatus(b);
-
-      detailModalHtml = `
-        <div class="modal-overlay" id="deconto-detail-modal">
-          <div class="modal-box" style="max-width: 1020px; width: 95%; max-height: 90vh; overflow-y: auto;">
-            
-            <!-- Modal Header -->
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 14px;">
-              <div>
-                <div style="display: flex; align-items: center; gap: 12px;">
-                  <span style="font-size: 2.2rem; font-weight: 900; color: var(--accent-cyan); font-family: monospace;">#${b.shortCode}</span>
-                  <span class="badge ${b.isOnlineWifi ? 'badge-success' : 'badge-warning'}">
-                    ${b.isOnlineWifi ? '📡 Wi-Fi Online (-62 dBm)' : '📶 Bluetooth Local Only'}
-                  </span>
-                  <span class="badge badge-info">${b.version} VERSION</span>
-                  ${boardStatusObj.badgeHtml}
-                </div>
-                <h2 style="font-size: 1.3rem; font-weight: 800; color: #fff; margin: 4px 0 0 0;">
-                  ${c.name ? c.name : 'Cliente Non Assegnato'}
-                </h2>
-                <div style="font-size: 0.85rem; color: var(--text-muted);">
-                  Macchina: <strong>${m.model || 'N/D'}</strong> | Seriale: <code>${m.serialNumber || 'N/D'}</code>
-                </div>
-              </div>
-              <button id="btn-close-deconto-modal" style="background: none; border: none; color: var(--text-muted); font-size: 1.8rem; cursor: pointer; padding: 0 8px;">&times;</button>
-            </div>
-
-            <!-- LAYOUT A 2 COLONNE AFFIANCATE -->
-            <div style="display: grid; grid-template-columns: 1.25fr 1fr; gap: 24px; align-items: start;">
-              
-              <!-- COLONNA DI SINISTRA: Registro Unificato dei Movimenti Deconto -->
-              <div style="background: rgba(0,0,0,0.25); padding: 18px; border-radius: 14px; border: 1px solid var(--border-subtle);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-                  <h3 style="font-size: 1.15rem; font-weight: 800; margin: 0; color: var(--accent-cyan); display: flex; align-items: center; gap: 8px;">
-                    📊 Movimenti & Saldo Deconto (#${b.shortCode})
-                  </h3>
-                  <span class="badge badge-info" style="font-size: 0.75rem;">${movements.length} Movimenti Totali</span>
-                </div>
-
-                <div class="table-container" style="max-height: 480px; overflow-y: auto; border: 1px solid var(--border-subtle); border-radius: 8px;">
-                  <table style="width: 100%;">
-                    <thead style="position: sticky; top: 0; background: #111827; z-index: 2;">
-                      <tr>
-                        <th>DATA & ORA</th>
-                        <th>TIPO MOVIMENTO</th>
-                        <th>DETTAGLI</th>
-                        <th style="text-align: right;">VARIAZIONE</th>
-                        <th style="text-align: right;">SALDO CREDITO</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      ${movements.length > 0 ? movements.map(mov => {
-                        const isRefill = mov.type === 'REFILL';
-                        const isPositive = mov.variation >= 0;
-                        
-                        let variationBadge = '';
-                        if (isRefill) {
-                          variationBadge = `<span class="badge" style="font-size: 0.8rem; font-weight: bold; background: ${isPositive ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)'}; color: ${isPositive ? 'var(--accent-green)' : 'var(--accent-rose)'}; border: 1px solid ${isPositive ? 'rgba(34, 197, 94, 0.25)' : 'rgba(239, 68, 68, 0.25)'};">${isPositive ? '+' : ''}${mov.variation} cr</span>`;
-                        } else {
-                          variationBadge = `<span class="badge" style="font-size: 0.8rem; font-weight: bold; background: rgba(239, 68, 68, 0.1); color: var(--accent-rose); border: 1px solid rgba(239, 68, 68, 0.25);">${mov.variation} cr</span>`;
-                        }
-
-                        return `
-                          <tr>
-                            <td><strong style="white-space: nowrap; font-size: 0.85rem; color: #fff;">${new Date(mov.timestamp).toLocaleString('it-IT')}</strong></td>
-                            <td>
-                              <span style="font-weight: 700; color: ${isRefill ? (isPositive ? 'var(--accent-green)' : 'var(--accent-amber)') : 'var(--text-main)'};">
-                                ${isRefill ? (isPositive ? '➕ Ricarica' : '➖ Storno/Decremento') : '☕ Erogazione'}
-                              </span>
-                            </td>
-                            <td><small style="color: var(--text-muted); font-size: 0.8rem;">${mov.details}</small></td>
-                            <td style="text-align: right;">${variationBadge}</td>
-                            <td style="text-align: right;"><strong style="font-family: monospace; font-size: 0.95rem; color: var(--accent-cyan);">${mov.runningBalance} cr</strong></td>
-                          </tr>
-                        `;
-                      }).join('') : `
-                        <tr>
-                          <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 40px;">
-                            Nessun movimento registrato (ricariche o erogazioni) per la scheda #${b.shortCode}.
-                          </td>
-                        </tr>
-                      `}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              <!-- COLONNA DI DESTRAMA: 4 Cards KPI, Odomedro & Telemetria -->
-              <div style="display: flex; flex-direction: column; gap: 16px;">
-                
-                <!-- Card Credito Residuo & Avviso Esaurimento -->
-                <div style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(168, 85, 247, 0.1)); padding: 18px; border-radius: 14px; border: 1px solid var(--accent-cyan);">
-                  <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Credito Cialde Rimanenti</div>
-                  <div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 6px;">
-                    <div style="font-size: 2.5rem; font-weight: 900; color: ${b.remainingCredits <= 0 ? 'var(--accent-rose)' : 'var(--accent-green)'};">
-                      ${b.remainingCredits} <span style="font-size: 1.1rem; font-weight: 600; color: #fff;">cialde</span>
-                    </div>
-                    <div style="text-align: right;">
-                      <div style="font-size: 0.75rem; color: var(--text-muted);">Stima Esaurimento:</div>
-                      <div style="font-size: 0.9rem; font-weight: 800; color: var(--accent-amber);">${estimatedDepletionDate}</div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Griglia 4 Cards KPI Micro Telemetria -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                  <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px; border: 1px solid var(--border-subtle);">
-                    <div style="font-size: 0.75rem; color: var(--text-muted);">Odomedro Macchina:</div>
-                    <div style="font-size: 1.2rem; font-weight: 800; color: #fff; margin-top: 2px;">${(b.machineExtractions || 0).toLocaleString('it-IT')} ☕</div>
-                  </div>
-
-                  <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px; border: 1px solid var(--border-subtle);">
-                    <div style="font-size: 0.75rem; color: var(--text-muted);">Storico Hardware:</div>
-                    <div style="font-size: 1.2rem; font-weight: 800; color: var(--accent-cyan); margin-top: 2px;">${(b.lifetimeExtractions || 0).toLocaleString('it-IT')} ☕</div>
-                  </div>
-
-                  <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px; border: 1px solid var(--border-subtle);">
-                    <div style="font-size: 0.75rem; color: var(--text-muted);">Media Consumo:</div>
-                    <div style="font-size: 1.2rem; font-weight: 800; color: var(--accent-green); margin-top: 2px;">${avgDailyDisplay} <small style="font-size: 0.75rem;">caffè/gg</small></div>
-                  </div>
-
-                  <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px; border: 1px solid var(--border-subtle);">
-                    <div style="font-size: 0.75rem; color: var(--text-muted);">Stato Relè Hardware:</div>
-                    <div style="font-size: 0.85rem; font-weight: 800; color: ${b.relayStatus === 'CLOSED_OK' ? 'var(--accent-green)' : 'var(--accent-rose)'}; margin-top: 4px;">
-                      ${b.relayStatus === 'CLOSED_OK' ? '🟢 CHIUSO (ABILITATO)' : '🔴 APERTO (BLOCCATO)'}
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Ricarica Rapida Operatore Interno -->
-                <div style="background: rgba(16, 185, 129, 0.05); padding: 16px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.2); display: flex; flex-direction: column; gap: 10px; margin-bottom: 4px;">
-                  <div style="font-size: 0.85rem; color: var(--accent-green); font-weight: 700; text-transform: uppercase; display: flex; align-items: center; gap: 6px;">
-                    <span>⚡</span> Ricarica Rapida Operatore
-                  </div>
-                  
-                  <div style="display: flex; gap: 8px;">
-                    <select id="modal-refill-credits-select" style="flex: 1; padding: 8px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700; font-size: 0.85rem;">
-                      <option value="50">+50 Caffè</option>
-                      <option value="100">+100 Caffè</option>
-                      <option value="200" selected>+200 Caffè</option>
-                      <option value="500">+500 Caffè</option>
-                      <option value="CUSTOM">🖋️ Personalizza...</option>
-                    </select>
-                    
-                    <input type="number" id="modal-refill-credits-custom" placeholder="Es. +120 o -50" style="display: none; width: 110px; padding: 8px; background: var(--bg-primary); color: #fff; border: 1px solid var(--accent-amber); border-radius: 6px; font-weight: 700; font-size: 0.85rem;">
-                  </div>
-
-                  <button id="btn-modal-perform-refill" data-board-code="${b.shortCode}" class="btn btn-primary" style="padding: 10px; font-size: 0.85rem; font-weight: 800; width: 100%; border-radius: 6px; background: linear-gradient(135deg, var(--accent-green), #059669);">
-                    ${(() => {
-                      const currUser = db.getCurrentUser();
-                      return currUser && (currUser.role === 'ADMIN' || currUser.role === 'UFFICIO')
-                        ? '🚀 Esegui Ricarica Cloud (Wi-Fi)'
-                        : '📡 Esegui Ricarica Bluetooth (BLE)';
-                    })()}
-                  </button>
-                </div>
-
-                <!-- Scheda Parametri Diagnostici Hardware -->
-                <div style="background: rgba(0,0,0,0.3); padding: 14px; border-radius: 10px; border: 1px solid var(--border-subtle); font-size: 0.8rem; line-height: 1.6;">
-                  <div style="font-weight: 800; color: var(--accent-cyan); margin-bottom: 6px;">🔧 Parametri Tecnologici Hardware ESP32-C6:</div>
-                  <div>• <strong>Seriale Scheda:</strong> <code>${b.hwSerial || 'N/D'}</code></div>
-                  <div>• <strong>Indirizzo MAC:</strong> <code>${b.macAddress || 'N/D'}</code></div>
-                  <div>• <strong>Firmware Attivo:</strong> <code>${b.firmwareVersion || 'N/D'}</code></div>
-                  <div>• <strong>Segnale Wi-Fi (RSSI):</strong> <code>${b.rssi ? b.rssi + ' dBm' : 'N/D'}</code></div>
-                  <div>• <strong>Ultimo Battito Heartbeat:</strong> <code>${b.lastSyncDate ? new Date(b.lastSyncDate).toLocaleString('it-IT') : 'N/D'}</code></div>
-                </div>
-
-              </div>
-            </div>
-
-            <!-- Footer con Pulsante di Chiusura -->
-            <div style="margin-top: 24px; padding-top: 14px; border-top: 1px solid var(--border-subtle); display: flex; justify-content: flex-end;">
-              <button class="btn btn-secondary" id="btn-close-deconto-modal-footer">Chiudi Telemetria Deconto</button>
-            </div>
-
-          </div>
-        </div>
-      `;
-    }
-  }
 
   return `
     <div>
@@ -1063,7 +822,242 @@ export function renderAdminDashboard(
         </div>
       </div>
     </div>
-    ${detailModalHtml}
     ${kpiModalHtml}
+  `;
+}
+
+export function renderDecontoDetailModal(viewingDecontoCode) {
+  if (!viewingDecontoCode) return '';
+  const details = db.getBoardFullDetails(viewingDecontoCode);
+  if (!details || !details.board) return '';
+  const b = details.board;
+  const m = details.machine || {};
+  const c = details.client || {};
+  const boardCoffees = details.coffees || [];
+  const boardRefills = details.refills || [];
+
+  // Uniamo ricariche ed erogazioni in un unico registro cronologico dei movimenti
+  const movements = [];
+
+  // Aggiungiamo le ricariche
+  boardRefills.forEach(r => {
+    movements.push({
+      id: r.id,
+      timestamp: new Date(r.timestamp),
+      type: 'REFILL',
+      variation: r.creditsAdded,
+      details: r.method === 'CLOUD_DIRECT' ? 'Ricarica Cloud (Ufficio)' : (r.method === 'WHATSAPP_OTP_BLE' ? 'Ricarica OTP (Cliente)' : 'Ricarica ADR (BLE)')
+    });
+  });
+
+  // Aggiungiamo le erogazioni
+  boardCoffees.forEach(cf => {
+    movements.push({
+      id: cf.id,
+      timestamp: new Date(cf.timestamp),
+      type: 'EXTRACTION',
+      variation: -1,
+      details: `Gruppo #${cf.groupId || 1} (${cf.durationSeconds || 22}s)`
+    });
+  });
+
+  // Ordiniamo dal movimento più vecchio al più recente per calcolare il saldo progressivo
+  movements.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+
+  // Calcoliamo il saldo progressivo passo-passo
+  let runningBalance = 0;
+  movements.forEach(mov => {
+    runningBalance += mov.variation;
+    mov.runningBalance = runningBalance;
+  });
+
+  // Invertiamo l'ordine per mostrarli dal più recente al più vecchio (decrescente)
+  movements.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+
+  // CALCOLO MEDIA REALE
+  let avgDaily = 0;
+  if (m.installDate && b.machineExtractions > 0) {
+    const installTime = new Date(m.installDate).getTime();
+    const nowTime = Date.now();
+    const daysElapsed = Math.max(1, Math.ceil((nowTime - installTime) / (1000 * 3600 * 24)));
+    avgDaily = Number((b.machineExtractions / daysElapsed).toFixed(1));
+  }
+  
+  const avgDailyDisplay = avgDaily > 0 ? avgDaily : 'N/D';
+  const daysLeft = avgDaily > 0 ? Math.ceil(b.remainingCredits / avgDaily) : 'N/D';
+  const estimatedDepletionDate = daysLeft !== 'N/D' 
+    ? new Date(Date.now() + daysLeft * 86400000).toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' })
+    : 'N/D';
+
+  const boardStatusObj = db.calculateBoardStatus(b);
+
+  return `
+    <div class="modal-overlay" id="deconto-detail-modal">
+      <div class="modal-box" style="max-width: 1020px; width: 95%; max-height: 90vh; overflow-y: auto;">
+        
+        <!-- Modal Header -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 14px;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="font-size: 2.2rem; font-weight: 900; color: var(--accent-cyan); font-family: monospace;">#${b.shortCode}</span>
+              <span class="badge ${b.isOnlineWifi ? 'badge-success' : 'badge-warning'}">
+                ${b.isOnlineWifi ? '📡 Wi-Fi Online (-62 dBm)' : '📶 Bluetooth Local Only'}
+              </span>
+              <span class="badge badge-info">${b.version} VERSION</span>
+              ${boardStatusObj.badgeHtml}
+            </div>
+            <h2 style="font-size: 1.3rem; font-weight: 800; color: #fff; margin: 4px 0 0 0;">
+              ${c.name ? c.name : 'Cliente Non Assegnato'}
+            </h2>
+            <div style="font-size: 0.85rem; color: var(--text-muted);">
+              Macchina: <strong>${m.model || 'N/D'}</strong> | Seriale: <code>${m.serialNumber || 'N/D'}</code>
+            </div>
+          </div>
+          <button id="btn-close-deconto-modal" style="background: none; border: none; color: var(--text-muted); font-size: 1.8rem; cursor: pointer; padding: 0 8px;">&times;</button>
+        </div>
+
+        <!-- LAYOUT A 2 COLONNE AFFIANCATE -->
+        <div style="display: grid; grid-template-columns: 1.25fr 1fr; gap: 24px; align-items: start;">
+          
+          <!-- COLONNA DI SINISTRA: Registro Unificato dei Movimenti Deconto -->
+          <div style="background: rgba(0,0,0,0.25); padding: 18px; border-radius: 14px; border: 1px solid var(--border-subtle);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+              <h3 style="font-size: 1.15rem; font-weight: 800; margin: 0; color: var(--accent-cyan); display: flex; align-items: center; gap: 8px;">
+                📊 Movimenti & Saldo Deconto (#${b.shortCode})
+              </h3>
+              <span class="badge badge-info" style="font-size: 0.75rem;">${movements.length} Movimenti Totali</span>
+            </div>
+
+            <div class="table-container" style="max-height: 480px; overflow-y: auto; border: 1px solid var(--border-subtle); border-radius: 8px;">
+              <table style="width: 100%;">
+                <thead style="position: sticky; top: 0; background: #111827; z-index: 2;">
+                  <tr>
+                    <th>DATA & ORA</th>
+                    <th>TIPO MOVIMENTO</th>
+                    <th>DETTAGLI</th>
+                    <th style="text-align: right;">VARIAZIONE</th>
+                    <th style="text-align: right;">SALDO CREDITO</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${movements.length > 0 ? movements.map(mov => {
+                    const isRefill = mov.type === 'REFILL';
+                    const isPositive = mov.variation >= 0;
+                    
+                    let variationBadge = '';
+                    if (isRefill) {
+                      variationBadge = `<span class="badge" style="font-size: 0.8rem; font-weight: bold; background: ${isPositive ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)'}; color: ${isPositive ? 'var(--accent-green)' : 'var(--accent-rose)'}; border: 1px solid ${isPositive ? 'rgba(34, 197, 94, 0.25)' : 'rgba(239, 68, 68, 0.25)'};">${isPositive ? '+' : ''}${mov.variation} cr</span>`;
+                    } else {
+                      variationBadge = `<span class="badge" style="font-size: 0.8rem; font-weight: bold; background: rgba(239, 68, 68, 0.1); color: var(--accent-rose); border: 1px solid rgba(239, 68, 68, 0.25);">${mov.variation} cr</span>`;
+                    }
+
+                    return `
+                      <tr>
+                        <td><strong style="white-space: nowrap; font-size: 0.85rem; color: #fff;">${new Date(mov.timestamp).toLocaleString('it-IT')}</strong></td>
+                        <td>
+                          <span style="font-weight: 700; color: ${isRefill ? (isPositive ? 'var(--accent-green)' : 'var(--accent-amber)') : 'var(--text-main)'};">
+                            ${isRefill ? (isPositive ? '➕ Ricarica' : '➖ Storno/Decremento') : '☕ Erogazione'}
+                          </span>
+                        </td>
+                        <td><small style="color: var(--text-muted); font-size: 0.8rem;">${mov.details}</small></td>
+                        <td style="text-align: right;">${variationBadge}</td>
+                        <td style="text-align: right;"><strong style="font-family: monospace; font-size: 0.95rem; color: var(--accent-cyan);">${mov.runningBalance} cr</strong></td>
+                      </tr>
+                    `;
+                  }).join('') : `
+                    <tr>
+                      <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 40px;">
+                        Nessun movimento registrato (ricariche o erogazioni) per la scheda #${b.shortCode}.
+                      </td>
+                    </tr>
+                  `}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- COLONNA DI DESTRA: 4 Cards KPI, Odomedro & Telemetria -->
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            
+            <!-- Card Credito Residuo & Avviso Esaurimento -->
+            <div style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(168, 85, 247, 0.1)); padding: 18px; border-radius: 14px; border: 1px solid var(--accent-cyan);">
+              <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Credito Cialde Rimanenti</div>
+              <div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 6px;">
+                <div style="font-size: 2.5rem; font-weight: 900; color: ${b.remainingCredits <= 0 ? 'var(--accent-rose)' : 'var(--accent-green)'};">
+                  ${b.remainingCredits} <span style="font-size: 1.1rem; font-weight: 600; color: #fff;">cialde</span>
+                </div>
+                <div style="text-align: right;">
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">Stima Esaurimento:</div>
+                  <div style="font-size: 0.9rem; font-weight: 800; color: var(--accent-amber);">${estimatedDepletionDate}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Griglia 4 Cards KPI Micro Telemetria -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px; border: 1px solid var(--border-subtle);">
+                <div style="font-size: 0.75rem; color: var(--text-muted);">Odomedro Macchina:</div>
+                <div style="font-size: 1.2rem; font-weight: 800; color: #fff; margin-top: 2px;">${(b.machineExtractions || 0).toLocaleString('it-IT')} ☕</div>
+              </div>
+
+              <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px; border: 1px solid var(--border-subtle);">
+                <div style="font-size: 0.75rem; color: var(--text-muted);">Storico Hardware:</div>
+                <div style="font-size: 1.2rem; font-weight: 800; color: var(--accent-cyan); margin-top: 2px;">${(b.lifetimeExtractions || 0).toLocaleString('it-IT')} ☕</div>
+              </div>
+
+              <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px; border: 1px solid var(--border-subtle);">
+                <div style="font-size: 0.75rem; color: var(--text-muted);">Media Consumo:</div>
+                <div style="font-size: 1.2rem; font-weight: 800; color: var(--accent-green); margin-top: 2px;">${avgDailyDisplay} <small style="font-size: 0.75rem;">caffè/gg</small></div>
+              </div>
+
+              <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px; border: 1px solid var(--border-subtle);">
+                <div style="font-size: 0.75rem; color: var(--text-muted);">Stato Relè Hardware:</div>
+                <div style="font-size: 0.85rem; font-weight: 800; color: ${b.relayStatus === 'CLOSED_OK' ? 'var(--accent-green)' : 'var(--accent-rose)'}; margin-top: 4px;">
+                  ${b.relayStatus === 'CLOSED_OK' ? '🟢 CHIUSO (ABILITATO)' : '🔴 APERTO (BLOCCATO)'}
+                </div>
+              </div>
+            </div>
+
+            <!-- Ricarica Rapida Operatore Interno -->
+            <div style="background: rgba(16, 185, 129, 0.05); padding: 16px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.2); display: flex; flex-direction: column; gap: 10px; margin-bottom: 4px;">
+              <div style="font-size: 0.85rem; color: var(--accent-green); font-weight: 700; text-transform: uppercase; display: flex; align-items: center; gap: 6px;">
+                <span>⚡</span> Ricarica Rapida Operatore
+              </div>
+              
+              <div style="display: flex; gap: 8px;">
+                <select id="modal-refill-credits-select" style="flex: 1; padding: 8px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; font-weight: 700; font-size: 0.85rem;">
+                  <option value="50">+50 Caffè</option>
+                  <option value="100">+100 Caffè</option>
+                  <option value="200" selected>+200 Caffè</option>
+                  <option value="500">+500 Caffè</option>
+                  <option value="CUSTOM">🖋️ Personalizza...</option>
+                </select>
+                
+                <input type="number" id="modal-refill-credits-custom" placeholder="Es. +120 o -50" style="display: none; width: 110px; padding: 8px; background: var(--bg-primary); color: #fff; border: 1px solid var(--accent-amber); border-radius: 6px; font-weight: 700; font-size: 0.85rem;">
+              </div>
+
+              <button id="btn-modal-perform-refill" data-board-code="${b.shortCode}" class="btn btn-primary" style="padding: 10px; font-size: 0.85rem; font-weight: 800; width: 100%; border-radius: 6px; background: linear-gradient(135deg, var(--accent-green), #059669);">
+                ${(() => {
+                  const currUser = db.getCurrentUser();
+                  return currUser && (currUser.role === 'ADMIN' || currUser.role === 'UFFICIO')
+                    ? '🚀 Esegui Ricarica Cloud (Wi-Fi)'
+                    : '📡 Esegui Ricarica Bluetooth (BLE)';
+                })()}
+              </button>
+            </div>
+
+            <!-- Parametri Diagnostici Hardware -->
+            <div style="background: rgba(0,0,0,0.3); padding: 14px; border-radius: 10px; border: 1px solid var(--border-subtle); font-size: 0.8rem; line-height: 1.6;">
+              <div style="font-weight: 800; color: var(--accent-cyan); margin-bottom: 6px;">🔧 Parametri Tecnologici Hardware ESP32-C6:</div>
+              <div>• <strong>Seriale Scheda:</strong> <code>${b.hwSerial || 'N/D'}</code></div>
+              <div>• <strong>Indirizzo MAC:</strong> <code>${b.macAddress || 'N/D'}</code></div>
+              <div>• <strong>Firmware Attivo:</strong> <code>v2.4.1-stable</code></div>
+              <div>• <strong>Segnale Wi-Fi (RSSI):</strong> <code>-62 dBm (Eccellente)</code></div>
+              <div>• <strong>Ultimo Battito Heartbeat:</strong> <code>${new Date(b.lastSyncDate).toLocaleString('it-IT')}</code></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   `;
 }

@@ -4,7 +4,7 @@ import { emailService } from './services/emailService.js';
 
 import { renderLoginScreen } from './components/LoginScreen.js';
 import { renderSidebar } from './components/Navigation.js';
-import { renderAdminDashboard } from './components/AdminDashboard.js';
+import { renderAdminDashboard, renderDecontoDetailModal } from './components/AdminDashboard.js';
 import { renderOfficePanel } from './components/OfficePanel.js';
 import { renderAdrPanel } from './components/AdrPanel.js';
 import { renderClientDiyPanel } from './components/ClientDiyPanel.js';
@@ -111,6 +111,7 @@ function renderApp() {
   }
 
   const profileModalHtml = renderUserProfileModal(state.showProfileModal, state.currentUser);
+  const decontoDetailModalHtml = renderDecontoDetailModal(state.viewingDecontoCode);
 
   appContainer.innerHTML = `
     <div class="app-layout">
@@ -120,6 +121,7 @@ function renderApp() {
       </main>
     </div>
     ${profileModalHtml}
+    ${decontoDetailModalHtml}
   `;
 
   attachGlobalEventListeners();
