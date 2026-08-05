@@ -1781,7 +1781,7 @@
     <div style="max-width: 800px; margin: 0 auto;">
       <div style="margin-bottom: 24px;">
         <h1 style="font-size: 1.8rem; font-weight: 800; color: #fff; margin: 0 0 8px 0;">🖨️ Generatore & Stampa Etichette QR</h1>
-        <p style="color: var(--text-muted); margin: 0;">Associa un cliente, una macchina e un Deconto per generare l'etichetta adesiva fisica 50x35mm con QR Code di ricarica.</p>
+        <p style="color: var(--text-muted); margin: 0;">Associa un cliente, una macchina e un Deconto per generare l'etichetta adesiva fisica 70x70mm con QR Code di ricarica.</p>
       </div>
 
       <div class="stat-card" style="padding: 28px; border: 1px solid var(--border-subtle); margin-bottom: 32px; background: rgba(0,0,0,0.2);">
@@ -1826,34 +1826,57 @@
 
       <!-- Area di Anteprima Etichetta (mostrata solo se generata) -->
       <div id="qr-preview-container" class="stat-card" style="padding: 28px; border: 2px solid var(--accent-cyan); display: ${e.isGenerated?`block`:`none`}; background: rgba(56, 189, 248, 0.03);">
-        <h3 style="margin-top: 0; color: var(--accent-cyan); margin-bottom: 20px; font-weight: 800;">👁️ Anteprima Etichetta Termica (50 x 35 mm)</h3>
+        <h3 style="margin-top: 0; color: var(--accent-cyan); margin-bottom: 20px; font-weight: 800;">👁️ Anteprima Etichetta Termica (70 x 70 mm)</h3>
         
         <div style="display: flex; justify-content: center; margin-bottom: 20px; background: rgba(0,0,0,0.4); padding: 30px; border-radius: 12px; border: 1px solid var(--border-subtle);">
           
-          <!-- L'Etichetta Fisica Reale (Design Minimale, Elegante e ad Alto Contrasto 50x35mm) -->
-          <div id="printable-qr-label" style="width: 50mm; height: 35mm; border: 1px dashed #ccc; padding: 2mm 3mm; display: flex; flex-direction: column; justify-content: space-between; background: #fff; color: #000; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; text-align: center;">
+          <!-- L'Etichetta Fisica Reale (Design 70x70mm con linea con pallini) -->
+          <div id="printable-qr-label" style="width: 70mm; height: 70mm; border: 1px solid #000; padding: 4mm; display: flex; flex-direction: column; justify-content: space-between; background: #fff; color: #000; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
             
-            <!-- Header: Tipografia Elegante e Pulita -->
-            <div style="line-height: 1.15; border-bottom: 0.5px solid #000; padding-bottom: 0.8mm;">
-              <div style="font-size: 7.5pt; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase; color: #000;">Emporio Boldrini</div>
-              <div style="font-size: 4.8pt; letter-spacing: 0.8px; color: #444; font-weight: 600; text-transform: uppercase; margin-top: 0.5px;">www.emporioboldrini.com</div>
-              <div style="font-size: 4.2pt; font-style: italic; color: #666; margin-top: 0.5px;">Macchina in comodato d'uso gratuito</div>
+            <!-- Parte Superiore: Intestazione -->
+            <div style="text-align: center; padding-top: 1mm; padding-bottom: 1mm;">
+              <div style="font-size: 11pt; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; color: #000; line-height: 1.2;">Emporio Boldrini</div>
+              <div style="font-size: 7.5pt; letter-spacing: 0.8px; color: #444; font-weight: 600; text-transform: uppercase; margin-top: 1mm; line-height: 1.2;">www.emporioboldrini.com</div>
             </div>
 
-            <!-- Riga 3: QR Code Centrale (Bilanciato a 16mm per massima eleganza) -->
-            <div style="display: flex; justify-content: center; align-items: center; height: 16mm; margin: 0.5mm 0;">
-              ${f?`<img src="${f}" style="width: 16mm; height: 16mm; object-fit: contain;" alt="QR Code">`:`<div style="width: 16mm; height: 16mm; border: 0.5px dashed #aaa; display: flex; align-items: center; justify-content: center; font-size: 5pt; color: #aaa;">QR CODE</div>`}
+            <!-- Prima Linea Divisoria: Linea Nera con 2 Pallini ai lati -->
+            <div style="display: flex; align-items: center; justify-content: center; width: 100%; margin: 1mm 0;">
+              <div style="width: 3.5px; height: 3.5px; border-radius: 50%; background: #000;"></div>
+              <div style="flex: 1; height: 0.8px; background: #000;"></div>
+              <div style="width: 3.5px; height: 3.5px; border-radius: 50%; background: #000;"></div>
             </div>
 
-            <!-- Righe 4 e 5: Seriali disposti Side-by-Side con tipografia leggera -->
-            <div style="font-size: 5.5pt; border-top: 0.5px solid #000; padding-top: 0.8mm; line-height: 1.2; display: flex; justify-content: space-between; width: 100%;">
-              <div style="text-align: left;">
-                <span style="color: #666; font-size: 4.5pt; font-weight: 700; text-transform: uppercase; display: block; letter-spacing: 0.2px;">Macchina</span>
-                <span style="font-family: monospace; font-size: 6pt; font-weight: bold; color: #000;">${d||`N/D`}</span>
+            <!-- Parte Centrale: 2 Colonne (Dati a sinistra, QR Code a destra) -->
+            <div style="display: flex; align-items: center; justify-content: space-between; height: 30mm; padding: 1mm 0;">
+              <!-- Colonna Sinistra: Codici Seriali -->
+              <div style="flex: 1.2; display: flex; flex-direction: column; gap: 3.5mm; justify-content: center; padding-right: 2mm; text-align: left;">
+                <div style="font-size: 7.5pt; line-height: 1.3; color: #000; font-weight: 700;">
+                  <span style="display: block; font-size: 6.5pt; text-transform: uppercase; color: #555; font-weight: 800; letter-spacing: 0.2px; margin-bottom: 0.5mm;">S/N Macchina:</span>
+                  <span style="font-family: monospace; font-size: 9.5pt; font-weight: 800;">${d||`N/D`}</span>
+                </div>
+                <div style="font-size: 7.5pt; line-height: 1.3; color: #000; font-weight: 700;">
+                  <span style="display: block; font-size: 6.5pt; text-transform: uppercase; color: #555; font-weight: 800; letter-spacing: 0.2px; margin-bottom: 0.5mm;">S/N Deconto:</span>
+                  <span style="font-family: monospace; font-size: 10.5pt; font-weight: 800; color: #000;">#${s||`N/D`}</span>
+                </div>
               </div>
-              <div style="text-align: right; border-left: 0.5px solid #ccc; padding-left: 2.5mm;">
-                <span style="color: #666; font-size: 4.5pt; font-weight: 700; text-transform: uppercase; display: block; letter-spacing: 0.2px;">Deconto</span>
-                <span style="font-family: monospace; font-size: 6.5pt; font-weight: bold; color: #000;">#${s||`N/D`}</span>
+              
+              <!-- Colonna Destra: QR Code -->
+              <div style="flex: 1; display: flex; justify-content: center; align-items: center;">
+                ${f?`<img src="${f}" style="width: 25mm; height: 25mm; object-fit: contain;" alt="QR Code">`:`<div style="width: 25mm; height: 25mm; border: 0.8px dashed #aaa; display: flex; align-items: center; justify-content: center; font-size: 6.5pt; color: #aaa;">QR CODE</div>`}
+              </div>
+            </div>
+
+            <!-- Seconda Linea Divisoria: Linea Nera con 2 Pallini ai lati -->
+            <div style="display: flex; align-items: center; justify-content: center; width: 100%; margin: 1mm 0;">
+              <div style="width: 3.5px; height: 3.5px; border-radius: 50%; background: #000;"></div>
+              <div style="flex: 1; height: 0.8px; background: #000;"></div>
+              <div style="width: 3.5px; height: 3.5px; border-radius: 50%; background: #000;"></div>
+            </div>
+
+            <!-- Parte Inferiore: Testo in Comodato -->
+            <div style="text-align: center; padding-top: 1mm; padding-bottom: 1.5mm;">
+              <div style="font-size: 6.8pt; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase; color: #000; line-height: 1.25;">
+                MACCHINA CONCESSA IN COMODATO GRATUITO
               </div>
             </div>
 
@@ -2658,7 +2681,7 @@
             <title>Stampa Etichetta Deconto</title>
             <style>
               @page {
-                size: 50mm 35mm;
+                size: 70mm 70mm;
                 margin: 0;
               }
               html, body {
@@ -2666,21 +2689,21 @@
                 padding: 0 !important;
                 background: #fff !important;
                 color: #000 !important;
-                width: 50mm !important;
-                height: 35mm !important;
+                width: 70mm !important;
+                height: 70mm !important;
                 box-sizing: border-box;
                 font-family: sans-serif;
                 overflow: hidden;
               }
               #print-box {
-                width: 50mm !important;
-                height: 35mm !important;
-                padding: 2mm !important;
+                width: 70mm !important;
+                height: 70mm !important;
+                border: 1px solid #000 !important;
+                padding: 4mm !important;
                 display: flex !important;
                 flex-direction: column !important;
                 justify-content: space-between !important;
                 box-sizing: border-box !important;
-                text-align: center !important;
               }
             </style>
           </head>

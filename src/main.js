@@ -1085,7 +1085,7 @@ function attachGlobalEventListeners() {
             <title>Stampa Etichetta Deconto</title>
             <style>
               @page {
-                size: 50mm 35mm;
+                size: 70mm 70mm;
                 margin: 0;
               }
               html, body {
@@ -1093,21 +1093,21 @@ function attachGlobalEventListeners() {
                 padding: 0 !important;
                 background: #fff !important;
                 color: #000 !important;
-                width: 50mm !important;
-                height: 35mm !important;
+                width: 70mm !important;
+                height: 70mm !important;
                 box-sizing: border-box;
                 font-family: sans-serif;
                 overflow: hidden;
               }
               #print-box {
-                width: 50mm !important;
-                height: 35mm !important;
-                padding: 2mm !important;
+                width: 70mm !important;
+                height: 70mm !important;
+                border: 1px solid #000 !important;
+                padding: 4mm !important;
                 display: flex !important;
                 flex-direction: column !important;
                 justify-content: space-between !important;
                 box-sizing: border-box !important;
-                text-align: center !important;
               }
             </style>
           </head>
