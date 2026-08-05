@@ -1104,7 +1104,7 @@ function attachGlobalEventListeners() {
               #printable-qr-label {
                 width: 70mm !important;
                 height: 70mm !important;
-                border: 1px solid #000 !important;
+                border: none !important;
                 padding: 4mm !important;
                 display: flex !important;
                 flex-direction: column !important;

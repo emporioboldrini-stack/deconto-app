@@ -1830,8 +1830,8 @@
         
         <div style="display: flex; justify-content: center; margin-bottom: 20px; background: rgba(0,0,0,0.4); padding: 30px; border-radius: 12px; border: 1px solid var(--border-subtle);">
           
-          <!-- L'Etichetta Fisica Reale (Design 70x70mm con linea con pallini) -->
-          <div id="printable-qr-label" style="width: 70mm; height: 70mm; border: 1px solid #000; padding: 4mm; display: flex; flex-direction: column; justify-content: space-between; background: #fff; color: #000; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+          <!-- L'Etichetta Fisica Reale (Design 70x70mm con linea con pallini, senza bordo esterno in stampa) -->
+          <div id="printable-qr-label" style="width: 70mm; height: 70mm; border: 1px dashed #ccc; padding: 4mm; display: flex; flex-direction: column; justify-content: space-between; background: #fff; color: #000; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
             
             <!-- Parte Superiore: Intestazione -->
             <div style="text-align: center; padding-top: 1mm; padding-bottom: 1mm;">
@@ -2700,7 +2700,7 @@
               #printable-qr-label {
                 width: 70mm !important;
                 height: 70mm !important;
-                border: 1px solid #000 !important;
+                border: none !important;
                 padding: 4mm !important;
                 display: flex !important;
                 flex-direction: column !important;
