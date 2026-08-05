@@ -585,44 +585,46 @@ export function renderAdminDashboard(
                 <span class="badge badge-warning">${lowStockBoards.length} Schede</span>
               </div>
 
-              <div class="table-container" style="max-height: 480px; overflow-y: auto;">
-                <table style="width: 100%;">
-                  <thead>
-                    <tr>
-                      <th>Deconto</th>
-                      <th>Cliente</th>
-                      <th>Credito</th>
-                      <th>Stato</th>
-                      <th>Azione</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${lowStockBoards.length > 0 ? lowStockBoards.map(b => {
-                      const details = db.getBoardFullDetails(b.id);
-                      const clientName = details && details.client ? details.client.name : 'N/D';
-                      const statusObj = db.calculateBoardStatus(b);
-                      return `
+              <div style="border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding-right: 6px; background: var(--bg-secondary); overflow: hidden;">
+                <div class="table-container" style="max-height: 480px; overflow-y: auto; border: none; border-radius: 0; box-shadow: none; background: transparent;">
+                  <table style="width: 100%;">
+                    <thead>
+                      <tr>
+                        <th>Deconto</th>
+                        <th>Cliente</th>
+                        <th>Credito</th>
+                        <th>Stato</th>
+                        <th>Azione</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${lowStockBoards.length > 0 ? lowStockBoards.map(b => {
+                        const details = db.getBoardFullDetails(b.id);
+                        const clientName = details && details.client ? details.client.name : 'N/D';
+                        const statusObj = db.calculateBoardStatus(b);
+                        return `
+                          <tr>
+                            <td><strong style="font-family: monospace; color: var(--accent-cyan);">#${b.shortCode}</strong></td>
+                            <td><strong style="font-size: 0.85rem;">${clientName}</strong></td>
+                            <td><strong style="color: var(--accent-rose); font-size: 0.85rem;">${b.remainingCredits} cr</strong></td>
+                            <td>${statusObj.badgeHtml}</td>
+                            <td>
+                              <button class="btn btn-secondary btn-deconto-detail" data-code="${b.shortCode}" style="padding: 4px 8px; font-size: 0.72rem; white-space: nowrap;">
+                                🔑 OTP
+                              </button>
+                            </td>
+                          </tr>
+                        `;
+                      }).join('') : `
                         <tr>
-                          <td><strong style="font-family: monospace; color: var(--accent-cyan);">#${b.shortCode}</strong></td>
-                          <td><strong style="font-size: 0.85rem;">${clientName}</strong></td>
-                          <td><strong style="color: var(--accent-rose); font-size: 0.85rem;">${b.remainingCredits} cr</strong></td>
-                          <td>${statusObj.badgeHtml}</td>
-                          <td>
-                            <button class="btn btn-secondary btn-deconto-detail" data-code="${b.shortCode}" style="padding: 4px 8px; font-size: 0.72rem; white-space: nowrap;">
-                              🔑 OTP
-                            </button>
+                          <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                            🟢 Nessuna scheda in avviso o blocco. Tutto il parco è regolare!
                           </td>
                         </tr>
-                      `;
-                    }).join('') : `
-                      <tr>
-                        <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 30px;">
-                          🟢 Nessuna scheda in avviso o blocco. Tutto il parco è regolare!
-                        </td>
-                      </tr>
-                    `}
-                  </tbody>
-                </table>
+                      `}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
 
@@ -924,51 +926,53 @@ export function renderDecontoDetailModal(viewingDecontoCode) {
               <span class="badge badge-info" style="font-size: 0.75rem;">${movements.length} Movimenti Totali</span>
             </div>
 
-            <div class="table-container" style="max-height: 480px; overflow-y: auto; border: 1px solid var(--border-subtle); border-radius: 8px;">
-              <table style="width: 100%;">
-                <thead style="position: sticky; top: 0; background: #111827; z-index: 2;">
-                  <tr>
-                    <th>DATA & ORA</th>
-                    <th>TIPO MOVIMENTO</th>
-                    <th>DETTAGLI</th>
-                    <th style="text-align: right;">VARIAZIONE</th>
-                    <th style="text-align: right;">SALDO CREDITO</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${movements.length > 0 ? movements.map(mov => {
-                    const isRefill = mov.type === 'REFILL';
-                    const isPositive = mov.variation >= 0;
-                    
-                    let variationBadge = '';
-                    if (isRefill) {
-                      variationBadge = `<span class="badge" style="font-size: 0.8rem; font-weight: bold; background: ${isPositive ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)'}; color: ${isPositive ? 'var(--accent-green)' : 'var(--accent-rose)'}; border: 1px solid ${isPositive ? 'rgba(34, 197, 94, 0.25)' : 'rgba(239, 68, 68, 0.25)'};">${isPositive ? '+' : ''}${mov.variation} cr</span>`;
-                    } else {
-                      variationBadge = `<span class="badge" style="font-size: 0.8rem; font-weight: bold; background: rgba(239, 68, 68, 0.1); color: var(--accent-rose); border: 1px solid rgba(239, 68, 68, 0.25);">${mov.variation} cr</span>`;
-                    }
-
-                    return `
-                      <tr>
-                        <td><strong style="white-space: nowrap; font-size: 0.85rem; color: #fff;">${new Date(mov.timestamp).toLocaleString('it-IT')}</strong></td>
-                        <td>
-                          <span style="font-weight: 700; color: ${isRefill ? (isPositive ? 'var(--accent-green)' : 'var(--accent-amber)') : 'var(--text-main)'};">
-                            ${isRefill ? (isPositive ? '➕ Ricarica' : '➖ Storno/Decremento') : '☕ Erogazione'}
-                          </span>
-                        </td>
-                        <td><small style="color: var(--text-muted); font-size: 0.8rem;">${mov.details}</small></td>
-                        <td style="text-align: right;">${variationBadge}</td>
-                        <td style="text-align: right;"><strong style="font-family: monospace; font-size: 0.95rem; color: var(--accent-cyan);">${mov.runningBalance} cr</strong></td>
-                      </tr>
-                    `;
-                  }).join('') : `
+            <div style="border: 1px solid var(--border-subtle); border-radius: 12px; padding: 2px 6px 2px 2px; background: var(--bg-secondary); overflow: hidden;">
+              <div class="table-container" style="max-height: 480px; overflow-y: auto; border: none; border-radius: 0; box-shadow: none; background: transparent;">
+                <table style="width: 100%;">
+                  <thead style="position: sticky; top: 0; background: #111827; z-index: 2;">
                     <tr>
-                      <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 40px;">
-                        Nessun movimento registrato (ricariche o erogazioni) per la scheda #${b.shortCode}.
-                      </td>
+                      <th>DATA & ORA</th>
+                      <th>TIPO MOVIMENTO</th>
+                      <th>DETTAGLI</th>
+                      <th style="text-align: right;">VARIAZIONE</th>
+                      <th style="text-align: right;">SALDO CREDITO</th>
                     </tr>
-                  `}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    ${movements.length > 0 ? movements.map(mov => {
+                      const isRefill = mov.type === 'REFILL';
+                      const isPositive = mov.variation >= 0;
+                      
+                      let variationBadge = '';
+                      if (isRefill) {
+                        variationBadge = `<span class="badge" style="font-size: 0.8rem; font-weight: bold; background: ${isPositive ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)'}; color: ${isPositive ? 'var(--accent-green)' : 'var(--accent-rose)'}; border: 1px solid ${isPositive ? 'rgba(34, 197, 94, 0.25)' : 'rgba(239, 68, 68, 0.25)'};">${isPositive ? '+' : ''}${mov.variation} cr</span>`;
+                      } else {
+                        variationBadge = `<span class="badge" style="font-size: 0.8rem; font-weight: bold; background: rgba(239, 68, 68, 0.1); color: var(--accent-rose); border: 1px solid rgba(239, 68, 68, 0.25);">${mov.variation} cr</span>`;
+                      }
+
+                      return `
+                        <tr>
+                          <td><strong style="white-space: nowrap; font-size: 0.85rem; color: #fff;">${new Date(mov.timestamp).toLocaleString('it-IT')}</strong></td>
+                          <td>
+                            <span style="font-weight: 700; color: ${isRefill ? (isPositive ? 'var(--accent-green)' : 'var(--accent-amber)') : 'var(--text-main)'};">
+                              ${isRefill ? (isPositive ? '➕ Ricarica' : '➖ Storno/Decremento') : '☕ Erogazione'}
+                            </span>
+                          </td>
+                          <td><small style="color: var(--text-muted); font-size: 0.8rem;">${mov.details}</small></td>
+                          <td style="text-align: right;">${variationBadge}</td>
+                          <td style="text-align: right;"><strong style="font-family: monospace; font-size: 0.95rem; color: var(--accent-cyan);">${mov.runningBalance} cr</strong></td>
+                        </tr>
+                      `;
+                    }).join('') : `
+                      <tr>
+                        <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 40px;">
+                          Nessun movimento registrato (ricariche o erogazioni) per la scheda #${b.shortCode}.
+                        </td>
+                      </tr>
+                    `}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
 
