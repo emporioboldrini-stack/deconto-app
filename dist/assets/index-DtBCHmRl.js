@@ -674,7 +674,7 @@
           </div>
         </div>
       </div>
-    `}let C=``;if(t){let e=a.getBoardFullDetails(t);if(e&&e.board){let t=e.board,n=e.machine||{},r=e.client||{},i=e.coffees||[],o=0;if(n.installDate&&t.machineExtractions>0){let e=new Date(n.installDate).getTime(),r=Math.max(1,Math.ceil((Date.now()-e)/864e5));o=Number((t.machineExtractions/r).toFixed(1))}let s=o>0?o:`N/D`,c=o>0?Math.ceil(t.remainingCredits/o):`N/D`,l=c===`N/D`?`N/D`:new Date(Date.now()+c*864e5).toLocaleDateString(`it-IT`,{day:`2-digit`,month:`long`,year:`numeric`}),u=a.calculateBoardStatus(t);C=`
+    `}let C=``;if(t){let e=a.getBoardFullDetails(t);if(e&&e.board){let t=e.board,n=e.machine||{},r=e.client||{},i=e.coffees||[],o=e.refills||[],s=[];o.forEach(e=>{s.push({id:e.id,timestamp:new Date(e.timestamp),type:`REFILL`,variation:e.creditsAdded,details:e.method===`CLOUD_DIRECT`?`Ricarica Cloud (Ufficio)`:e.method===`WHATSAPP_OTP_BLE`?`Ricarica OTP (Cliente)`:`Ricarica ADR (BLE)`})}),i.forEach(e=>{s.push({id:e.id,timestamp:new Date(e.timestamp),type:`EXTRACTION`,variation:-1,details:`Gruppo #${e.groupId||1} (${e.durationSeconds||22}s)`})}),s.sort((e,t)=>e.timestamp.getTime()-t.timestamp.getTime());let c=0;s.forEach(e=>{c+=e.variation,e.runningBalance=c}),s.sort((e,t)=>t.timestamp.getTime()-e.timestamp.getTime());let l=0;if(n.installDate&&t.machineExtractions>0){let e=new Date(n.installDate).getTime(),r=Math.max(1,Math.ceil((Date.now()-e)/864e5));l=Number((t.machineExtractions/r).toFixed(1))}let u=l>0?l:`N/D`,d=l>0?Math.ceil(t.remainingCredits/l):`N/D`,f=d===`N/D`?`N/D`:new Date(Date.now()+d*864e5).toLocaleDateString(`it-IT`,{day:`2-digit`,month:`long`,year:`numeric`}),p=a.calculateBoardStatus(t);C=`
         <div class="modal-overlay" id="deconto-detail-modal">
           <div class="modal-box" style="max-width: 1020px; width: 95%; max-height: 90vh; overflow-y: auto;">
             
@@ -687,7 +687,7 @@
                     ${t.isOnlineWifi?`📡 Wi-Fi Online (-62 dBm)`:`📶 Bluetooth Local Only`}
                   </span>
                   <span class="badge badge-info">${t.version} VERSION</span>
-                  ${u.badgeHtml}
+                  ${p.badgeHtml}
                 </div>
                 <h2 style="font-size: 1.3rem; font-weight: 800; color: #fff; margin: 4px 0 0 0;">
                   ${r.name?r.name:`Cliente Non Assegnato`}
@@ -702,39 +702,43 @@
             <!-- LAYOUT A 2 COLONNE AFFIANCATE -->
             <div style="display: grid; grid-template-columns: 1.25fr 1fr; gap: 24px; align-items: start;">
               
-              <!-- COLONNA DI SINISTRA: Elenco Cronologico Erogazioni Esteso & Ampio -->
+              <!-- COLONNA DI SINISTRA: Registro Unificato dei Movimenti Deconto -->
               <div style="background: rgba(0,0,0,0.25); padding: 18px; border-radius: 14px; border: 1px solid var(--border-subtle);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
                   <h3 style="font-size: 1.15rem; font-weight: 800; margin: 0; color: var(--accent-cyan); display: flex; align-items: center; gap: 8px;">
-                    ☕ Registro Cronologico Erogazioni (#${t.shortCode})
+                    📊 Movimenti & Saldo Deconto (#${t.shortCode})
                   </h3>
-                  <span class="badge badge-info" style="font-size: 0.75rem;">${i.length} Erogazioni</span>
+                  <span class="badge badge-info" style="font-size: 0.75rem;">${s.length} Movimenti Totali</span>
                 </div>
 
                 <div class="table-container" style="max-height: 480px; overflow-y: auto; border: 1px solid var(--border-subtle); border-radius: 8px;">
                   <table style="width: 100%;">
                     <thead style="position: sticky; top: 0; background: #111827; z-index: 2;">
                       <tr>
-                        <th>ID LOG</th>
                         <th>DATA & ORA</th>
-                        <th>DURATA 230V</th>
-                        <th>GRUPPO BRACCIO</th>
-                        <th>STATO CREDITO</th>
+                        <th>TIPO MOVIMENTO</th>
+                        <th>DETTAGLI</th>
+                        <th style="text-align: right;">VARIAZIONE</th>
+                        <th style="text-align: right;">SALDO CREDITO</th>
                       </tr>
                     </thead>
                     <tbody>
-                      ${i.length>0?i.map(e=>`
-                        <tr>
-                          <td><code style="font-size: 0.75rem;">${e.id}</code></td>
-                          <td><strong style="white-space: nowrap; font-size: 0.85rem;">${new Date(e.timestamp).toLocaleString(`it-IT`)}</strong></td>
-                          <td><strong>${e.durationSeconds} s</strong></td>
-                          <td>Gruppo #${e.groupId}</td>
-                          <td><span class="badge badge-success" style="font-size: 0.75rem;">OK (-1 CIALDA)</span></td>
-                        </tr>
-                      `).join(``):`
+                      ${s.length>0?s.map(e=>{let t=e.type===`REFILL`,n=e.variation>=0,r=``;return r=t?`<span class="badge" style="font-size: 0.8rem; font-weight: bold; background: ${n?`rgba(34, 197, 94, 0.1)`:`rgba(239, 68, 68, 0.1)`}; color: ${n?`var(--accent-green)`:`var(--accent-rose)`}; border: 1px solid ${n?`rgba(34, 197, 94, 0.25)`:`rgba(239, 68, 68, 0.25)`};">${n?`+`:``}${e.variation} cr</span>`:`<span class="badge" style="font-size: 0.8rem; font-weight: bold; background: rgba(239, 68, 68, 0.1); color: var(--accent-rose); border: 1px solid rgba(239, 68, 68, 0.25);">${e.variation} cr</span>`,`
+                          <tr>
+                            <td><strong style="white-space: nowrap; font-size: 0.85rem; color: #fff;">${new Date(e.timestamp).toLocaleString(`it-IT`)}</strong></td>
+                            <td>
+                              <span style="font-weight: 700; color: ${t?n?`var(--accent-green)`:`var(--accent-amber)`:`var(--text-main)`};">
+                                ${t?n?`➕ Ricarica`:`➖ Storno/Decremento`:`☕ Erogazione`}
+                              </span>
+                            </td>
+                            <td><small style="color: var(--text-muted); font-size: 0.8rem;">${e.details}</small></td>
+                            <td style="text-align: right;">${r}</td>
+                            <td style="text-align: right;"><strong style="font-family: monospace; font-size: 0.95rem; color: var(--accent-cyan);">${e.runningBalance} cr</strong></td>
+                          </tr>
+                        `}).join(``):`
                         <tr>
                           <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 40px;">
-                            Nessuna erogazione recente registrata per la macchina #${t.shortCode}.
+                            Nessun movimento registrato (ricariche o erogazioni) per la scheda #${t.shortCode}.
                           </td>
                         </tr>
                       `}
@@ -755,7 +759,7 @@
                     </div>
                     <div style="text-align: right;">
                       <div style="font-size: 0.75rem; color: var(--text-muted);">Stima Esaurimento:</div>
-                      <div style="font-size: 0.9rem; font-weight: 800; color: var(--accent-amber);">${l}</div>
+                      <div style="font-size: 0.9rem; font-weight: 800; color: var(--accent-amber);">${f}</div>
                     </div>
                   </div>
                 </div>
@@ -774,7 +778,7 @@
 
                   <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px; border: 1px solid var(--border-subtle);">
                     <div style="font-size: 0.75rem; color: var(--text-muted);">Media Consumo:</div>
-                    <div style="font-size: 1.2rem; font-weight: 800; color: var(--accent-green); margin-top: 2px;">${s} <small style="font-size: 0.75rem;">caffè/gg</small></div>
+                    <div style="font-size: 1.2rem; font-weight: 800; color: var(--accent-green); margin-top: 2px;">${u} <small style="font-size: 0.75rem;">caffè/gg</small></div>
                   </div>
 
                   <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px; border: 1px solid var(--border-subtle);">

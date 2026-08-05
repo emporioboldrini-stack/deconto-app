@@ -646,6 +646,45 @@ export function renderAdminDashboard(
       const m = details.machine || {};
       const c = details.client || {};
       const boardCoffees = details.coffees || [];
+      const boardRefills = details.refills || [];
+
+      // Uniamo ricariche ed erogazioni in un unico registro cronologico dei movimenti
+      const movements = [];
+
+      // Aggiungiamo le ricariche
+      boardRefills.forEach(r => {
+        movements.push({
+          id: r.id,
+          timestamp: new Date(r.timestamp),
+          type: 'REFILL',
+          variation: r.creditsAdded,
+          details: r.method === 'CLOUD_DIRECT' ? 'Ricarica Cloud (Ufficio)' : (r.method === 'WHATSAPP_OTP_BLE' ? 'Ricarica OTP (Cliente)' : 'Ricarica ADR (BLE)')
+        });
+      });
+
+      // Aggiungiamo le erogazioni
+      boardCoffees.forEach(cf => {
+        movements.push({
+          id: cf.id,
+          timestamp: new Date(cf.timestamp),
+          type: 'EXTRACTION',
+          variation: -1,
+          details: `Gruppo #${cf.groupId || 1} (${cf.durationSeconds || 22}s)`
+        });
+      });
+
+      // Ordiniamo dal movimento più vecchio al più recente per calcolare il saldo progressivo
+      movements.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+
+      // Calcoliamo il saldo progressivo passo-passo
+      let runningBalance = 0;
+      movements.forEach(mov => {
+        runningBalance += mov.variation;
+        mov.runningBalance = runningBalance;
+      });
+
+      // Invertiamo l'ordine per mostrarli dal più recente al più vecchio (decrescente)
+      movements.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
 
       // CALCOLO MEDIA REALE
       let avgDaily = 0;
@@ -692,39 +731,55 @@ export function renderAdminDashboard(
             <!-- LAYOUT A 2 COLONNE AFFIANCATE -->
             <div style="display: grid; grid-template-columns: 1.25fr 1fr; gap: 24px; align-items: start;">
               
-              <!-- COLONNA DI SINISTRA: Elenco Cronologico Erogazioni Esteso & Ampio -->
+              <!-- COLONNA DI SINISTRA: Registro Unificato dei Movimenti Deconto -->
               <div style="background: rgba(0,0,0,0.25); padding: 18px; border-radius: 14px; border: 1px solid var(--border-subtle);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
                   <h3 style="font-size: 1.15rem; font-weight: 800; margin: 0; color: var(--accent-cyan); display: flex; align-items: center; gap: 8px;">
-                    ☕ Registro Cronologico Erogazioni (#${b.shortCode})
+                    📊 Movimenti & Saldo Deconto (#${b.shortCode})
                   </h3>
-                  <span class="badge badge-info" style="font-size: 0.75rem;">${boardCoffees.length} Erogazioni</span>
+                  <span class="badge badge-info" style="font-size: 0.75rem;">${movements.length} Movimenti Totali</span>
                 </div>
 
                 <div class="table-container" style="max-height: 480px; overflow-y: auto; border: 1px solid var(--border-subtle); border-radius: 8px;">
                   <table style="width: 100%;">
                     <thead style="position: sticky; top: 0; background: #111827; z-index: 2;">
                       <tr>
-                        <th>ID LOG</th>
                         <th>DATA & ORA</th>
-                        <th>DURATA 230V</th>
-                        <th>GRUPPO BRACCIO</th>
-                        <th>STATO CREDITO</th>
+                        <th>TIPO MOVIMENTO</th>
+                        <th>DETTAGLI</th>
+                        <th style="text-align: right;">VARIAZIONE</th>
+                        <th style="text-align: right;">SALDO CREDITO</th>
                       </tr>
                     </thead>
                     <tbody>
-                      ${boardCoffees.length > 0 ? boardCoffees.map(log => `
-                        <tr>
-                          <td><code style="font-size: 0.75rem;">${log.id}</code></td>
-                          <td><strong style="white-space: nowrap; font-size: 0.85rem;">${new Date(log.timestamp).toLocaleString('it-IT')}</strong></td>
-                          <td><strong>${log.durationSeconds} s</strong></td>
-                          <td>Gruppo #${log.groupId}</td>
-                          <td><span class="badge badge-success" style="font-size: 0.75rem;">OK (-1 CIALDA)</span></td>
-                        </tr>
-                      `).join('') : `
+                      ${movements.length > 0 ? movements.map(mov => {
+                        const isRefill = mov.type === 'REFILL';
+                        const isPositive = mov.variation >= 0;
+                        
+                        let variationBadge = '';
+                        if (isRefill) {
+                          variationBadge = `<span class="badge" style="font-size: 0.8rem; font-weight: bold; background: ${isPositive ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)'}; color: ${isPositive ? 'var(--accent-green)' : 'var(--accent-rose)'}; border: 1px solid ${isPositive ? 'rgba(34, 197, 94, 0.25)' : 'rgba(239, 68, 68, 0.25)'};">${isPositive ? '+' : ''}${mov.variation} cr</span>`;
+                        } else {
+                          variationBadge = `<span class="badge" style="font-size: 0.8rem; font-weight: bold; background: rgba(239, 68, 68, 0.1); color: var(--accent-rose); border: 1px solid rgba(239, 68, 68, 0.25);">${mov.variation} cr</span>`;
+                        }
+
+                        return `
+                          <tr>
+                            <td><strong style="white-space: nowrap; font-size: 0.85rem; color: #fff;">${new Date(mov.timestamp).toLocaleString('it-IT')}</strong></td>
+                            <td>
+                              <span style="font-weight: 700; color: ${isRefill ? (isPositive ? 'var(--accent-green)' : 'var(--accent-amber)') : 'var(--text-main)'};">
+                                ${isRefill ? (isPositive ? '➕ Ricarica' : '➖ Storno/Decremento') : '☕ Erogazione'}
+                              </span>
+                            </td>
+                            <td><small style="color: var(--text-muted); font-size: 0.8rem;">${mov.details}</small></td>
+                            <td style="text-align: right;">${variationBadge}</td>
+                            <td style="text-align: right;"><strong style="font-family: monospace; font-size: 0.95rem; color: var(--accent-cyan);">${mov.runningBalance} cr</strong></td>
+                          </tr>
+                        `;
+                      }).join('') : `
                         <tr>
                           <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 40px;">
-                            Nessuna erogazione recente registrata per la macchina #${b.shortCode}.
+                            Nessun movimento registrato (ricariche o erogazioni) per la scheda #${b.shortCode}.
                           </td>
                         </tr>
                       `}
