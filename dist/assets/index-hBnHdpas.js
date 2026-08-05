@@ -2692,10 +2692,10 @@
                 width: 70mm !important;
                 height: 70mm !important;
                 box-sizing: border-box;
-                font-family: sans-serif;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                 overflow: hidden;
               }
-              #print-box {
+              #printable-qr-label {
                 width: 70mm !important;
                 height: 70mm !important;
                 border: 1px solid #000 !important;
@@ -2704,20 +2704,43 @@
                 flex-direction: column !important;
                 justify-content: space-between !important;
                 box-sizing: border-box !important;
+                background: #fff !important;
+                color: #000 !important;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
               }
             </style>
           </head>
           <body>
-            <div id="print-box">
-              ${e.innerHTML}
-            </div>
+            ${e.outerHTML}
             <script>
-              // Forza il caricamento prima della stampa
               window.onload = function() {
-                window.print();
-                setTimeout(() => {
-                  window.parent.document.body.removeChild(window.frameElement);
-                }, 500);
+                const img = document.querySelector('img');
+                if (img) {
+                  if (img.complete) {
+                    window.print();
+                    setTimeout(() => {
+                      window.parent.document.body.removeChild(window.frameElement);
+                    }, 500);
+                  } else {
+                    img.onload = function() {
+                      window.print();
+                      setTimeout(() => {
+                        window.parent.document.body.removeChild(window.frameElement);
+                      }, 500);
+                    };
+                    img.onerror = function() {
+                      window.print();
+                      setTimeout(() => {
+                        window.parent.document.body.removeChild(window.frameElement);
+                      }, 500);
+                    };
+                  }
+                } else {
+                  window.print();
+                  setTimeout(() => {
+                    window.parent.document.body.removeChild(window.frameElement);
+                  }, 500);
+                }
               };
             <\/script>
           </body>
