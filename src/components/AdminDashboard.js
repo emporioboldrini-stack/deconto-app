@@ -861,18 +861,14 @@ export function renderDecontoDetailModal(viewingDecontoCode) {
     });
   });
 
-  // Ordiniamo dal movimento più vecchio al più recente per calcolare il saldo progressivo
-  movements.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
-
-  // Calcoliamo il saldo progressivo passo-passo
-  let runningBalance = 0;
-  movements.forEach(mov => {
-    runningBalance += mov.variation;
-    mov.runningBalance = runningBalance;
-  });
-
-  // Invertiamo l'ordine per mostrarli dal più recente al più vecchio (decrescente)
+  // Ordiniamo dal più recente al più vecchio (decrescente) per calcolare il saldo a ritroso a partire dal credito attuale
   movements.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+
+  let tempBalance = b.remainingCredits;
+  movements.forEach(mov => {
+    mov.runningBalance = tempBalance;
+    tempBalance -= mov.variation;
+  });
 
   // CALCOLO MEDIA REALE
   let avgDaily = 0;
