@@ -893,7 +893,7 @@ export function renderDecontoDetailModal(viewingDecontoCode) {
 
   return `
     <div class="modal-overlay" id="deconto-detail-modal">
-      <div class="modal-box" style="max-width: 1020px; width: 95%; max-height: 90vh; overflow-y: auto;">
+      <div class="modal-box" style="max-width: 1280px; width: 95%; max-height: 90vh; overflow-y: auto;">
         
         <!-- Modal Header -->
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 14px;">
