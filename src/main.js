@@ -1129,6 +1129,81 @@ function attachGlobalEventListeners() {
     });
   }
 
+  // --- RICARICA DIRETTA (SENZA OTP) DA PANNELLO ---
+  const btnDirectRefillPanel = document.getElementById('btn-direct-refill-panel');
+  if (btnDirectRefillPanel) {
+    btnDirectRefillPanel.addEventListener('click', () => {
+      const clientId = document.getElementById('otp-client-select').value;
+      const machineId = document.getElementById('otp-machine-select').value;
+      const boardShortCode = document.getElementById('otp-board-select').value;
+      const creditsType = document.getElementById('otp-credits-input').value;
+      const customCreditsVal = document.getElementById('otp-custom-credits-value').value;
+      const expiry = document.getElementById('otp-expiry-input').value;
+
+      if (!clientId || !boardShortCode) {
+        alert('Seleziona sia il Cliente che la Scheda Deconto per procedere!');
+        return;
+      }
+
+      let credits = 200;
+      if (creditsType === 'CUSTOM') {
+        const manualVal = parseInt(customCreditsVal, 10);
+        if (isNaN(manualVal)) {
+          alert('Inserisci un valore numerico valido (positivo o negativo) per i crediti personalizzati!');
+          return;
+        }
+        credits = manualVal;
+      } else {
+        credits = parseInt(creditsType, 10);
+      }
+
+      try {
+        db.performRefill({
+          boardShortCode,
+          credits,
+          method: 'CLOUD_DIRECT',
+          operatorId: state.currentUser ? state.currentUser.id : 'usr_001'
+        });
+
+        alert(`✅ Ricarica diretta di ${credits >= 0 ? '+' : ''}${credits} caffè effettuata con successo sul Deconto #${boardShortCode}!\nCredito aggiornato via Cloud.`);
+        
+        // Salviamo lo stato temporaneo per ripristinare la vista dopo il render
+        state.selectedClientTemp = clientId;
+        state.selectedMachineTemp = machineId;
+        state.selectedBoardTemp = boardShortCode;
+        state.selectedCreditsTemp = creditsType;
+        state.selectedCustomCreditsTemp = creditsType === 'CUSTOM' ? credits : '';
+        state.selectedExpiryTemp = expiry;
+        state.generatedOtpUrl = null;
+        state.generatedOtpToken = null;
+
+        renderApp();
+
+        // Ripristiniamo i valori nei campi nel DOM dopo il rendering per consentire ricariche consecutive
+        const restoreClient = document.getElementById('otp-client-select');
+        const restoreMachine = document.getElementById('otp-machine-select');
+        const restoreBoard = document.getElementById('otp-board-select');
+        const restoreCredits = document.getElementById('otp-credits-input');
+        const restoreCustomWrap = document.getElementById('otp-custom-credits-wrapper');
+        const restoreCustomVal = document.getElementById('otp-custom-credits-value');
+        const restoreExpiry = document.getElementById('otp-expiry-input');
+
+        if (restoreClient) restoreClient.value = state.selectedClientTemp;
+        if (restoreMachine) restoreMachine.value = state.selectedMachineTemp;
+        if (restoreBoard) restoreBoard.value = state.selectedBoardTemp;
+        if (restoreCredits) restoreCredits.value = state.selectedCreditsTemp;
+        if (restoreCredits && restoreCredits.value === 'CUSTOM' && restoreCustomWrap) {
+          restoreCustomWrap.style.display = 'block';
+          if (restoreCustomVal) restoreCustomVal.value = state.selectedCustomCreditsTemp;
+        }
+        if (restoreExpiry) restoreExpiry.value = state.selectedExpiryTemp;
+
+      } catch (err) {
+        alert(`❌ Errore durante la ricarica diretta: ${err.message}`);
+      }
+    });
+  }
+
   // 1. Genera Link & Token OTP
   const btnGenerateOtpLink = document.getElementById('btn-generate-otp-link');
   if (btnGenerateOtpLink) {

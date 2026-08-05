@@ -20,12 +20,12 @@ export function renderOtpGeneratorPanel(generatedLink = null, generatedOtp = nul
   return `
     <div style="max-width: 800px; margin: 0 auto;">
       <div style="margin-bottom: 24px;">
-        <h1 style="font-size: 1.8rem; font-weight: 800; color: #fff; margin: 0 0 8px 0;">🔑 Generatore OTP WhatsApp & Link Ricarica</h1>
-        <p style="color: var(--text-muted); margin: 0;">Genera codici OTP e link di accreditamento fai-da-te da inviare ai clienti via WhatsApp.</p>
+        <h1 style="font-size: 1.8rem; font-weight: 800; color: #fff; margin: 0 0 8px 0;">⚡ Ricariche e Generazione OTP Deconto</h1>
+        <p style="color: var(--text-muted); margin: 0;">Ricarica i crediti del Deconto in tempo reale oppure genera codici OTP e link di accreditamento fai-da-te.</p>
       </div>
 
       <div class="stat-card" style="padding: 28px; border: 1px solid var(--border-subtle); margin-bottom: 32px; background: rgba(0,0,0,0.2);">
-        <h3 style="margin-top: 0; color: var(--accent-cyan); margin-bottom: 20px; font-weight: 800;">⚙️ Configura Ricarica Fai-da-Te</h3>
+        <h3 style="margin-top: 0; color: var(--accent-cyan); margin-bottom: 20px; font-weight: 800;">⚙️ Configura Operazione Ricarica</h3>
         
         <!-- Triplice Associazione Collegata (Cliente, Macchina, Deconto) -->
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px;">
@@ -90,7 +90,10 @@ export function renderOtpGeneratorPanel(generatedLink = null, generatedOtp = nul
           </div>
         </div>
 
-        <div style="display: flex; justify-content: flex-end; margin-top: 24px; border-top: 1px solid var(--border-subtle); padding-top: 20px;">
+        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; border-top: 1px solid var(--border-subtle); padding-top: 20px;">
+          <button id="btn-direct-refill-panel" class="btn btn-secondary" style="padding: 14px 28px; font-size: 1rem; font-weight: 800; border-radius: 10px; color: var(--accent-green); border-color: rgba(34, 197, 94, 0.4); background: rgba(34, 197, 94, 0.05);">
+            🚀 Ricarica Diretta (Cloud)
+          </button>
           <button id="btn-generate-otp-link" class="btn btn-primary" style="padding: 14px 28px; font-size: 1rem; font-weight: 800; border-radius: 10px;">
             ⚡ Genera Token & Link WhatsApp
           </button>
