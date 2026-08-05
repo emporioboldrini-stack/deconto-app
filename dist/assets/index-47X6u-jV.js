@@ -1736,7 +1736,7 @@
           </div>
         </div>
 
-        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; border-top: 1px solid var(--border-subtle); padding-top: 20px;">
+        <div style="display: flex; justify-content: center; gap: 24px; margin-top: 24px; border-top: 1px solid var(--border-subtle); padding-top: 20px;">
           <button id="btn-direct-refill-panel" class="btn btn-secondary" style="padding: 14px 28px; font-size: 1rem; font-weight: 800; border-radius: 10px; color: var(--accent-green); border-color: rgba(34, 197, 94, 0.4); background: rgba(34, 197, 94, 0.05);">
             🚀 Ricarica Diretta (Cloud)
           </button>
