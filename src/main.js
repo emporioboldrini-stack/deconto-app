@@ -138,7 +138,10 @@ function attachLoginEventListeners() {
       try {
         const user = db.login(username, password);
         state.currentUser = user;
-        state.activeTab = user.role === 'ADR' ? 'adr_visits' : 'dashboard';
+        let defaultTab = 'dashboard';
+        if (user.role === 'UFFICIO') defaultTab = 'deconto_boards';
+        else if (user.role === 'ADR') defaultTab = 'simulator';
+        state.activeTab = defaultTab;
         renderApp();
       } catch (err) {
         alert(err.message);

@@ -106,13 +106,7 @@ export function renderSidebar(currentUser, activeTab) {
           </a>
         ` : ''}
 
-        ${isAdr ? `
-          <div class="nav-section-title">LOGISTICA & CONSEGNE</div>
-          <a class="nav-item ${activeTab === 'adr_visits' ? 'active' : ''}" data-tab="adr_visits">
-            <span class="nav-icon">🚚</span>
-            <span>Visite ADR & BLE</span>
-          </a>
-        ` : ''}
+
 
         <div class="nav-section-title">COLLAUDO & IMPOSTAZIONI</div>
         <a class="nav-item ${activeTab === 'simulator' ? 'active' : ''}" data-tab="simulator">
